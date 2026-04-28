@@ -209,41 +209,44 @@ impl<T: std::error::Error + Clone> Clone for LocatedError<T> {
 mod tests {
     use thiserror::Error;
 
+    #[derive(Debug, Error)]
+    pub enum MyError {
+        #[error("MyError {0}")]
+        LocatedIoError(#[from] LocatedError<std::io::Error>),
+    }
+
+    impl From<std::io::Error> for MyError {
+        #[track_caller]
+        fn from(err: std::io::Error) -> Self {
+            MyError::from(LocatedError::from(err))
+        }
+    }
+
+    fn located_error1() -> Result<(), MyError> {
+        std::fs::File::open("blurb.txt").map_err(|e| LocatedError::<std::io::Error>::from(e))?;
+        Ok(())
+    }
+
+    fn located_error2() -> Result<(), MyError> {
+        std::fs::File::open("blurb.txt")?;
+        Ok(())
+    }
+
     use super::*;
     #[test]
     fn test_located_error() {
-        #[derive(Debug, Error)]
-        pub enum MyError {
-            #[error("{0}")]
-            LocatedIoError(#[from] LocatedError<std::io::Error>),
-        }
-
-        impl From<std::io::Error> for MyError {
-            #[track_caller]
-            fn from(err: std::io::Error) -> Self {
-                MyError::from(LocatedError::from(err))
-            }
-        }
-
-        fn located_error1() -> Result<(), MyError> {
-            std::fs::File::open("blurb.txt")
-                .map_err(|e| LocatedError::<std::io::Error>::from(e))?;
-            Ok(())
-        }
-
-        fn located_error2() -> Result<(), MyError> {
-            std::fs::File::open("blurb.txt")?;
-            Ok(())
-        }
-
         if let Err(e) = located_error1() {
-            println!("error {}", e);
-            println!("error {:?}", e);
+            println!("==========================================================");
+            println!("{}", e);
+            println!("==========================================================");
+            println!("{:?}", e);
         }
 
         if let Err(e) = located_error2() {
-            println!("error {}", e);
-            println!("error {:?}", e);
+            println!("==========================================================");
+            println!("{}", e);
+            println!("==========================================================");
+            println!("{:?}", e);
         }
     }
 }
