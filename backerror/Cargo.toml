@@ -28,7 +28,7 @@ default = ["force_backtrace", "release_off"]
 backtrace = []
 
 # force backtrace even if environment variable is not set
-force_backtrace = []
+force_backtrace = ["backtrace"]
 
 # turn off attribute macro in release mode
 release_off = ["backerror-macros/release_off"]

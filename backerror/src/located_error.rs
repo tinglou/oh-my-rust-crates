@@ -1,6 +1,8 @@
+#[cfg(feature = "backtrace")]
+use std::borrow::Cow;
 use std::ops::Deref;
 use std::panic::Location;
-#[cfg(any(feature = "backtrace", feature = "force_backtrace"))]
+#[cfg(feature = "backtrace")]
 use std::sync::Arc;
 
 /// New error type encapsulating the original error and location data.
@@ -15,7 +17,7 @@ pub struct LocatedError<E: std::error::Error> {
     inner: E,
     location: &'static Location<'static>,
 
-    #[cfg(any(feature = "backtrace", feature = "force_backtrace"))]
+    #[cfg(feature = "backtrace")]
     backtrace: Arc<std::backtrace::Backtrace>,
 }
 
@@ -26,15 +28,17 @@ impl<E: std::error::Error> std::error::Error for LocatedError<E> {
     }
 }
 
+const DEBUG_CAUSED_BY_PAT: &str = "Caused by: ";
+const DISPLAY_CAUSED_BY_PAT: &str = "; Caused by ";
+
 /// Display
 impl<E: std::error::Error> std::fmt::Display for LocatedError<E> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        const PAT: &str = "; Caused by ";
         let inner_msg = format!("{}", self.inner);
-        if let Some(pos) = inner_msg.find(PAT) {
+        if let Some(pos) = inner_msg.find(DISPLAY_CAUSED_BY_PAT) {
             write!(
                 f,
-                "{}; Caused by {} ({}){}",
+                "{}{DISPLAY_CAUSED_BY_PAT}{} ({}){}",
                 &inner_msg[..pos],
                 std::any::type_name::<E>(),
                 self.location,
@@ -43,7 +47,7 @@ impl<E: std::error::Error> std::fmt::Display for LocatedError<E> {
         } else {
             write!(
                 f,
-                "{}; Caused by {}({});",
+                "{}{DISPLAY_CAUSED_BY_PAT}{}({});",
                 self.inner,
                 std::any::type_name::<E>(),
                 self.location,
@@ -54,7 +58,7 @@ impl<E: std::error::Error> std::fmt::Display for LocatedError<E> {
 
 /// Debug
 impl<E: std::error::Error> std::fmt::Debug for LocatedError<E> {
-    #[cfg(not(any(feature = "backtrace", feature = "force_backtrace")))]
+    #[cfg(not(feature = "backtrace"))]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // let name = std::any::type_name::<E>();
         // let pos = name.rfind(":").unwrap_or(0);
@@ -68,7 +72,7 @@ impl<E: std::error::Error> std::fmt::Debug for LocatedError<E> {
         )
     }
 
-    #[cfg(any(feature = "backtrace", feature = "force_backtrace"))]
+    #[cfg(feature = "backtrace")]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(stacktrace) = super::stacktrace::StackTrace::parse(&self.backtrace) {
             self.fmt_stacktrace(stacktrace, f)
@@ -84,60 +88,71 @@ impl<E: std::error::Error> std::fmt::Debug for LocatedError<E> {
     }
 }
 
-#[cfg(any(feature = "backtrace", feature = "force_backtrace"))]
+#[cfg(feature = "backtrace")]
 impl<E: std::error::Error> LocatedError<E> {
     fn fmt_stacktrace(
         &self,
         stacktrace: super::stacktrace::StackTrace,
         f: &mut std::fmt::Formatter<'_>,
     ) -> std::fmt::Result {
-        const CAUSED_BY_PAT: &str = "\nCaused by: ";
+        let mut output = Vec::new();
+        let inner_debug = format!("{:?}", self.inner);
+        let mut lines = inner_debug.lines();
 
-        let inner_msg = format!("{:?} ({})", self.inner, self.location);
+        let mut first_caused_by = true;
+        while let Some(line) = lines.next() {
+            if first_caused_by {
+                if line.starts_with(DEBUG_CAUSED_BY_PAT) {
+                    first_caused_by = false;
+                    // inject the stacktrace
+                    self.inject_stacktrace(&stacktrace, &mut output);
+                }
+                output.push(Cow::Borrowed(line));
+            } else {
+                let line = Cow::Borrowed(line);
+                if !output.contains(&line) {
+                    output.push(line);
+                }
+            }
+        }
+        if first_caused_by {
+            // inject the stacktrace
+            self.inject_stacktrace(&stacktrace, &mut output);
+        }
 
-        let index = if let Some(cause_index) = inner_msg.find(CAUSED_BY_PAT) {
-            // write the head
-            let msg_head = &inner_msg[0..cause_index + 1];
-            write!(f, "{}", msg_head)?;
-            cause_index
-        } else {
-            // write total message
-            writeln!(f, "{}", inner_msg)?;
-            0
-        };
+        for line in output {
+            writeln!(f, "{}", line)?;
+        }
 
-        // inject the stacktrace
-        writeln!(
-            f,
-            "Caused by: {}: {}",
+        write!(f, "")
+    }
+
+    #[cfg(feature = "backtrace")]
+    fn inject_stacktrace(
+        &self,
+        stacktrace: &crate::stacktrace::StackTrace,
+        output: &mut Vec<Cow<'_, str>>,
+    ) {
+        let cause = format!(
+            "{DEBUG_CAUSED_BY_PAT}{}: {} ({})",
             std::any::type_name::<E>(),
-            self.pure_desc()
-        )?;
-        for frame in stacktrace.frames {
-            let line = if frame.file.is_empty() {
+            self.pure_desc(),
+            self.location
+        );
+        output.push(Cow::Owned(cause));
+        for frame in &stacktrace.frames {
+            let trace = if frame.file.is_empty() {
                 format!("\tat {}", frame.func)
             } else {
                 format!("\tat {} ({}:{})", frame.func, frame.file, frame.line)
             };
-            if inner_msg.find(&line).is_some() {
-                continue;
-            }
-            writeln!(f, "{}", line)?;
+            output.push(Cow::Owned(trace));
         }
-
-        // write the rest
-        if index > 0 {
-            let msg_remain = &inner_msg[index + 1..];
-            write!(f, "{}", msg_remain)?;
-        }
-        write!(f, "")
     }
 
     fn pure_desc(&self) -> String {
-        const PAT: &str = "; Caused by ";
-
         let desc = self.inner.to_string();
-        let desc = if let Some(pos) = desc.find(PAT) {
+        let desc = if let Some(pos) = desc.find(DISPLAY_CAUSED_BY_PAT) {
             desc[..pos].to_string()
         } else {
             desc
@@ -199,7 +214,7 @@ impl<T: std::error::Error + Clone> Clone for LocatedError<T> {
             inner: self.inner.clone(),
             location: self.location,
 
-            #[cfg(any(feature = "backtrace", feature = "force_backtrace"))]
+            #[cfg(feature = "backtrace")]
             backtrace: self.backtrace.clone(),
         }
     }

@@ -3,7 +3,7 @@
 
 mod located_error;
 
-#[cfg(any(feature = "backtrace", feature = "force_backtrace"))]
+#[cfg(feature = "backtrace")]
 mod stacktrace;
 
 pub use backerror_macros::backerror;
