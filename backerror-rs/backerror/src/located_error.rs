@@ -1,7 +1,12 @@
+use core::error::Error;
+use core::ops::Deref;
+use core::panic::Location;
+use core::{borrow, fmt, panic};
+use core::any::type_name;
+#[cfg(feature = "backtrace")]
+use std::backtrace::Backtrace;
 #[cfg(feature = "backtrace")]
 use std::borrow::Cow;
-use std::ops::Deref;
-use std::panic::Location;
 #[cfg(feature = "backtrace")]
 use std::sync::Arc;
 
@@ -13,17 +18,17 @@ use std::sync::Arc;
 /// }
 /// let _r = open_fail();
 /// ```
-pub struct LocatedError<E: std::error::Error> {
+pub struct LocatedError<E: Error> {
     inner: E,
     location: &'static Location<'static>,
 
     #[cfg(feature = "backtrace")]
-    backtrace: Arc<std::backtrace::Backtrace>,
+    backtrace: Arc<Backtrace>,
 }
 
 /// Error
-impl<E: std::error::Error> std::error::Error for LocatedError<E> {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+impl<E: Error> Error for LocatedError<E> {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
         self.inner.source()
     }
 }
@@ -32,15 +37,15 @@ const DEBUG_CAUSED_BY_PAT: &str = "Caused by: ";
 const DISPLAY_CAUSED_BY_PAT: &str = "; Caused by ";
 
 /// Display
-impl<E: std::error::Error> std::fmt::Display for LocatedError<E> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<E: Error> fmt::Display for LocatedError<E> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let inner_msg = format!("{}", self.inner);
         if let Some(pos) = inner_msg.find(DISPLAY_CAUSED_BY_PAT) {
             write!(
                 f,
                 "{}{DISPLAY_CAUSED_BY_PAT}{} ({}){}",
                 &inner_msg[..pos],
-                std::any::type_name::<E>(),
+                type_name::<E>(),
                 self.location,
                 &inner_msg[pos..]
             )
@@ -49,7 +54,7 @@ impl<E: std::error::Error> std::fmt::Display for LocatedError<E> {
                 f,
                 "{}{DISPLAY_CAUSED_BY_PAT}{}({});",
                 self.inner,
-                std::any::type_name::<E>(),
+                type_name::<E>(),
                 self.location,
             )
         }
@@ -57,23 +62,20 @@ impl<E: std::error::Error> std::fmt::Display for LocatedError<E> {
 }
 
 /// Debug
-impl<E: std::error::Error> std::fmt::Debug for LocatedError<E> {
+impl<E: Error> fmt::Debug for LocatedError<E> {
     #[cfg(not(feature = "backtrace"))]
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // let name = std::any::type_name::<E>();
-        // let pos = name.rfind(":").unwrap_or(0);
-        // let name = &name[pos + 1..];
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{:?}\n\tat ({}) by {}",
             self.inner,
             self.location,
-            std::any::type_name::<E>(), // name
+            type_name::<E>(), // name
         )
     }
 
     #[cfg(feature = "backtrace")]
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(stacktrace) = super::stacktrace::StackTrace::parse(&self.backtrace) {
             self.fmt_stacktrace(stacktrace, f)
         } else {
@@ -82,19 +84,19 @@ impl<E: std::error::Error> std::fmt::Debug for LocatedError<E> {
                 "{:?}\n\tat ({}) by {}",
                 self.inner,
                 self.location,
-                std::any::type_name::<E>() // name
+                type_name::<E>() // name
             )
         }
     }
 }
 
 #[cfg(feature = "backtrace")]
-impl<E: std::error::Error> LocatedError<E> {
+impl<E: Error> LocatedError<E> {
     fn fmt_stacktrace(
         &self,
         stacktrace: super::stacktrace::StackTrace,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         let mut output = Vec::new();
         let inner_debug = format!("{:?}", self.inner);
         let mut lines = inner_debug.lines();
@@ -135,7 +137,7 @@ impl<E: std::error::Error> LocatedError<E> {
     ) {
         let cause = format!(
             "{DEBUG_CAUSED_BY_PAT}{}: {} ({})",
-            std::any::type_name::<E>(),
+            type_name::<E>(),
             self.pure_desc(),
             self.location
         );
@@ -162,31 +164,31 @@ impl<E: std::error::Error> LocatedError<E> {
 }
 
 /// From
-impl<E: std::error::Error> From<E> for LocatedError<E> {
+impl<E: Error> From<E> for LocatedError<E> {
     #[track_caller]
     fn from(err: E) -> Self {
         LocatedError {
             inner: err,
-            location: std::panic::Location::caller(),
+            location: panic::Location::caller(),
 
             #[cfg(all(feature = "backtrace", not(feature = "force_backtrace")))]
-            backtrace: Arc::new(std::backtrace::Backtrace::capture()),
+            backtrace: Arc::new(Backtrace::capture()),
 
             #[cfg(feature = "force_backtrace")]
-            backtrace: Arc::new(std::backtrace::Backtrace::force_capture()), // or Backtrace::disabled()
+            backtrace: Arc::new(Backtrace::force_capture()), // or Backtrace::disabled()
         }
     }
 }
 
 /// AsRef
-impl<T: std::error::Error> AsRef<T> for LocatedError<T> {
+impl<T: Error> AsRef<T> for LocatedError<T> {
     fn as_ref(&self) -> &T {
         &self.inner
     }
 }
 
 /// Deref
-impl<T: std::error::Error> Deref for LocatedError<T> {
+impl<T: Error> Deref for LocatedError<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -195,20 +197,20 @@ impl<T: std::error::Error> Deref for LocatedError<T> {
 }
 
 /// Borrow
-impl<T: std::error::Error> std::borrow::Borrow<T> for LocatedError<T> {
+impl<T: Error> borrow::Borrow<T> for LocatedError<T> {
     fn borrow(&self) -> &T {
         &self.inner
     }
 }
 
 // Send
-unsafe impl<T: std::error::Error + Send> Send for LocatedError<T> {}
+unsafe impl<T: Error + Send> Send for LocatedError<T> {}
 
 /// Sync
-unsafe impl<T: std::error::Error + Sync> Sync for LocatedError<T> {}
+unsafe impl<T: Error + Sync> Sync for LocatedError<T> {}
 
 // Clone
-impl<T: std::error::Error + Clone> Clone for LocatedError<T> {
+impl<T: Error + Clone> Clone for LocatedError<T> {
     fn clone(&self) -> Self {
         LocatedError {
             inner: self.inner.clone(),

@@ -1,0 +1,22 @@
+[package]
+name = "macaddr-oui"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+categories.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+repository.workspace = true
+
+[features]
+default = ["std", "serde", "pnet"]
+
+std = ["pnet_base/std", "serde/std", "thiserror/std"]
+pnet = []
+serde = ["dep:serde"]
+
+[dependencies]
+pnet_base = { version = "0.35.0", default-features = false }
+serde = { version = "1.0.228", default-features = false, optional = true }
+thiserror = { version = "2.0.18", default-features = false }

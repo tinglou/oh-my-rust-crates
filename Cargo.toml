@@ -1,7 +1,12 @@
 [workspace]
 resolver = "2"
 
-members = ["backerror", "backerror-macros"]
+members = [
+    "backerror-rs/backerror",
+    "backerror-rs/backerror-macros",
+    "macaddr/macaddr-oui",
+    "macaddr/macaddr-oui-codegen",
+]
 
 [workspace.package]
 version = "0.1.2"
@@ -14,5 +19,4 @@ keywords = ["error", "error-handling", "backtrace", "stacktrace", "thiserror"]
 repository = "https://github.com/tinglou/backerror-rs"
 
 [workspace.dependencies]
-backerror = { path = "./backerror", version = "0.1.2" }
-backerror-macros = { path = "./backerror-macros", version = "0.1.2" }
+backerror-macros = { path = "backerror-rs/backerror-macros", version = "0.1.2" }
