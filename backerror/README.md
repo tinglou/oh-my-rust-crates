@@ -33,53 +33,53 @@ thiserror = "2.0"
 ### Example Codes
 
 ```rust
-    use backerror::backerror;
-    use thiserror::Error;
+use backerror::backerror;
+use thiserror::Error;
 
-    #[backerror]
-    #[derive(Debug, Error)]
-    #[error(transparent)]
-    pub struct MyError1(#[from] std::io::Error);
+#[backerror]
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct MyError1(#[from] std::io::Error);
 
-    #[backerror]
-    #[derive(Debug, Error)]
-    pub enum MyError2 {
-        #[error("By MyError2: {0}")]
-        MyError1(#[from] MyError1),
-    }
+#[backerror]
+#[derive(Debug, Error)]
+pub enum MyError2 {
+    #[error("By MyError2: {0}")]
+    My1(#[from] MyError1),
+}
 
-    #[backerror]
-    #[derive(Debug, Error)]
-    pub enum MyError3 {
-        #[error("By MyError3: {0}")]
-        MyError2(#[from] MyError2),
-    }
+#[backerror]
+#[derive(Debug, Error)]
+pub enum MyError3 {
+    #[error("By MyError3: {0}")]
+    My2(#[from] MyError2),
+}
 
-    fn throw_error1() -> Result<(), MyError1> {
-        std::fs::File::open("blurb.txt")?;
-        Ok(())
-    }
+fn throw_error1() -> Result<(), MyError1> {
+    std::fs::File::open("blurb.txt")?;
+    Ok(())
+}
 
-    fn throw_error2() -> Result<(), MyError2> {
-        Ok(throw_error1()?)
-    }
-    fn throw_error3() -> Result<(), MyError3> {
-        Ok(throw_error2()?)
-    }
+fn throw_error2() -> Result<(), MyError2> {
+    Ok(throw_error1()?)
+}
+fn throw_error3() -> Result<(), MyError3> {
+    Ok(throw_error2()?)
+}
 
-    #[test]
-    fn test_display() {
-        if let Err(err) = throw_error3() {
-            println!("{}", err);
-        }
+#[test]
+fn test_display() {
+    if let Err(err) = throw_error3() {
+        println!("{}", err);
     }
+}
 
-    #[test]
-    fn test_debug() {
-        if let Err(e) = throw_error3() {
-            println!("{:?}", e);
-        }
+#[test]
+fn test_debug() {
+    if let Err(e) = throw_error3() {
+        println!("{:?}", e);
     }
+}
 ```
 
 ### Example Output
@@ -87,41 +87,46 @@ thiserror = "2.0"
 #### Display Output(`to_string`)
 
 ```text
-By MyError3: By MyError2: The system cannot find the file specified. (os error 2); Caused by example::tests::MyError2 (backerror\tests\example.rs:36:12); Caused by example::tests::MyError1 (backerror\tests\example.rs:33:12); Caused by std::io::error::Error(backerror\tests\example.rs:28:9);
+By MyError3: By MyError2: The system cannot find the file specified. (os error 2); Caused by example::MyError2 (backerror\tests\example.rs:32:8); Caused by example::MyError1 (backerror\tests\example.rs:29:8); Caused by std::io::error::Error(backerror\tests\example.rs:24:5);
 ```
 
 #### Debug Output
 
 ```text
-MyError2(MyError1(MyError1(Os { code: 2, kind: NotFound, message: "The system cannot find the file specified." } (backerror\tests\example.rs:27:9)
-Caused by: example::tests::MyError2: By MyError2: The system cannot find the file specified. (os error 2)
-        at example::tests::impl$10::from (.\tests\example.rs:19)
-        at core::result::impl$28::from_residual<tuple$<>,enum2$<example::tests::MyError2>,enum2$<example::tests::MyError3> > (C:\Users\admin\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\result.rs:2177)
-Caused by: example::tests::MyError1: The system cannot find the file specified. (os error 2)
-        at example::tests::impl$5::from (.\tests\example.rs:12)
-        at core::result::impl$28::from_residual<tuple$<>,example::tests::MyError1,enum2$<example::tests::MyError2> > (C:\Users\admin\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\result.rs:2177)
-Caused by: std::io::error::Error: The system cannot find the file specified. (os error 2)
-        at example::tests::impl$0::from (.\tests\example.rs:7)
-        at core::result::impl$28::from_residual<tuple$<>,std::io::error::Error,example::tests::MyError1> (C:\Users\admin\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\result.rs:2177)
-        at example::tests::throw_error1 (.\tests\example.rs:27)
-        at example::tests::throw_error2 (.\tests\example.rs:32)
-        at example::tests::throw_error3 (.\tests\example.rs:35)
-        at example::tests::test_debug (.\tests\example.rs:47)
-        at example::tests::test_debug::closure$0 (.\tests\example.rs:46)
-        at core::ops::function::FnOnce::call_once<example::tests::test_debug::closure_env$0,tuple$<> > (C:\Users\admin\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\ops\function.rs:250)
-        at core::ops::function::FnOnce::call_once (/rustc/f8297e351a40c1439a467bbbb6879088047f50b3/library\core\src\ops\function.rs:250)
-        at test::__rust_begin_short_backtrace<enum2$<core::result::Result<tuple$<>,alloc::string::String> >,enum2$<core::result::Result<tuple$<>,alloc::string::String> > (*)()> (/rustc/f8297e351a40c1439a467bbbb6879088047f50b3/library\test\src\lib.rs:663)
-        at test::run_test_in_process (/rustc/f8297e351a40c1439a467bbbb6879088047f50b3/library\test\src\lib.rs:686)
-        at test::run_test::closure$0 (/rustc/f8297e351a40c1439a467bbbb6879088047f50b3/library\test\src\lib.rs:607)
-        at test::run_test::closure$1 (/rustc/f8297e351a40c1439a467bbbb6879088047f50b3/library\test\src\lib.rs:637)
-        at std::sys::backtrace::__rust_begin_short_backtrace<test::run_test::closure_env$1,tuple$<> > (/rustc/f8297e351a40c1439a467bbbb6879088047f50b3/library\std\src\sys\backtrace.rs:158)
-        at core::ops::function::FnOnce::call_once<std::thread::impl$0::spawn_unchecked_::closure_env$1<test::run_test::closure_env$1,tuple$<> >,tuple$<> > (/rustc/f8297e351a40c1439a467bbbb6879088047f50b3/library\core\src\ops\function.rs:250)
-        at alloc::boxed::impl$29::call_once (/rustc/f8297e351a40c1439a467bbbb6879088047f50b3/library\alloc\src\boxed.rs:1985)
-        at alloc::boxed::impl$29::call_once (/rustc/f8297e351a40c1439a467bbbb6879088047f50b3/library\alloc\src\boxed.rs:1985)
-        at std::sys::thread::windows::impl$0::new::thread_start (/rustc/f8297e351a40c1439a467bbbb6879088047f50b3/library\std\src\sys\thread\windows.rs:60)
+My2(My1(MyError1(Os { code: 2, kind: NotFound, message: "The system cannot find the file specified." }
+Caused by: example::MyError2: By MyError2: The system cannot find the file specified. (os error 2) (backerror\tests\example.rs:32:8)
+        at example::impl$10::from (.\tests\example.rs:16)
+        at core::result::impl$28::from_residual<tuple$<>,enum2$<example::MyError2>,enum2$<example::MyError3> > (C:\Users\admin\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\result.rs:2189)
+        at example::throw_error3 (.\tests\example.rs:32)
+        at example::test_debug (.\tests\example.rs:44)
+        at example::test_debug::closure$0 (.\tests\example.rs:43)
+        at core::ops::function::FnOnce::call_once<example::test_debug::closure_env$0,tuple$<> > (C:\Users\admin\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\ops\function.rs:250)
+        at core::ops::function::FnOnce::call_once (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\core\src\ops\function.rs:250)
+        at test::__rust_begin_short_backtrace<enum2$<core::result::Result<tuple$<>,alloc::string::String> >,enum2$<core::result::Result<tuple$<>,alloc::string::String> > (*)()> (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\test\src\lib.rs:663)
+        at test::run_test_in_process (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\test\src\lib.rs:686)
+        at test::run_test::closure$0 (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\test\src\lib.rs:607)
+        at test::run_test::closure$1 (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\test\src\lib.rs:637)
+        at std::sys::backtrace::__rust_begin_short_backtrace<test::run_test::closure_env$1,tuple$<> > (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\std\src\sys\backtrace.rs:160)
+        at std::thread::lifecycle::spawn_unchecked::closure$1::closure$0 (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\std\src\thread\lifecycle.rs:92)
+        at core::panic::unwind_safe::impl$25::call_once (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\core\src\panic\unwind_safe.rs:274)
+        at std::panicking::catch_unwind::do_call (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\std\src\panicking.rs:581)
+        at std::panicking::catch_unwind (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\std\src\panicking.rs:544)
+        at std::panic::catch_unwind (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\std\src\panic.rs:359)
+        at std::thread::lifecycle::spawn_unchecked::closure$1 (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\std\src\thread\lifecycle.rs:90)
+        at core::ops::function::FnOnce::call_once<std::thread::lifecycle::spawn_unchecked::closure_env$1<test::run_test::closure_env$1,tuple$<> >,tuple$<> > (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\core\src\ops\function.rs:250)
+        at std::sys::thread::windows::impl$0::new::thread_start (/rustc/254b59607d4417e9dffbc307138ae5c86280fe4c/library\std\src\sys\thread\windows.rs:59)
         at BaseThreadInitThunk
         at RtlUserThreadStart
-) (backerror\tests\example.rs:32:12)) (backerror\tests\example.rs:35:12))
+Caused by: example::MyError1: The system cannot find the file specified. (os error 2) (backerror\tests\example.rs:29:8)
+        at example::impl$5::from (.\tests\example.rs:9)
+        at core::result::impl$28::from_residual<tuple$<>,example::MyError1,enum2$<example::MyError2> > (C:\Users\admin\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\result.rs:2189)
+        at example::throw_error2 (.\tests\example.rs:29)
+Caused by: std::io::error::Error: The system cannot find the file specified. (os error 2) (backerror\tests\example.rs:24:5)
+        at example::impl$0::from (.\tests\example.rs:4)
+        at core::result::impl$28::from_residual<tuple$<>,std::io::error::Error,example::MyError1> (C:\Users\admin\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\result.rs:2189)
+        at example::throw_error1 (.\tests\example.rs:24)
+)
+)
 ```
 
 ## Rust Features

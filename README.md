@@ -33,53 +33,53 @@ thiserror = "2.0"
 ### Example Codes
 
 ```rust
-    use backerror::backerror;
-    use thiserror::Error;
+use backerror::backerror;
+use thiserror::Error;
 
-    #[backerror]
-    #[derive(Debug, Error)]
-    #[error(transparent)]
-    pub struct MyError1(#[from] std::io::Error);
+#[backerror]
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub struct MyError1(#[from] std::io::Error);
 
-    #[backerror]
-    #[derive(Debug, Error)]
-    pub enum MyError2 {
-        #[error("By MyError2: {0}")]
-        MyError1(#[from] MyError1),
-    }
+#[backerror]
+#[derive(Debug, Error)]
+pub enum MyError2 {
+    #[error("By MyError2: {0}")]
+    MyError1(#[from] MyError1),
+}
 
-    #[backerror]
-    #[derive(Debug, Error)]
-    pub enum MyError3 {
-        #[error("By MyError3: {0}")]
-        MyError2(#[from] MyError2),
-    }
+#[backerror]
+#[derive(Debug, Error)]
+pub enum MyError3 {
+    #[error("By MyError3: {0}")]
+    MyError2(#[from] MyError2),
+}
 
-    fn throw_error1() -> Result<(), MyError1> {
-        std::fs::File::open("blurb.txt")?;
-        Ok(())
-    }
+fn throw_error1() -> Result<(), MyError1> {
+    std::fs::File::open("blurb.txt")?;
+    Ok(())
+}
 
-    fn throw_error2() -> Result<(), MyError2> {
-        Ok(throw_error1()?)
-    }
-    fn throw_error3() -> Result<(), MyError3> {
-        Ok(throw_error2()?)
-    }
+fn throw_error2() -> Result<(), MyError2> {
+    Ok(throw_error1()?)
+}
+fn throw_error3() -> Result<(), MyError3> {
+    Ok(throw_error2()?)
+}
 
-    #[test]
-    fn test_display() {
-        if let Err(err) = throw_error3() {
-            println!("{}", err);
-        }
+#[test]
+fn test_display() {
+    if let Err(err) = throw_error3() {
+        println!("{}", err);
     }
+}
 
-    #[test]
-    fn test_debug() {
-        if let Err(e) = throw_error3() {
-            println!("{:?}", e);
-        }
+#[test]
+fn test_debug() {
+    if let Err(e) = throw_error3() {
+        println!("{:?}", e);
     }
+}
 ```
 
 ### Example Output
@@ -100,9 +100,6 @@ Caused by: example::tests::MyError2: By MyError2: The system cannot find the fil
 Caused by: example::tests::MyError1: The system cannot find the file specified. (os error 2)
         at example::tests::impl$5::from (.\tests\example.rs:12)
         at core::result::impl$28::from_residual<tuple$<>,example::tests::MyError1,enum2$<example::tests::MyError2> > (C:\Users\admin\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\result.rs:2177)
-Caused by: std::io::error::Error: The system cannot find the file specified. (os error 2)
-        at example::tests::impl$0::from (.\tests\example.rs:7)
-        at core::result::impl$28::from_residual<tuple$<>,std::io::error::Error,example::tests::MyError1> (C:\Users\admin\.rustup\toolchains\stable-x86_64-pc-windows-msvc\lib\rustlib\src\rust\library\core\src\result.rs:2177)
         at example::tests::throw_error1 (.\tests\example.rs:27)
         at example::tests::throw_error2 (.\tests\example.rs:32)
         at example::tests::throw_error3 (.\tests\example.rs:35)

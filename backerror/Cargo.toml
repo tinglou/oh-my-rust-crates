@@ -1,7 +1,6 @@
 [package]
 name = "backerror"
 description = "Java style backtrace for Rust"
-readme = "../README.md"
 
 version.workspace = true
 authors.workspace = true
@@ -12,7 +11,6 @@ documentation.workspace = true
 keywords.workspace = true
 repository.workspace = true
 
-include = ["**/*.rs", "Cargo.toml", "../README.md"]
 
 [dependencies]
 backerror-macros = { workspace = true }
