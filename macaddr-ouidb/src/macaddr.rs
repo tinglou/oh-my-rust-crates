@@ -11,13 +11,37 @@ pub const ETHER_ADDR_LEN: usize = 6;
 const LOCAL_ADDR_BIT: u8 = 0x02;
 const MULTICAST_ADDR_BIT: u8 = 0x01;
 
+#[derive(Debug, thiserror::Error, PartialEq, Eq, Clone)]
+pub enum ParseMacError {
+    #[error("Invalid length")]
+    InvalidLength,
+    #[error("Invalid digit")]
+    InvalidDigit,
+}
+
 /// Mac Address
 #[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 pub struct MacAddress(pub(crate) [u8; 6]);
+
 impl MacAddress {
+    /// Construct a new `MacAddress` instance
     pub const fn new(mac: [u8; 6]) -> Self {
         MacAddress(mac)
+    }
+
+    /// Construct a new `MacAddress` instance from 6 components
+    pub const fn new6(a: u8, b: u8, c: u8, d: u8, e: u8, f: u8) -> Self {
+        MacAddress([a, b, c, d, e, f])
+    }
+
+    /// Construct a new `MacAddress` instance from slice
+    pub const fn from_slice(mac: &[u8]) -> Result<Self, ParseMacError> {
+        if mac.len() != 6 {
+            return Err(ParseMacError::InvalidLength);
+        }
+        let bytes = [mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]];
+        Ok(MacAddress(bytes))
     }
 
     /// Construct an all-zero `MacAddr` instance.
@@ -60,16 +84,8 @@ impl MacAddress {
         *self == Self::broadcast()
     }
 
-    pub fn octets(&self) -> &[u8] {
-        &self.0
-    }
-
-    pub const fn from_slice(mac: &[u8]) -> Option<Self> {
-        if mac.len() != 6 {
-            return None;
-        }
-        let bytes = [mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]];
-        Some(MacAddress(bytes))
+    pub fn octets(&self) -> [u8; 6] {
+        self.0
     }
 }
 
@@ -116,14 +132,6 @@ impl Sub for &MacAddress {
             | (rhs.0[5] as u64);
         self_val as i64 - rhs_val as i64
     }
-}
-
-#[derive(Debug, thiserror::Error, PartialEq)]
-pub enum ParseMacError {
-    #[error("Invalid length")]
-    InvalidLength,
-    #[error("Invalid digit")]
-    InvalidDigit,
 }
 
 impl FromStr for MacAddress {

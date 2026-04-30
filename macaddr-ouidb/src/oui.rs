@@ -140,10 +140,7 @@ impl OuiDb {
     //    - `01`: Look up in `oui_28` subtable using `mac[3] & 0xF0`
     //    - `02`: Look up in `oui_32` subtable using `mac[3]`
     //    - `03`: Look up in `oui_36` subtable using `mac[3]` and `mac[4] & 0xF0` combined
-    pub fn lookup(&self, mac: &[u8]) -> Option<&'static str> {
-        if mac.len() != 6 {
-            return None;
-        }
+    pub fn lookup(&self, mac: [u8; 6]) -> Option<&'static str> {
         // 1. 提取前 3 字节作为 oui_24 的查找键
         let key3 = [mac[0], mac[1], mac[2]];
 

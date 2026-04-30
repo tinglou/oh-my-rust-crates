@@ -6,15 +6,15 @@ use macaddr_ouidb::{MacAddress, OuiDb, OUI_DB};
 fn test_mac_address_parsing() {
     // 测试冒号分隔格式
     let mac1: MacAddress = "00:55:DA:0A:BB:CC".parse().unwrap();
-    assert_eq!(mac1.octets(), &[0x00, 0x55, 0xDA, 0x0A, 0xBB, 0xCC]);
+    assert_eq!(mac1.octets(), [0x00, 0x55, 0xDA, 0x0A, 0xBB, 0xCC]);
 
     // 测试横线分隔格式
     let mac2: MacAddress = "00-55-DA-0A-BB-CC".parse().unwrap();
-    assert_eq!(mac2.octets(), &[0x00, 0x55, 0xDA, 0x0A, 0xBB, 0xCC]);
+    assert_eq!(mac2.octets(), [0x00, 0x55, 0xDA, 0x0A, 0xBB, 0xCC]);
 
     // 测试大小写不敏感
     let mac3: MacAddress = "00:55:da:0a:bb:cc".parse().unwrap();
-    assert_eq!(mac3.octets(), &[0x00, 0x55, 0xDA, 0x0A, 0xBB, 0xCC]);
+    assert_eq!(mac3.octets(), [0x00, 0x55, 0xDA, 0x0A, 0xBB, 0xCC]);
 }
 
 #[test]
@@ -184,19 +184,19 @@ fn test_oui_subtable_name() {
 fn test_mac_address_from_bytes() {
     let bytes = [0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC];
     let mac = MacAddress::from(bytes);
-    assert_eq!(mac.octets(), &bytes);
+    assert_eq!(mac.octets(), bytes);
 }
 
 #[test]
 fn test_mac_address_from_slice() {
     let bytes = [0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC];
     let mac = MacAddress::from_slice(&bytes);
-    assert_eq!(mac, Some(MacAddress::from(bytes)));
+    assert_eq!(mac, Ok(MacAddress::from(bytes)));
 
     // 错误长度
     let wrong_bytes = [0x12, 0x34, 0x56];
     let mac = MacAddress::from_slice(&wrong_bytes);
-    assert_eq!(mac, None);
+    assert!(mac.is_err());
 }
 
 #[test]
