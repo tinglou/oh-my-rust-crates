@@ -1,7 +1,11 @@
 [package]
 name = "backerror-macros"
 description = "Java style backtrace for Rust"
-categories = ["rust-patterns", "development-tools::debugging"]
+categories = [
+    "rust-patterns",
+    "development-tools::debugging",
+    "no-std",
+] # https://crates.io/category_slugs
 documentation = "https://docs.rs/backerror/"
 keywords = ["error", "error-handling", "backtrace", "stacktrace", "thiserror"]
 

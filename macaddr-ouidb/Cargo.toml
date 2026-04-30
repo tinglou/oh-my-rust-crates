@@ -1,8 +1,14 @@
 [package]
 name = "macaddr-ouidb"
-categories = ["rust-patterns", "development-tools::debugging"]
-documentation = "https://docs.rs/backerror/"
-keywords = ["error", "error-handling", "backtrace", "stacktrace", "thiserror"]
+description = "Mac Address and OUI(Organizationally Unique Identifiers) database"
+
+categories = [
+    "network-programming",
+    "no-std::no-alloc",
+    "no-std",
+] # https://crates.io/category_slugs
+documentation = "https://docs.rs/macaddr-ouidb/"
+keywords = ["mac", "oui", "network", "eui48", "wireshark", "ethernet", "address", "lookup"]
 
 version.workspace = true
 authors.workspace = true
