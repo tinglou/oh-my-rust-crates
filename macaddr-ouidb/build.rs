@@ -577,6 +577,7 @@ impl OuiDataBuilder {
         code.push_str("];\n\n");
 
         // 生成 OuiDb 常量
+        code.push_str("/// Global static instance of OuiDb\n");
         code.push_str("pub const OUI_DB: OuiDb = OuiDb {\n");
         code.push_str("    names: OUI_NAMES,\n");
         code.push_str("    oui_24: &OUI_24_TABLE,\n");

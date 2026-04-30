@@ -1,5 +1,6 @@
 use core::fmt;
 use core::str::FromStr;
+use core::ops::Sub;
 
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -94,6 +95,26 @@ impl fmt::Display for MacAddress {
             "{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
             self.0[0], self.0[1], self.0[2], self.0[3], self.0[4], self.0[5]
         )
+    }
+}
+
+impl Sub for &MacAddress {
+    type Output = i64;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let self_val = ((self.0[0] as u64) << 40)
+            | ((self.0[1] as u64) << 32)
+            | ((self.0[2] as u64) << 24)
+            | ((self.0[3] as u64) << 16)
+            | ((self.0[4] as u64) << 8)
+            | (self.0[5] as u64);
+        let rhs_val = ((rhs.0[0] as u64) << 40)
+            | ((rhs.0[1] as u64) << 32)
+            | ((rhs.0[2] as u64) << 24)
+            | ((rhs.0[3] as u64) << 16)
+            | ((rhs.0[4] as u64) << 8)
+            | (rhs.0[5] as u64);
+        self_val as i64 - rhs_val as i64
     }
 }
 

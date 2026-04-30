@@ -1,6 +1,6 @@
 //! macaddr-oui 集成测试
 
-use macaddr_oui::{MacAddress, OUI_DB, OuiDb};
+use macaddr_ouidb::{MacAddress, OUI_DB, OuiDb};
 
 #[test]
 fn test_mac_address_parsing() {
@@ -55,22 +55,22 @@ fn test_oui_lookup_24bit() {
     
     // Xerox (00:00:00)
     let mac: MacAddress = "00:00:01:00:00:00".parse().unwrap();
-    let org = OUI_DB.lookup(mac);
+    let org = OUI_DB.lookup_mac(mac);
     assert_eq!(org, Some("Xerox"));
 
     // Cisco Systems (00:00:0C)
     let mac: MacAddress = "00:00:0C:00:00:00".parse().unwrap();
-    let org = OUI_DB.lookup(mac);
+    let org = OUI_DB.lookup_mac(mac);
     assert_eq!(org, Some("Cisco Systems"));
 
     // Microsoft (00:03:FF)
     let mac: MacAddress = "00:03:FF:00:00:00".parse().unwrap();
-    let org = OUI_DB.lookup(mac);
+    let org = OUI_DB.lookup_mac(mac);
     assert_eq!(org, Some("Microsoft"));
     
     // Apple (00:03:93)
     let mac: MacAddress = "00:03:93:FF:FF:FF".parse().unwrap();
-    let org = OUI_DB.lookup(mac);
+    let org = OUI_DB.lookup_mac(mac);
     assert_eq!(org, Some("Apple"));
 }
 
@@ -81,15 +81,15 @@ fn test_oui_lookup_28bit() {
     
     // 00:55:DA 前缀下的 28 位条目
     let mac: MacAddress = "00:55:DA:0A:BB:CC".parse().unwrap();
-    let org = OUI_DB.lookup(mac);
+    let org = OUI_DB.lookup_mac(mac);
     assert!(org.is_some(), "28-bit OUI lookup failed for 00:55:DA:0A:BB:CC");
     println!("28-bit OUI: 00:55:DA:0A:BB:CC -> {}", org.unwrap());
 
     // 同一 24 位前缀下，不同 28 位子条目应该匹配不同组织
     let mac1: MacAddress = "00:55:DA:00:00:00".parse().unwrap();
     let mac2: MacAddress = "00:55:DA:10:00:00".parse().unwrap();
-    let org1 = OUI_DB.lookup(mac1);
-    let org2 = OUI_DB.lookup(mac2);
+    let org1 = OUI_DB.lookup_mac(mac1);
+    let org2 = OUI_DB.lookup_mac(mac2);
     
     // 都应该有结果（可能相同也可能不同）
     assert!(org1.is_some(), "28-bit OUI lookup failed for 00:55:DA:00:00:00");
@@ -98,7 +98,7 @@ fn test_oui_lookup_28bit() {
     // 验证 28 位子表确实被使用（不是简单的 24 位匹配）
     // 如果第 4 字节不在子表范围内，应该回退到 24 位或返回 None
     let mac_fallback: MacAddress = "00:55:DA:F0:00:00".parse().unwrap();
-    let org_fallback = OUI_DB.lookup(mac_fallback);
+    let org_fallback = OUI_DB.lookup_mac(mac_fallback);
     // 这个可能匹配 24 位条目或 28 位条目
     assert!(org_fallback.is_some() || org_fallback.is_none());
 }
@@ -110,14 +110,14 @@ fn test_oui_lookup_36bit() {
     
     // 00:16:E3 前缀下的 36 位条目
     let mac: MacAddress = "00:16:E3:00:00:00".parse().unwrap();
-    let org = OUI_DB.lookup(mac);
+    let org = OUI_DB.lookup_mac(mac);
     assert!(org.is_some(), "36-bit OUI lookup failed for 00:16:E3:00:00:00");
     println!("36-bit OUI: 00:16:E3:00:00:00 -> {:?}", org);
     
     // 验证 36 位子表被使用
     // 00:16:E3 是 24 位前缀，但它的某些第 4 字节有 36 位子表
     let mac2: MacAddress = "00:16:E3:80:00:00".parse().unwrap();
-    let org2 = OUI_DB.lookup(mac2);
+    let org2 = OUI_DB.lookup_mac(mac2);
     assert!(org2.is_some(), "36-bit OUI lookup failed for 00:16:E3:80:00:00");
     
     // 不同的第 4 字节应该能匹配到不同结果
@@ -134,12 +134,12 @@ fn test_oui_lookup_not_found() {
     
     // FF:FF:FF 不是有效的 OUI 前缀
     let mac: MacAddress = "FF:FF:FF:00:00:00".parse().unwrap();
-    let org = OUI_DB.lookup(mac);
+    let org = OUI_DB.lookup_mac(mac);
     assert_eq!(org, None, "Expected None for unallocated OUI FF:FF:FF");
     
     // 某些未分配的地址段
     let mac2: MacAddress = "FE:FF:FF:00:00:00".parse().unwrap();
-    let org2 = OUI_DB.lookup(mac2);
+    let org2 = OUI_DB.lookup_mac(mac2);
     assert_eq!(org2, None, "Expected None for unallocated OUI FE:FF:FF");
     
     println!("Correctly returns None for unallocated OUI addresses");
@@ -214,7 +214,7 @@ fn test_oui_lookup_batch() {
 
     for (mac_str, expected_org) in test_cases {
         let mac: MacAddress = mac_str.parse().unwrap();
-        let org = OUI_DB.lookup(mac);
+        let org = OUI_DB.lookup_mac(mac);
         assert_eq!(org, Some(expected_org), "Failed for MAC: {}", mac_str);
     }
 }
@@ -235,7 +235,7 @@ fn test_oui_database_coverage() {
     let mut found_count = 0;
     for addr in test_addresses {
         let mac: MacAddress = addr.parse().unwrap();
-        if OUI_DB.lookup(mac).is_some() {
+        if OUI_DB.lookup_mac(mac).is_some() {
             found_count += 1;
         }
     }
@@ -250,25 +250,25 @@ fn test_oui_all_types_coverage() {
     
     // === 24 位 OUI (MA-L) ===
     let mac_24: MacAddress = "00:00:01:00:00:00".parse().unwrap();
-    let org_24 = OUI_DB.lookup(mac_24);
+    let org_24 = OUI_DB.lookup_mac(mac_24);
     assert_eq!(org_24, Some("Xerox"), "24-bit OUI lookup failed");
     println!("✓ 24-bit OUI: {} -> {:?}", mac_24, org_24);
     
     // === 28 位 OUI (MA-M) ===
     let mac_28: MacAddress = "00:55:DA:00:00:00".parse().unwrap();
-    let org_28 = OUI_DB.lookup(mac_28);
+    let org_28 = OUI_DB.lookup_mac(mac_28);
     assert!(org_28.is_some(), "28-bit OUI lookup failed");
     println!("✓ 28-bit OUI: {} -> {:?}", mac_28, org_28);
     
     // === 36 位 OUI (MA-S) ===
     let mac_36: MacAddress = "00:16:E3:00:00:00".parse().unwrap();
-    let org_36 = OUI_DB.lookup(mac_36);
+    let org_36 = OUI_DB.lookup_mac(mac_36);
     assert!(org_36.is_some(), "36-bit OUI lookup failed");
     println!("✓ 36-bit OUI: {} -> {:?}", mac_36, org_36);
     
     // === 未分配 OUI ===
     let mac_none: MacAddress = "FF:FF:FF:00:00:00".parse().unwrap();
-    let org_none = OUI_DB.lookup(mac_none);
+    let org_none = OUI_DB.lookup_mac(mac_none);
     assert_eq!(org_none, None, "Should return None for unallocated OUI");
     println!("✓ Unallocated OUI: {} -> {:?}", mac_none, org_none);
     

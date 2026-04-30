@@ -1,3 +1,12 @@
+//！ # Organizationally Unique Identifiers (OUI) database
+//！ 
+//！ ## 查询
+//！ 1. 取 mac 前 3 个字节，二分查找 `OuiDb::oui_24` `prefix`, 找不到返回 None，获取 `loc` 对应值
+//！ 2. 如 loc bit-31-30 = 0，则计算 offset/length，返回 `OuiDb::names[offset..offset+length]`
+//！ 2. 如 loc bit-31-30 = 1，取 mac [第 4 个字节 & 0xF0], 查找 `OuiDb::oui_28`
+//！ 2. 如 loc bit-31-30 = 2，取 mac [第 4 个字节], 查找 `OuiDb::oui_32`
+//！ 2. 如 loc bit-31-30 = 3，取 mac [第 4 个字节，第 5 个字节 & 0xF0], 查找 `OuiDb::oui_36`
+//！ 
 use crate::MacAddress;
 
 const OUI_SUBTABLE: &str = "Ieee Registration Authority";
@@ -12,12 +21,7 @@ const OUI_VIRTUAL: [&'static str; 5] = [
 
 /// # Organizationally Unique Identifiers (OUI) database
 ///
-/// ## 查询
-/// 1. 取 mac 前 3 个字节，二分查找 `OuiDb::oui_24` `prefix`, 找不到返回 None，获取 `loc` 对应值
-/// 2. 如 loc bit-31-30 = 0，则计算 offset/length，返回 `OuiDb::names[offset..offset+length]`
-/// 2. 如 loc bit-31-30 = 1，取 mac [第 4 个字节 & 0xF0], 查找 `OuiDb::oui_28`
-/// 2. 如 loc bit-31-30 = 2，取 mac [第 4 个字节], 查找 `OuiDb::oui_32`
-/// 2. 如 loc bit-31-30 = 3，取 mac [第 4 个字节，第 5 个字节 & 0xF0], 查找 `OuiDb::oui_36`
+
 pub struct OuiDb {
     pub(crate) names: &'static str,
 
@@ -72,18 +76,70 @@ pub(crate) struct OuiSubtable<T: 'static> {
 }
 
 impl OuiDb {
+    /// Checks if the given OUI name corresponds to a virtual NIC.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The OUI name to check.
+    ///
+    /// # Returns
+    ///
+    /// Returns `true` if the name is a virtual NIC (e.g., QEMU, VirtualBox), otherwise `false`.
     pub fn is_virtual_nic(name: &str) -> bool {
         OUI_VIRTUAL.contains(&name)
     }
 
+    /// Returns the name identifier of the subtable (`oui_28`, `oui_32`, `oui_36`) in the database.
+    ///
+    /// # Returns
+    ///
+    /// Returns the subtable name string `"Ieee Registration Authority"`.
     pub fn oui_subtable_name() -> &'static str {
         OUI_SUBTABLE
     }
 
+    /// Looks up the organization name (OUI vendor information) for a given MAC address.
+    ///
+    /// # Arguments
+    ///
+    /// * `mac` - The MAC address as a [`MacAddress`] type.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Some(&'static str)` if the organization name is found, otherwise `None`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use macaddr_ouidb::*;
+    /// let mac = MacAddress::new([0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
+    /// let org = OUI_DB.lookup_mac(mac);
+    /// ```
     pub fn lookup_mac(&self, mac: MacAddress) -> Option<&'static str> {
         self.lookup(mac.octets())
     }
 
+    /// Looks up the organization name (OUI vendor information) for a given MAC address byte array.
+    ///
+    /// Supports 24-bit, 28-bit, 32-bit, and 36-bit OUI queries.
+    ///
+    /// # Arguments
+    ///
+    /// * `mac` - A 6-byte MAC address byte array.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Some(&'static str)` if the organization name is found. Returns `None` if the MAC
+    /// address length is not 6 bytes or no match is found.
+    ///
+    // # Query Logic
+    //
+    // 1. Extract the first 3 bytes and perform a binary search in `oui_24.prefix`
+    // 2. Based on `loc` bits 31-30, determine the type:
+    //    - `00`: Retrieve string from `names` using offset and length
+    //    - `01`: Look up in `oui_28` subtable using `mac[3] & 0xF0`
+    //    - `02`: Look up in `oui_32` subtable using `mac[3]`
+    //    - `03`: Look up in `oui_36` subtable using `mac[3]` and `mac[4] & 0xF0` combined
     pub fn lookup(&self, mac: &[u8]) -> Option<&'static str> {
         if mac.len() != 6 {
             return None;
