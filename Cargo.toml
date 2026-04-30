@@ -8,7 +8,7 @@ members = [
 ]
 
 # Exclude sample projects from workspace
-exclude = ["samples"]
+exclude = ["samples", "erfs"]
 
 [workspace.package]
 version = "0.1.4"

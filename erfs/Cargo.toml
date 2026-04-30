@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "erfs-rt",
+    "erfs-gen",
+    "erfs-example",
+]

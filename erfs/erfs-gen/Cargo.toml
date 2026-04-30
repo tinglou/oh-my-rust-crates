@@ -1,0 +1,22 @@
+[package]
+name = "erfs-gen"
+build = "build.rs"
+version = "0.1.1"
+authors = ["Lou, Ting <ting.lou@gmail.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+readme = "../README.md"
+repository = "https://github.com/tinglou/erfs"
+homepage = "https://github.com/tinglou/erfs"
+
+description = "Embedded resource file system(C/Rust): tool to generate C/Rust source files from a resource directory."
+
+[dependencies]
+deflate = "0.8.2"
+
+[build-dependencies]
+cc = { version = "1.0.50", features = ["parallel"] }
+bindgen = "0.49.4"
+
+
+[dev-dependencies]

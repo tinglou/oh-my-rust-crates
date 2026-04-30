@@ -1,0 +1,21 @@
+[package]
+name = "erfs-example"
+build = "build.rs"
+version = "0.1.1"
+authors = ["Lou, Ting <ting.lou@gmail.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+readme = "../README.md"
+repository = "https://github.com/tinglou/erfs"
+homepage = "https://github.com/tinglou/erfs"
+
+description = "Embedded resource file system (C/Rust): example."
+
+[dependencies]
+erfs-rt = { path = "../erfs-rt" }
+
+[build-dependencies]
+erfs-gen = { path = "../erfs-gen" }
+cc = { version = "1.0.50", features = ["parallel"] }
+
+[dev-dependencies]
