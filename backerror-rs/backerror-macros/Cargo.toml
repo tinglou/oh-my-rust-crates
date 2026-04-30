@@ -1,14 +1,14 @@
 [package]
 name = "backerror-macros"
 description = "Java style backtrace for Rust"
+categories = ["rust-patterns", "development-tools::debugging"]
+documentation = "https://docs.rs/backerror/"
+keywords = ["error", "error-handling", "backtrace", "stacktrace", "thiserror"]
 
 version.workspace = true
 authors.workspace = true
 license.workspace = true
 edition.workspace = true
-categories.workspace = true
-documentation.workspace = true
-keywords.workspace = true
 repository.workspace = true
 
 [lib]

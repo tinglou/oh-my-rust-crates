@@ -4,7 +4,7 @@ resolver = "2"
 members = [
     "backerror-rs/backerror",
     "backerror-rs/backerror-macros",
-    "macaddr/macaddr-oui",
+    "macaddr-ouidb",
 ]
 
 [workspace.package]
@@ -12,9 +12,6 @@ version = "0.1.2"
 authors = ["Ting Lou <ting.lou@gmail.com>"]
 license = "Apache-2.0"
 edition = "2021"
-categories = ["rust-patterns", "development-tools::debugging"]
-documentation = "https://docs.rs/backerror/"
-keywords = ["error", "error-handling", "backtrace", "stacktrace", "thiserror"]
 repository = "https://github.com/tinglou/backerror-rs"
 
 [workspace.dependencies]

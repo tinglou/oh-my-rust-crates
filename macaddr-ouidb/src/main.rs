@@ -6,7 +6,7 @@
 //!   macaddr-oui 00:55:DA:0A:BB:CC
 //!   macaddr-oui 00-55-DA-0A-BB-CC
 
-use macaddr_oui::{MacAddress, OUI_DB, OuiDb};
+use macaddr_ouidb::{MacAddress, OUI_DB, OuiDb};
 use std::env;
 use std::process;
 
@@ -57,7 +57,7 @@ fn main() {
     println!();
 
     // OUI 查询
-    match OUI_DB.lookup(mac) {
+    match OUI_DB.lookup_mac(mac) {
         Some(org_name) => {
             println!("Organization: {}", org_name);
             if OuiDb::is_virtual_nic(org_name) {

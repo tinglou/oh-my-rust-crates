@@ -2,6 +2,30 @@
 // DO NOT EDIT MANUALLY
 // rustfmt-off
 
+// === Generation Statistics ===
+// - Unique names: 29584
+// - Total length of names: 544883 bytes
+// - OUI-24 entries: 38938
+// - OUI-28 tables: 416
+// - OUI-32 tables: 0
+// - OUI-36 tables: 3
+// - Subtable-only prefixes: 8
+// - Generated file size: 1717221 bytes
+// ============================
+
+// === Subtable-Only Prefixes (No 24-bit OUI Entry) ===
+// These prefixes have only subtables (28/32/36-bit) without a 24-bit OUI entry
+// Format: // - XX:XX:XX (TYPE, N entries)
+// - 1C8774 (OUI-28, 15 entries)
+// - 1C8776 (OUI-28, 15 entries)
+// - 1C8779 (OUI-28, 15 entries)
+// - 1C8879 (OUI-28, 15 entries)
+// - 40A36B (OUI-28, 14 entries)
+// - 70886B (OUI-28, 11 entries)
+// - 8439BE (OUI-28, 13 entries)
+// - C898DB (OUI-28, 15 entries)
+// ================================================
+
 use crate::oui::{OuiSubtable, OuiTable};
 
 use crate::oui::OuiDb;
@@ -3694,7 +3718,7 @@ const OUI_36_TABLES: &[OuiSubtable<u16>] = &[
 
 pub const OUI_DB: OuiDb = OuiDb {
     names: OUI_NAMES,
-    oui_24: OUI_24_TABLE,
+    oui_24: &OUI_24_TABLE,
     oui_28: OUI_28_TABLES,
     oui_32: OUI_32_TABLES,
     oui_36: OUI_36_TABLES,

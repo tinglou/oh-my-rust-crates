@@ -21,7 +21,7 @@ const OUI_VIRTUAL: [&'static str; 5] = [
 pub struct OuiDb {
     pub(crate) names: &'static str,
 
-    pub(crate) oui_24: OuiTable<3>,
+    pub(crate) oui_24: &'static OuiTable<3>,
 
     pub(crate) oui_28: &'static [OuiSubtable<u8>],
 
@@ -60,19 +60,18 @@ pub struct OuiDb {
 type OuiLoc = u32;
 
 /// 列存储（节约内存，提升缓存利用率）
-pub struct OuiTable<const N: usize> {
+pub(crate) struct OuiTable<const N: usize> {
     pub(crate) prefix: &'static [[u8; N]],
     pub(crate) loc: &'static [OuiLoc],
 }
 
 /// 列存储（节约内存，提升缓存利用率）
-pub struct OuiSubtable<T: 'static> {
+pub(crate) struct OuiSubtable<T: 'static> {
     pub(crate) prefix: &'static [T],
     pub(crate) loc: &'static [OuiLoc],
 }
 
 impl OuiDb {
-
     pub fn is_virtual_nic(name: &str) -> bool {
         OUI_VIRTUAL.contains(&name)
     }
@@ -81,9 +80,16 @@ impl OuiDb {
         OUI_SUBTABLE
     }
 
-    pub fn lookup(&self, mac: MacAddress) -> Option<&'static str> {
+    pub fn lookup_mac(&self, mac: MacAddress) -> Option<&'static str> {
+        self.lookup(mac.octets())
+    }
+
+    pub fn lookup(&self, mac: &[u8]) -> Option<&'static str> {
+        if mac.len() != 6 {
+            return None;
+        }
         // 1. 提取前 3 字节作为 oui_24 的查找键
-        let key3 = [mac.0[0], mac.0[1], mac.0[2]];
+        let key3 = [mac[0], mac[1], mac[2]];
 
         // 2. 二分查找 oui_24
         let idx = match self.oui_24.prefix.binary_search(&key3) {
@@ -106,20 +112,20 @@ impl OuiDb {
             1 => {
                 // oui_28: 取 mac[3] & 0xF0
                 let sub_idx = (loc & 0xFFFF) as usize;
-                let key4 = mac.0[3] & 0xF0;
+                let key4 = mac[3] & 0xF0;
                 self.lookup_subtable(&self.oui_28[sub_idx], key4)
             }
             2 => {
                 // oui_32: 取 mac[3]
                 let sub_idx = (loc & 0xFFFF) as usize;
-                let key4 = mac.0[3];
+                let key4 = mac[3];
                 self.lookup_subtable(&self.oui_32[sub_idx], key4)
             }
             3 => {
                 // oui_36: 取 mac[3] 和 mac[4] & 0xF0
                 // 组合为 16 位：高 8 位是 mac[3], 低 8 位是 mac[4] & 0xF0
                 let sub_idx = (loc & 0xFFFF) as usize;
-                let key5 = ((mac.0[3] as u16) << 8) | ((mac.0[4] & 0xF0) as u16);
+                let key5 = ((mac[3] as u16) << 8) | ((mac[4] & 0xF0) as u16);
                 self.lookup_subtable(&self.oui_36[sub_idx], key5)
             }
             _ => None,
