@@ -1,8 +1,8 @@
+use core::any::type_name;
 use core::error::Error;
 use core::ops::Deref;
 use core::panic::Location;
 use core::{borrow, fmt, panic};
-use core::any::type_name;
 #[cfg(feature = "backtrace")]
 use std::backtrace::Backtrace;
 #[cfg(feature = "backtrace")]

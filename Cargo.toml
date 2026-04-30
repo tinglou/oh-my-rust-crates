@@ -7,6 +7,11 @@ members = [
     "macaddr-ouidb",
 ]
 
+
+# Exclude sample projects from workspace
+exclude = ["samples"]
+
+
 [workspace.package]
 version = "0.1.2"
 authors = ["Ting Lou <ting.lou@gmail.com>"]

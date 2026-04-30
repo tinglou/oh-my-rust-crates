@@ -6,7 +6,7 @@
 //!   macaddr-oui 00:55:DA:0A:BB:CC
 //!   macaddr-oui 00-55-DA-0A-BB-CC
 
-use macaddr_ouidb::{MacAddress, OUI_DB, OuiDb};
+use macaddr_ouidb::{MacAddress, OuiDb, OUI_DB};
 use std::env;
 use std::process;
 
@@ -41,19 +41,39 @@ fn main() {
     // 输出 MAC 地址信息
     println!("MAC Address: {}", mac);
     println!("Formatted:   {}", mac);
-    println!("Octets:      {:02X}-{:02X}-{:02X}-{:02X}-{:02X}-{:02X}",
-        mac.octets()[0], mac.octets()[1], mac.octets()[2],
-        mac.octets()[3], mac.octets()[4], mac.octets()[5]
+    println!(
+        "Octets:      {:02X}-{:02X}-{:02X}-{:02X}-{:02X}-{:02X}",
+        mac.octets()[0],
+        mac.octets()[1],
+        mac.octets()[2],
+        mac.octets()[3],
+        mac.octets()[4],
+        mac.octets()[5]
     );
     println!();
 
     // 地址类型
     println!("Address Type:");
-    println!("  Unicast:     {}", if mac.is_unicast() { "Yes" } else { "No" });
-    println!("  Multicast:   {}", if mac.is_multicast() { "Yes" } else { "No" });
-    println!("  Broadcast:   {}", if mac.is_broadcast() { "Yes" } else { "No" });
-    println!("  Universal:   {}", if mac.is_universal() { "Yes" } else { "No" });
-    println!("  Local:       {}", if mac.is_local() { "Yes" } else { "No" });
+    println!(
+        "  Unicast:     {}",
+        if mac.is_unicast() { "Yes" } else { "No" }
+    );
+    println!(
+        "  Multicast:   {}",
+        if mac.is_multicast() { "Yes" } else { "No" }
+    );
+    println!(
+        "  Broadcast:   {}",
+        if mac.is_broadcast() { "Yes" } else { "No" }
+    );
+    println!(
+        "  Universal:   {}",
+        if mac.is_universal() { "Yes" } else { "No" }
+    );
+    println!(
+        "  Local:       {}",
+        if mac.is_local() { "Yes" } else { "No" }
+    );
     println!();
 
     // OUI 查询

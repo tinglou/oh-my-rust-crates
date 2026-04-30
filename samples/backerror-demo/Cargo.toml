@@ -1,0 +1,8 @@
+[package]
+name = "backerror-demo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+backerror = { path = "../../backerror-rs/backerror" }
+thiserror = "2.0"

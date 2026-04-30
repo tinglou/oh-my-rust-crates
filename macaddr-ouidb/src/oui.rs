@@ -1,12 +1,12 @@
-//！ # Organizationally Unique Identifiers (OUI) database
-//！ 
-//！ ## 查询
-//！ 1. 取 mac 前 3 个字节，二分查找 `OuiDb::oui_24` `prefix`, 找不到返回 None，获取 `loc` 对应值
-//！ 2. 如 loc bit-31-30 = 0，则计算 offset/length，返回 `OuiDb::names[offset..offset+length]`
-//！ 2. 如 loc bit-31-30 = 1，取 mac [第 4 个字节 & 0xF0], 查找 `OuiDb::oui_28`
-//！ 2. 如 loc bit-31-30 = 2，取 mac [第 4 个字节], 查找 `OuiDb::oui_32`
-//！ 2. 如 loc bit-31-30 = 3，取 mac [第 4 个字节，第 5 个字节 & 0xF0], 查找 `OuiDb::oui_36`
-//！ 
+//! # Organizationally Unique Identifiers (OUI) database
+//!
+//! ## 查询
+//! 1. 取 mac 前 3 个字节，二分查找 `OuiDb::oui_24` `prefix`, 找不到返回 None，获取 `loc` 对应值
+//! 2. 如 loc bit-31-30 = 0，则计算 offset/length，返回 `OuiDb::names[offset..offset+length]`
+//! 2. 如 loc bit-31-30 = 1，取 mac [第 4 个字节 & 0xF0], 查找 `OuiDb::oui_28`
+//! 2. 如 loc bit-31-30 = 2，取 mac [第 4 个字节], 查找 `OuiDb::oui_32`
+//! 2. 如 loc bit-31-30 = 3，取 mac [第 4 个字节，第 5 个字节 & 0xF0], 查找 `OuiDb::oui_36`
+//!
 use crate::MacAddress;
 
 const OUI_SUBTABLE: &str = "Ieee Registration Authority";

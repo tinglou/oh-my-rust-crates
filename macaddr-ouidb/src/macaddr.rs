@@ -1,6 +1,6 @@
 use core::fmt;
-use core::str::FromStr;
 use core::ops::Sub;
+use core::str::FromStr;
 
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};

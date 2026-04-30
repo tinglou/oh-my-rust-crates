@@ -1,0 +1,8 @@
+[package]
+name = "backerror-nostd-demo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+backerror = { path = "../../backerror-rs/backerror", default-features = false }
+thiserror = "2.0"
