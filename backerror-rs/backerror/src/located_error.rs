@@ -33,11 +33,13 @@ impl<E: Error> Error for LocatedError<E> {
     }
 }
 
+#[cfg(feature = "backtrace")]
 const DEBUG_CAUSED_BY_PAT: &str = "Caused by: ";
 const DISPLAY_CAUSED_BY_PAT: &str = "; Caused by ";
 
 /// Display
 impl<E: Error> fmt::Display for LocatedError<E> {
+    #[cfg(feature = "std")]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let inner_msg = format!("{}", self.inner);
         if let Some(pos) = inner_msg.find(DISPLAY_CAUSED_BY_PAT) {
@@ -59,6 +61,17 @@ impl<E: Error> fmt::Display for LocatedError<E> {
             )
         }
     }
+
+    #[cfg(not(feature = "std"))]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{DISPLAY_CAUSED_BY_PAT}{}({});",
+            self.inner,
+            type_name::<E>(),
+            self.location,
+        )
+    }
 }
 
 /// Debug
@@ -67,7 +80,7 @@ impl<E: Error> fmt::Debug for LocatedError<E> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{:?}\n\tat ({}) by {}",
+            "{:?} at ({}) by {}",
             self.inner,
             self.location,
             type_name::<E>(), // name
@@ -81,7 +94,7 @@ impl<E: Error> fmt::Debug for LocatedError<E> {
         } else {
             write!(
                 f,
-                "{:?}\n\tat ({}) by {}",
+                "{:?} at ({}) by {}",
                 self.inner,
                 self.location,
                 type_name::<E>() // name
