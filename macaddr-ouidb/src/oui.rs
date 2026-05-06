@@ -25,12 +25,15 @@ const OUI_VIRTUAL: [&'static str; 5] = [
 pub struct OuiDb {
     pub(crate) names: &'static str,
 
+    /// MA-L(24 bit prefix) 24 bit ≈1677 万 传统大厂/运营商
     pub(crate) oui_24: &'static OuiTable<3>,
 
+    /// MA-M(28 bit prefix) 20 bit ≈104 万 中型设备商/模组厂
     pub(crate) oui_28: &'static [OuiSubtable<u8>],
 
     pub(crate) oui_32: &'static [OuiSubtable<u8>],
 
+    /// MA-S(36 bit prefix) 12 bit =4096 IoT/小微/专用硬件
     pub(crate) oui_36: &'static [OuiSubtable<u16>],
 }
 

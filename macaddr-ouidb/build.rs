@@ -373,17 +373,23 @@ impl OuiDataBuilder {
             unique_names_total_length
         ));
         code.push_str(&format!("// - OUI-24 entries: {}\n", oui24_prefixes.len()));
+        let oui28_entries: usize = self.oui28_tables.iter().map(|t| t.len()).sum();
         code.push_str(&format!(
-            "// - OUI-28 tables: {}\n",
-            self.oui28_tables.len()
+            "// - OUI-28 tables: {}, entries: {}\n",
+            self.oui28_tables.len(),
+            oui28_entries
         ));
+        let oui32_entries: usize = self.oui32_tables.iter().map(|t| t.len()).sum();
         code.push_str(&format!(
-            "// - OUI-32 tables: {}\n",
-            self.oui32_tables.len()
+            "// - OUI-32 tables: {}, entries: {}\n",
+            self.oui32_tables.len(),
+            oui32_entries
         ));
+        let oui36_entries: usize = self.oui36_tables.iter().map(|t| t.len()).sum();
         code.push_str(&format!(
-            "// - OUI-36 tables: {}\n",
-            self.oui36_tables.len()
+            "// - OUI-36 tables: {}, entries: {}\n",
+            self.oui36_tables.len(),
+            oui36_entries
         ));
         code.push_str(&format!(
             "// - Subtable-only prefixes: {}\n",
@@ -622,16 +628,19 @@ impl OuiDataBuilder {
         );
         println!("cargo:warning=  - OUI-24 entries: {}", oui24_prefixes.len());
         println!(
-            "cargo:warning=  - OUI-28 tables: {}",
-            self.oui28_tables.len()
+            "cargo:warning=  - OUI-28 tables: {}, entries: {}",
+            self.oui28_tables.len(),
+            oui28_entries
         );
         println!(
-            "cargo:warning=  - OUI-32 tables: {}",
-            self.oui32_tables.len()
+            "cargo:warning=  - OUI-32 tables: {}, entries: {}",
+            self.oui32_tables.len(),
+            oui32_entries
         );
         println!(
-            "cargo:warning=  - OUI-36 tables: {}",
-            self.oui36_tables.len()
+            "cargo:warning=  - OUI-36 tables: {}, entries: {}",
+            self.oui36_tables.len(),
+            oui36_entries
         );
         println!(
             "cargo:warning=  - Subtable-only prefixes: {}",
