@@ -156,6 +156,14 @@ impl core::convert::TryFrom<&'_ str> for MacAddress {
     }
 }
 
+impl core::convert::TryFrom<&'_ [u8]> for MacAddress {
+    type Error = ParseMacError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        Self::from_slice(value)
+    }
+}
+
 #[cfg(feature = "std")]
 impl core::convert::TryFrom<std::borrow::Cow<'_, str>> for MacAddress {
     type Error = ParseMacError;
