@@ -10,14 +10,13 @@ struct OuiEntry {
     prefix_str: String,
     /// 组织名称
     org_name: String,
-    /// 前缀位长度（24/28/32/36）
+    /// 前缀位长度（24/28/36）
     bit_len: usize,
 }
 
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 enum SubtableRef {
     Oui28(usize),
-    Oui32(usize),
     Oui36(usize),
 }
 
@@ -25,13 +24,6 @@ enum SubtableRef {
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 struct Oui28Entry {
     prefix: u8, // 高 4 位有效
-    name_idx: usize,
-}
-
-/// 32 位子表条目
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-struct Oui32Entry {
-    prefix: u8,
     name_idx: usize,
 }
 
@@ -63,19 +55,17 @@ fn parse_nmap_file(path: &Path) -> Vec<OuiEntry> {
         let org_name = parts.next().unwrap_or("").trim();
 
         // 根据前缀长度判断位数
-        // 6 字符 = 24 位，7 字符 = 28 位，8 字符 = 32 位，9 字符 = 36 位
+        // 6 字符 = 24 位，7 字符 = 28 位，8 字符 = 36 位
         let bit_len = match prefix_str.len() {
             6 => 24,
             7 => 28,
-            8 => 32,
             9 => 36,
             _ => {
-                eprintln!(
-                    "Warning: skipping invalid prefix length {}: {}",
+                panic!(
+                    "Invalid prefix length {} for '{}': expected 6, 7, or 9 characters (24, 28, or 36 bits)",
                     prefix_str.len(),
                     prefix_str
                 );
-                continue;
             }
         };
 
@@ -101,10 +91,6 @@ struct OuiDataBuilder {
     oui28_tables: Vec<Vec<Oui28Entry>>,
     /// 28 位子表索引到 24 位前缀的映射
     oui28_idx_to_prefix: BTreeMap<usize, [u8; 3]>,
-    /// 32 位子表列表
-    oui32_tables: Vec<Vec<Oui32Entry>>,
-    /// 32 位子表索引到 24 位前缀的映射
-    oui32_idx_to_prefix: BTreeMap<usize, [u8; 3]>,
     /// 36 位子表列表
     oui36_tables: Vec<Vec<Oui36Entry>>,
     /// 36 位子表索引到 24 位前缀的映射
@@ -121,8 +107,6 @@ impl OuiDataBuilder {
             oui24_map: BTreeMap::new(),
             oui28_tables: Vec::new(),
             oui28_idx_to_prefix: BTreeMap::new(),
-            oui32_tables: Vec::new(),
-            oui32_idx_to_prefix: BTreeMap::new(),
             oui36_tables: Vec::new(),
             oui36_idx_to_prefix: BTreeMap::new(),
             subtable_only_prefixes: Vec::new(),
@@ -165,11 +149,9 @@ impl OuiDataBuilder {
         // 按前缀长度分组
         // entries_24: 3 字节前缀 -> 名称列表
         // entries_28: 3 字节前缀 -> (4 字节高 4 位，名称) 列表
-        // entries_32: 3 字节前缀 -> (第 4 字节，名称) 列表
         // entries_36: 3 字节前缀 -> (第 4 字节 + 第 5 字节高 4 位，名称) 列表
         let mut entries_24: BTreeMap<[u8; 3], Vec<(usize, String)>> = BTreeMap::new();
         let mut entries_28: BTreeMap<[u8; 3], Vec<(u8, usize)>> = BTreeMap::new();
-        let mut entries_32: BTreeMap<[u8; 3], Vec<(u8, usize)>> = BTreeMap::new();
         let mut entries_36: BTreeMap<[u8; 3], Vec<(u16, usize)>> = BTreeMap::new();
 
         for entry in entries {
@@ -189,15 +171,6 @@ impl OuiDataBuilder {
                     let prefix3: [u8; 3] = [bytes[0], bytes[1], bytes[2]];
                     let key4 = bytes[3] & 0xF0;
                     entries_28
-                        .entry(prefix3)
-                        .or_insert_with(Vec::new)
-                        .push((key4, name_idx));
-                }
-                32 => {
-                    // 按 3 字节前缀分组，存储第 4 字节
-                    let prefix3: [u8; 3] = [bytes[0], bytes[1], bytes[2]];
-                    let key4 = bytes[3];
-                    entries_32
                         .entry(prefix3)
                         .or_insert_with(Vec::new)
                         .push((key4, name_idx));
@@ -240,34 +213,6 @@ impl OuiDataBuilder {
                 self.subtable_only_prefixes.push((
                     prefix3,
                     SubtableRef::Oui28(subtable_idx),
-                    entry_count,
-                ));
-            }
-        }
-
-        // 构建 32 位子表：每个 3 字节前缀对应一个子表
-        for (prefix3, entries_list) in entries_32 {
-            let subtable_idx = self.oui32_tables.len();
-            let entry_count = entries_list.len(); // 先保存长度
-            let mut table: Vec<Oui32Entry> = entries_list
-                .into_iter()
-                .map(|(key4, name_idx)| Oui32Entry {
-                    prefix: key4,
-                    name_idx,
-                })
-                .collect();
-            table.sort();
-            table.dedup_by(|a, b| a.prefix == b.prefix);
-            self.oui32_tables.push(table);
-            self.oui32_idx_to_prefix.insert(subtable_idx, prefix3);
-
-            oui24_to_subtable.insert(prefix3, SubtableRef::Oui32(subtable_idx));
-
-            // 只有当 entries_24 中不存在该前缀时，才记录为 subtable_only
-            if !entries_24.contains_key(&prefix3) {
-                self.subtable_only_prefixes.push((
-                    prefix3,
-                    SubtableRef::Oui32(subtable_idx),
                     entry_count,
                 ));
             }
@@ -316,7 +261,6 @@ impl OuiDataBuilder {
                 // 从子表中获取第一个名称
                 let name_idx = match subtable_ref {
                     SubtableRef::Oui28(idx) => self.oui28_tables[*idx].first().map(|e| e.name_idx),
-                    SubtableRef::Oui32(idx) => self.oui32_tables[*idx].first().map(|e| e.name_idx),
                     SubtableRef::Oui36(idx) => self.oui36_tables[*idx].first().map(|e| e.name_idx),
                 };
                 all_prefixes.insert(*prefix, name_idx);
@@ -358,7 +302,8 @@ impl OuiDataBuilder {
         let oui24_prefixes: Vec<[u8; 3]> = self.oui24_map.keys().copied().collect();
 
         // 计算唯一名称总长度
-        let unique_names_total_length: usize = self.names.iter().map(|s| s.len()).sum();
+        // let unique_names_total_length: usize = self.names.iter().map(|s| s.len()).sum();
+        let unique_names_total_length: usize = names_string.len();
 
         // 文件头 - 添加生成信息和统计
         code.push_str("// Auto-generated by macaddr-oui-codegen\n");
@@ -367,10 +312,9 @@ impl OuiDataBuilder {
 
         // 添加统计信息注释
         code.push_str("// === Generation Statistics ===\n");
-        code.push_str(&format!("// - Unique names: {}\n", self.names.len()));
         code.push_str(&format!(
-            "// - Total length of names: {} bytes\n",
-            unique_names_total_length
+            "// - Unique names: {}, total length: {unique_names_total_length}\n",
+            self.names.len()
         ));
         code.push_str(&format!("// - OUI-24 entries: {}\n", oui24_prefixes.len()));
         let oui28_entries: usize = self.oui28_tables.iter().map(|t| t.len()).sum();
@@ -378,12 +322,6 @@ impl OuiDataBuilder {
             "// - OUI-28 tables: {}, entries: {}\n",
             self.oui28_tables.len(),
             oui28_entries
-        ));
-        let oui32_entries: usize = self.oui32_tables.iter().map(|t| t.len()).sum();
-        code.push_str(&format!(
-            "// - OUI-32 tables: {}, entries: {}\n",
-            self.oui32_tables.len(),
-            oui32_entries
         ));
         let oui36_entries: usize = self.oui36_tables.iter().map(|t| t.len()).sum();
         code.push_str(&format!(
@@ -402,13 +340,12 @@ impl OuiDataBuilder {
         if !self.subtable_only_prefixes.is_empty() {
             code.push_str("// === Subtable-Only Prefixes (No 24-bit OUI Entry) ===\n");
             code.push_str(
-                "// These prefixes have only subtables (28/32/36-bit) without a 24-bit OUI entry\n",
+                "// These prefixes have only subtables (28/36-bit) without a 24-bit OUI entry\n",
             );
             code.push_str("// Format: // - XX:XX:XX (TYPE, N entries)\n");
             for (prefix, subtable_type, entry_count) in &self.subtable_only_prefixes {
                 let type_str = match subtable_type {
                     SubtableRef::Oui28(_) => "OUI-28",
-                    SubtableRef::Oui32(_) => "OUI-32",
                     SubtableRef::Oui36(_) => "OUI-36",
                 };
                 code.push_str(&format!(
@@ -424,7 +361,6 @@ impl OuiDataBuilder {
         for (prefix, subtable_type, entry_count) in &self.subtable_only_prefixes {
             let type_str = match subtable_type {
                 SubtableRef::Oui28(_) => "OUI-28",
-                SubtableRef::Oui32(_) => "OUI-32",
                 SubtableRef::Oui36(_) => "OUI-36",
             };
             println!(
@@ -466,8 +402,7 @@ impl OuiDataBuilder {
             let (name_idx, subtable) = self.oui24_map.get(prefix).unwrap();
             let loc = match subtable {
                 Some(SubtableRef::Oui28(idx)) => Self::encode_loc_subtable(1, *idx),
-                Some(SubtableRef::Oui32(idx)) => Self::encode_loc_subtable(2, *idx),
-                Some(SubtableRef::Oui36(idx)) => Self::encode_loc_subtable(3, *idx),
+                Some(SubtableRef::Oui36(idx)) => Self::encode_loc_subtable(2, *idx),
                 None => {
                     // Type 00: 指向 names
                     let offset = name_offsets[*name_idx];
@@ -489,39 +424,6 @@ impl OuiDataBuilder {
         for (idx, table) in self.oui28_tables.iter().enumerate() {
             // 获取 24 位前缀注释
             let prefix3 = self.oui28_idx_to_prefix.get(&idx).unwrap();
-            code.push_str(&format!(
-                "    /* {:02X}{:02X}{:02X} */ OuiSubtable {{ prefix: &[",
-                prefix3[0], prefix3[1], prefix3[2]
-            ));
-            for (i, entry) in table.iter().enumerate() {
-                if i > 0 {
-                    code.push_str(",");
-                }
-                code.push_str(&format!("0x{:02X}", entry.prefix));
-            }
-            code.push_str("], loc: &[");
-
-            // loc 字段 - 单行
-            for (i, entry) in table.iter().enumerate() {
-                if i > 0 {
-                    code.push_str(",");
-                }
-                let offset = name_offsets[entry.name_idx];
-                let name = &self.names[entry.name_idx];
-                let length = name.len();
-                let loc = ((offset as u32) << 8) | (length as u32);
-                code.push_str(&format!("0x{:08X}", loc));
-            }
-            code.push_str("] },\n");
-        }
-        code.push_str("];\n\n");
-
-        // 生成 oui_32 数组 - 直接内嵌所有子表数据，每表一行，添加 24 位前缀注释
-        code.push_str("#[rustfmt::skip]\n");
-        code.push_str("const OUI_32_TABLES: &[OuiSubtable<u8>] = &[\n");
-        for (idx, table) in self.oui32_tables.iter().enumerate() {
-            // 获取 24 位前缀注释
-            let prefix3 = self.oui32_idx_to_prefix.get(&idx).unwrap();
             code.push_str(&format!(
                 "    /* {:02X}{:02X}{:02X} */ OuiSubtable {{ prefix: &[",
                 prefix3[0], prefix3[1], prefix3[2]
@@ -588,7 +490,6 @@ impl OuiDataBuilder {
         code.push_str("    names: OUI_NAMES,\n");
         code.push_str("    oui_24: &OUI_24_TABLE,\n");
         code.push_str("    oui_28: OUI_28_TABLES,\n");
-        code.push_str("    oui_32: OUI_32_TABLES,\n");
         code.push_str("    oui_36: OUI_36_TABLES,\n");
         code.push_str("};\n");
 
@@ -621,21 +522,15 @@ impl OuiDataBuilder {
             println!("cargo:warning=oui_data.rs is up to date, skipped");
         }
         println!("cargo:warning=Statistics:");
-        println!("cargo:warning=  - Unique names: {}", self.names.len());
         println!(
-            "cargo:warning=  - Total length of names: {}",
-            unique_names_total_length
+            "cargo:warning=  - Unique names: {}, total length: {unique_names_total_length}",
+            self.names.len()
         );
         println!("cargo:warning=  - OUI-24 entries: {}", oui24_prefixes.len());
         println!(
             "cargo:warning=  - OUI-28 tables: {}, entries: {}",
             self.oui28_tables.len(),
             oui28_entries
-        );
-        println!(
-            "cargo:warning=  - OUI-32 tables: {}, entries: {}",
-            self.oui32_tables.len(),
-            oui32_entries
         );
         println!(
             "cargo:warning=  - OUI-36 tables: {}, entries: {}",
@@ -661,9 +556,10 @@ fn main() {
 
     // 判断是否需要重新生成
     let need_gen = if output_path.exists() {
+        let build_mtime = fs::metadata("build.rs").unwrap().modified().unwrap();
         let src_mtime = fs::metadata(src).unwrap().modified().unwrap();
         let dest_mtime = fs::metadata(&output_path).unwrap().modified().unwrap();
-        src_mtime > dest_mtime // 源文件比目标新 → 需要生成
+        src_mtime > dest_mtime || build_mtime > dest_mtime // 源文件比目标新 → 需要生成
     } else {
         true // 目标不存在 → 必须生成
     };

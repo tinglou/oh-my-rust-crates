@@ -4,8 +4,7 @@
 //! 1. 取 mac 前 3 个字节，二分查找 `OuiDb::oui_24` `prefix`, 找不到返回 None，获取 `loc` 对应值
 //! 2. 如 loc bit-31-30 = 0，则计算 offset/length，返回 `OuiDb::names[offset..offset+length]`
 //! 2. 如 loc bit-31-30 = 1，取 mac [第 4 个字节 & 0xF0], 查找 `OuiDb::oui_28`
-//! 2. 如 loc bit-31-30 = 2，取 mac [第 4 个字节], 查找 `OuiDb::oui_32`
-//! 2. 如 loc bit-31-30 = 3，取 mac [第 4 个字节，第 5 个字节 & 0xF0], 查找 `OuiDb::oui_36`
+//! 2. 如 loc bit-31-30 = 2，取 mac [第 4 个字节，第 5 个字节 & 0xF0], 查找 `OuiDb::oui_36`
 //!
 use crate::MacAddress;
 
@@ -31,8 +30,6 @@ pub struct OuiDb {
 
     /// MA-M(28 bit prefix) 20 bit ≈104 万 中型设备商/模组厂
     pub(crate) oui_28: &'static [OuiSubtable<u8>],
-
-    pub(crate) oui_32: &'static [OuiSubtable<u8>],
 
     /// MA-S(36 bit prefix) 12 bit =4096 IoT/小微/专用硬件
     pub(crate) oui_36: &'static [OuiSubtable<u16>],
@@ -60,9 +57,7 @@ pub struct OuiDb {
 ///       - bit-07-00: length (8 bits)
 ///   - 01 指向 OuiDb::oui_28 偏移量
 ///       - bit-15-00: subtable index (16 bits)
-///   - 02 指向 OuiDb::oui_32 偏移量
-///       - bit-15-00: subtable index (16 bits)
-///   - 03 指向 OuiDb::oui_36 偏移量
+///   - 02 指向 OuiDb::oui_36 偏移量
 ///       - bit-15-00: subtable index (16 bits)
 ///
 type OuiLoc = u32;
@@ -125,7 +120,7 @@ impl OuiDb {
 
     /// Looks up the organization name (OUI vendor information) for a given MAC address byte array.
     ///
-    /// Supports 24-bit, 28-bit, 32-bit, and 36-bit OUI queries.
+    /// Supports 24-bit, 28-bit, and 36-bit OUI queries.
     ///
     /// # Arguments
     ///
@@ -142,8 +137,7 @@ impl OuiDb {
     // 2. Based on `loc` bits 31-30, determine the type:
     //    - `00`: Retrieve string from `names` using offset and length
     //    - `01`: Look up in `oui_28` subtable using `mac[3] & 0xF0`
-    //    - `02`: Look up in `oui_32` subtable using `mac[3]`
-    //    - `03`: Look up in `oui_36` subtable using `mac[3]` and `mac[4] & 0xF0` combined
+    //    - `02`: Look up in `oui_36` subtable using `mac[3]` and `mac[4] & 0xF0` combined
     pub fn lookup(&self, mac: [u8; 6]) -> Option<&'static str> {
         // 1. 提取前 3 字节作为 oui_24 的查找键
         let key3 = [mac[0], mac[1], mac[2]];
@@ -173,12 +167,6 @@ impl OuiDb {
                 self.lookup_subtable(&self.oui_28[sub_idx], key4)
             }
             2 => {
-                // oui_32: 取 mac[3]
-                let sub_idx = (loc & 0xFFFF) as usize;
-                let key4 = mac[3];
-                self.lookup_subtable(&self.oui_32[sub_idx], key4)
-            }
-            3 => {
                 // oui_36: 取 mac[3] 和 mac[4] & 0xF0
                 // 组合为 16 位：高 8 位是 mac[3], 低 8 位是 mac[4] & 0xF0
                 let sub_idx = (loc & 0xFFFF) as usize;
