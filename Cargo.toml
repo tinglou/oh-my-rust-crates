@@ -4,6 +4,7 @@ resolver = "2"
 members = [
     "backerror-rs/backerror",
     "backerror-rs/backerror-macros",
+    "init-log4rs",
     "macaddr-ouidb",
 ]
 
@@ -14,7 +15,7 @@ exclude = ["samples", "erfs"]
 version = "0.1.5"
 authors = ["Ting Lou <ting.lou@gmail.com>"]
 license = "Apache-2.0"
-edition = "2021"
+edition = "2024"
 repository = "https://github.com/tinglou/oh-my-rust-crates"
 
 [workspace.dependencies]
