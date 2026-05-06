@@ -148,6 +148,23 @@ impl FromStr for MacAddress {
     }
 }
 
+impl core::convert::TryFrom<&'_ str> for MacAddress {
+    type Error = ParseMacError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+
+#[cfg(feature = "std")]
+impl core::convert::TryFrom<std::borrow::Cow<'_, str>> for MacAddress {
+    type Error = ParseMacError;
+
+    fn try_from(value: std::borrow::Cow<'_, str>) -> Result<Self, Self::Error> {
+        value.parse()
+    }
+}
+
 impl MacAddress {
     /// parse mac address, e.g. `52:54:00:12:34:56` or `52-54-00-12-34-56`
     fn from_str_sep(s: &str, separator: char) -> Result<Self, ParseMacError> {
