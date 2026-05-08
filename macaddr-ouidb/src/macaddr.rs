@@ -45,13 +45,13 @@ impl MacAddress {
     }
 
     /// Construct an all-zero `MacAddr` instance.
-    pub fn zero() -> Self {
-        Default::default()
+    pub const fn zero() -> Self {
+        Self([0; ETHER_ADDR_LEN])
     }
 
     /// Construct a broadcast `MacAddr` instance.
-    pub fn broadcast() -> Self {
-        [0xff; ETHER_ADDR_LEN].into()
+    pub const fn broadcast() -> Self {
+        Self([0xff; ETHER_ADDR_LEN])
     }
 
     /// Returns true if a `MacAddr` is an all-zero address.
