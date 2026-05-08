@@ -10,13 +10,14 @@ use crate::MacAddress;
 
 const OUI_SUBTABLE: &str = "Ieee Registration Authority";
 
-const OUI_VIRTUAL: [&'static str; 6] = [
+const OUI_VIRTUAL: [&'static str; 7] = [
     "VMware",
     "QEMU virtual NIC",
     "Bochs virtual NIC",
     "PearPC virtual NIC",
     "Cooperative Linux virtual NIC",
     "Oracle VirtualBox virtual NIC",
+    "OpenStack",
 ];
 
 /// # Organizationally Unique Identifiers (OUI) database

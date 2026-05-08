@@ -603,8 +603,10 @@ impl OuiDataBuilder {
 
 fn main() {
     let src = "nmap-mac-prefixes";
+    let my = "my-mac-prefixes";
     // 监控源文件变化，当源文件变化时重新运行 build script
     println!("cargo:rerun-if-changed={}", src);
+    println!("cargo:rerun-if-changed={}", my);
     println!("cargo:rerun-if-changed=build.rs");
 
     // 检测 ma-s feature 是否启用
@@ -612,13 +614,16 @@ fn main() {
 
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
     let input_path = Path::new(manifest_dir).join(src);
+    let my_input_path = Path::new(manifest_dir).join(my);
 
     // 输出到 OUT_DIR（Rust 标准做法）
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let output_path = Path::new(&out_dir).join("oui_data.rs");
 
     // 解析文件
-    let entries = parse_nmap_file(&input_path);
+    let mut entries = parse_nmap_file(&input_path);
+    let mut my_entries = parse_nmap_file(&my_input_path);
+    entries.append(&mut my_entries);
 
     // 构建数据结构
     let mut builder = OuiDataBuilder::new();

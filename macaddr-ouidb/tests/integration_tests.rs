@@ -209,6 +209,9 @@ fn test_mac_address_display() {
 fn test_mac_address_debug() {
     let mac: MacAddress = "00:11:22:33:44:55".parse().unwrap();
     assert_eq!(format!("{:?}", mac), "00:11:22:33:44:55");
+
+    let mac: MacAddress = "fa:16:3e:05:44:9b".parse().unwrap();
+    assert!(mac.is_local());
 }
 
 #[test]
@@ -225,6 +228,7 @@ fn test_oui_lookup_batch() {
         ("00:00:60:00:00:00", "Kontron Europe GmbH"),
         ("00:00:85:00:00:00", "Canon"),
         ("00:00:87:00:00:00", "Hitachi"),
+        ("fa:16:3e:05:44:9b", "OpenStack"),
     ];
 
     for (mac_str, expected_org) in test_cases {
