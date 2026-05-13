@@ -25,6 +25,10 @@ pnet = []
 serde = ["dep:serde"]
 ma-s = []
 
+[[bin]]
+name = "mac-oui"
+path = "src/main.rs"
+
 [dependencies]
 pnet_base = { version = "0.35.0", default-features = false }
 serde = { version = "1.0.228", default-features = false, optional = true }
