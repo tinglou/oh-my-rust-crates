@@ -5,6 +5,8 @@ use core::str::FromStr;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 
+use crate::OuiDb;
+
 /// The number of bytes in an ethernet (MAC) address.
 pub const ETHER_ADDR_LEN: usize = 6;
 
@@ -82,6 +84,18 @@ impl MacAddress {
     /// Returns true if the MacAddr is a broadcast address.
     pub fn is_broadcast(&self) -> bool {
         *self == Self::broadcast()
+    }
+
+    /// Return true if the MacAddr is a virtual NIC
+    pub fn is_virtual_nic(&self) -> bool {
+        crate::OUI_DB
+            .lookup_mac(*self)
+            .map_or(false, |name| OuiDb::is_virtual_nic(name))
+    }
+
+    /// Return OUI (Organizationally Unique Identifier)
+    pub fn oui(&self) -> Option<&'static str> {
+        crate::OUI_DB.lookup_mac(*self)
     }
 
     pub fn octets(&self) -> [u8; 6] {
