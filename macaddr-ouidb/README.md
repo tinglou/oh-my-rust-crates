@@ -5,9 +5,9 @@ High-performance MAC address OUI (Organizationally Unique Identifier) lookup lib
 ## Features
 
 - 🚀 **Zero-Cost Abstraction**: Compile-time generated lookup tables, only binary search at runtime
-- 💾 **Memory Efficient**: Columnar storage + compact encoding, full database only ~1.7MB
+- 💾 **Memory Efficient**: Columnar storage + compact encoding, full database only 900KB
 - ⚡ **Fast Lookup**: O(log n) time complexity, supports 24/28/36-bit OUI
-- 🔍 **Comprehensive Coverage**: Contains 38,000+ OUI-24 entries, 6,000+ OUI-28 entries, 6,000+ OUI-36 entries (from Nmap project)
+- 🔍 **Comprehensive Coverage**: Contains 38,000+ OUI-24 entries, 6,000+ OUI-28 entries, 6,000+ OUI-36 entries
 - 🎯 **Virtual NIC Detection**: Built-in common virtualization platform NIC recognition (VMware, QEMU, VirtualBox, OpenStack, etc.)
 - 📦 **Flexible Integration**: Supports `serde` serialization, optional `pnet` interoperability
 - 🔒 **no_std Support**: Works in `no_std` environments (optional features for std)
