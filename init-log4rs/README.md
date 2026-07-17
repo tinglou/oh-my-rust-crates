@@ -4,12 +4,13 @@ A utility crate that simplifies log4rs initialization for Rust applications. It 
 
 ## Features
 
-- **Auto-discovery**: Searches for `log4rs.yaml` configuration file in multiple directories:
-  - Executable directory
+- **Auto-discovery**: Searches for `log4rs.yaml` configuration file in multiple directories (in order):
+  - `RUST_LOG_DIR` environment variable path (if set)
+  - Executable directory (in `logs` subdirectory)
   - Current working directory (in `logs` subdirectory)
   - Parent directory (in `logs` subdirectory)
   - User's home directory (in `logs` subdirectory)
-  - System temporary directory
+  - System temporary directory (in `logs` subdirectory)
 
 - **Auto-creation**: If no configuration file is found, automatically creates a new one with sensible defaults including:
   - Console output (stdout and stderr)
@@ -17,7 +18,7 @@ A utility crate that simplifies log4rs initialization for Rust applications. It 
   - Fixed window rollover pattern (keeps up to 20 archived logs)
   - Configurable log format: `{date} {level} {module}:{line} - {message}`
 
-- **Hot-reload ready**: Configuration file can be set to refresh every 30 seconds for dynamic log level changes
+- **Hot-reload ready**: Configuration file refreshes every 60 seconds for dynamic log level changes
 
 ## Installation
 
@@ -58,6 +59,9 @@ fn main() -> anyhow::Result<()> {
 When no configuration file is found, the crate creates a YAML configuration with the following structure:
 
 ```yaml
+# Scan this file for changes every 30 seconds
+refresh_rate: 60 seconds
+
 appenders:
   stdout:
     kind: console

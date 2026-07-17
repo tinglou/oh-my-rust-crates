@@ -27,10 +27,17 @@ pub enum InitLog4rsError {
 pub fn init_log4rs(log_cfg_yaml: &str, log_stem: &str) -> Result<(), InitLog4rsError> {
     let mut log_path: Vec<PathBuf> = Vec::new();
 
+    // First, check RUST_LOG_DIR environment variable
+    if let Ok(log_dir) = env::var("RUST_LOG_DIR") {
+        log_path.push(PathBuf::from(log_dir));
+    }
+
     if let Ok(exe) = std::env::current_exe()
         && let Some(p) = exe.parent()
     {
-        log_path.push(p.to_path_buf());
+        let mut exe_log_dir = p.to_path_buf();
+        exe_log_dir.push("logs");
+        log_path.push(exe_log_dir);
     }
     if let Ok(mut pwd) = env::current_dir() {
         pwd.push("logs");
@@ -47,7 +54,9 @@ pub fn init_log4rs(log_cfg_yaml: &str, log_stem: &str) -> Result<(), InitLog4rsE
         path.push("logs");
         log_path.push(path);
     }
-    log_path.push(env::temp_dir());
+    let mut temp_log_dir = env::temp_dir();
+    temp_log_dir.push("logs");
+    log_path.push(temp_log_dir);
 
     // Search log4rs.yaml first
     for path in &log_path {
@@ -110,7 +119,7 @@ fn logger_yaml_file_create(
     let config_str = format!(
         "
 # Scan this file for changes every 30 seconds
-# refresh_rate: 30 seconds
+refresh_rate: 60 seconds
 
 appenders:
     # stdout
