@@ -373,3 +373,54 @@ fn test_mac_address_cisco_ios_format_invalid() {
     let result: Result<MacAddress, _> = "001A,2B3C,4D5E".parse();
     assert!(result.is_err());
 }
+
+#[test]
+fn test_mac_address_continuous_hex() {
+    // 测试无分隔符连续 hex 格式：12 个十六进制字符
+    let mac1: MacAddress = "001A2B3C4D5E".parse().unwrap();
+    assert_eq!(mac1.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
+
+    // 测试全零地址
+    let mac2: MacAddress = "000000000000".parse().unwrap();
+    assert_eq!(mac2.octets(), [0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    assert!(mac2.is_zero());
+
+    // 测试广播地址
+    let mac3: MacAddress = "FFFFFFFFFFFF".parse().unwrap();
+    assert_eq!(mac3.octets(), [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+    assert!(mac3.is_broadcast());
+
+    // 测试大小写不敏感
+    let mac4: MacAddress = "001a2b3c4d5e".parse().unwrap();
+    assert_eq!(mac4.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
+
+    let mac5: MacAddress = "001A2b3C4d5E".parse().unwrap();
+    assert_eq!(mac5.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
+
+    // 测试与其他格式的一致性
+    let mac_colon: MacAddress = "00:1A:2B:3C:4D:5E".parse().unwrap();
+    let mac_dash: MacAddress = "00-1A-2B-3C-4D-5E".parse().unwrap();
+    let mac_cisco: MacAddress = "001A.2B3C.4D5E".parse().unwrap();
+    let mac_continuous: MacAddress = "001A2B3C4D5E".parse().unwrap();
+    assert_eq!(mac_colon, mac_dash);
+    assert_eq!(mac_colon, mac_cisco);
+    assert_eq!(mac_colon, mac_continuous);
+}
+
+#[test]
+fn test_mac_address_continuous_hex_invalid() {
+    // 测试无效长度（太短）
+    let result: Result<MacAddress, _> = "001A2B3C4D5".parse();
+    assert!(result.is_err());
+
+    // 测试无效长度（太长）
+    let result: Result<MacAddress, _> = "001A2B3C4D5E6".parse();
+    assert!(result.is_err());
+
+    // 测试无效十六进制字符
+    let result: Result<MacAddress, _> = "001G2B3C4D5E".parse();
+    assert!(result.is_err());
+
+    let result: Result<MacAddress, _> = "001A2BH3C4D5E".parse();
+    assert!(result.is_err());
+}
