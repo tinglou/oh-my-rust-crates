@@ -11,6 +11,10 @@ High-performance MAC address OUI (Organizationally Unique Identifier) lookup lib
 - 🎯 **Virtual NIC Detection**: Built-in common virtualization platform NIC recognition (VMware, QEMU, VirtualBox, OpenStack, etc.)
 - 📦 **Flexible Integration**: Supports `serde` serialization, optional `pnet` interoperability
 - 🔒 **no_std Support**: Works in `no_std` environments (optional features for std)
+- 🔢 **Multiple MAC Address Formats**: Supports parsing MAC addresses in various formats:
+  - Colon-separated: `00:11:22:33:44:55`
+  - Dash-separated: `00-11-22-33-44-55`
+  - Cisco IOS format: `001A.2B3C.4D5E`
 
 ## Quick Start
 

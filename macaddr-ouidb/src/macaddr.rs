@@ -160,8 +160,15 @@ impl Sub for MacAddress {
 impl FromStr for MacAddress {
     type Err = ParseMacError;
 
-    /// parse mac address, e.g. `52:54:00:12:34:56` or `52-54-00-12-34-56`
+    /// parse mac address, e.g. `52:54:00:12:34:56`, `52-54-00-12-34-56` or `001A.2B3C.4D5E` (Cisco IOS format)
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Try Cisco IOS format first (XXXX.XXXX.XXXX)
+        let value = Self::from_str_cisco(s);
+        if value.is_ok() {
+            return value;
+        }
+
+        // Try colon-separated format
         let value = Self::from_str_sep(s, ':');
         if value.is_ok() {
             value
@@ -218,6 +225,38 @@ impl MacAddress {
         } else {
             Err(ParseMacError::InvalidLength)
         }
+    }
+
+    /// parse Cisco IOS mac address format: `001A.2B3C.4D5E` (XXXX.XXXX.XXXX)
+    fn from_str_cisco(s: &str) -> Result<Self, ParseMacError> {
+        // Cisco format: XXXX.XXXX.XXXX (12 hex digits in 3 groups of 4)
+        let len = s.len();
+        if len != 14 {
+            return Err(ParseMacError::InvalidLength);
+        }
+
+        // Check for dots at correct positions
+        let bytes = s.as_bytes();
+        if bytes[4] != b'.' || bytes[9] != b'.' {
+            return Err(ParseMacError::InvalidDigit);
+        }
+
+        // Parse the 6 bytes (2 hex digits at a time from each group)
+        let mut parts = [0u8; 6];
+
+        // First group: positions 0-3 -> bytes 0,1
+        parts[0] = u8::from_str_radix(&s[0..2], 16).map_err(|_| ParseMacError::InvalidDigit)?;
+        parts[1] = u8::from_str_radix(&s[2..4], 16).map_err(|_| ParseMacError::InvalidDigit)?;
+
+        // Second group: positions 5-8 -> bytes 2,3
+        parts[2] = u8::from_str_radix(&s[5..7], 16).map_err(|_| ParseMacError::InvalidDigit)?;
+        parts[3] = u8::from_str_radix(&s[7..9], 16).map_err(|_| ParseMacError::InvalidDigit)?;
+
+        // Third group: positions 10-13 -> bytes 4,5
+        parts[4] = u8::from_str_radix(&s[10..12], 16).map_err(|_| ParseMacError::InvalidDigit)?;
+        parts[5] = u8::from_str_radix(&s[12..14], 16).map_err(|_| ParseMacError::InvalidDigit)?;
+
+        Ok(Self(parts))
     }
 }
 

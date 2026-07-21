@@ -314,3 +314,62 @@ fn test_mac_address_default() {
     let mac = MacAddress::default();
     assert!(mac.is_zero());
 }
+
+#[test]
+fn test_mac_address_cisco_ios_format() {
+    // 测试 Cisco IOS 格式：XXXX.XXXX.XXXX
+    let mac1: MacAddress = "001A.2B3C.4D5E".parse().unwrap();
+    assert_eq!(mac1.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
+
+    // 测试全零地址
+    let mac2: MacAddress = "0000.0000.0000".parse().unwrap();
+    assert_eq!(mac2.octets(), [0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    assert!(mac2.is_zero());
+
+    // 测试广播地址
+    let mac3: MacAddress = "FFFF.FFFF.FFFF".parse().unwrap();
+    assert_eq!(mac3.octets(), [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
+    assert!(mac3.is_broadcast());
+
+    // 测试大小写不敏感
+    let mac4: MacAddress = "001a.2b3c.4d5e".parse().unwrap();
+    assert_eq!(mac4.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
+
+    let mac5: MacAddress = "001a.2B3c.4d5E".parse().unwrap();
+    assert_eq!(mac5.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
+
+    // 测试与其他格式的一致性
+    let mac_colon: MacAddress = "00:1A:2B:3C:4D:5E".parse().unwrap();
+    let mac_dash: MacAddress = "00-1A-2B-3C-4D-5E".parse().unwrap();
+    let mac_cisco: MacAddress = "001A.2B3C.4D5E".parse().unwrap();
+    assert_eq!(mac_colon, mac_dash);
+    assert_eq!(mac_colon, mac_cisco);
+}
+
+#[test]
+fn test_mac_address_cisco_ios_format_invalid() {
+    // 测试无效长度
+    let result: Result<MacAddress, _> = "001A.2B3C.4D5".parse();
+    assert!(result.is_err());
+
+    let result: Result<MacAddress, _> = "001A.2B3C.4D5E6".parse();
+    assert!(result.is_err());
+
+    // 测试错误的分隔符位置
+    let result: Result<MacAddress, _> = "001.2B3C.4D5E".parse();
+    assert!(result.is_err());
+
+    let result: Result<MacAddress, _> = "001A2B3C.4D5E".parse();
+    assert!(result.is_err());
+
+    // 测试无效十六进制字符
+    let result: Result<MacAddress, _> = "001G.2B3C.4D5E".parse();
+    assert!(result.is_err());
+
+    let result: Result<MacAddress, _> = "001A.2B3H.4D5E".parse();
+    assert!(result.is_err());
+
+    // 测试错误的分隔符
+    let result: Result<MacAddress, _> = "001A,2B3C,4D5E".parse();
+    assert!(result.is_err());
+}
