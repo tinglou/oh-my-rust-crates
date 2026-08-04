@@ -1,0 +1,24 @@
+[package]
+name = "conan2-rs"
+description = "Rust library for integrating [Conan 2](https://docs.conan.io/2/) into Cargo build scripts."
+
+categories = [
+    "development-tools::build-utils",
+] # https://crates.io/category_slugs
+documentation = "https://docs.rs/conan2-rs/"
+keywords = ["conan", "conan2", "build", "ffi"]
+
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+which = "8.0"
+thiserror = { version = "2.0" }
+
+[dev-dependencies]
+anyhow = "1.0"

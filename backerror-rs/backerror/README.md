@@ -154,7 +154,3 @@ The `backerror` crate works by:
 4. Optionally capturing a full backtrace when the error is created
 
 When an error occurs, it gets wrapped in a `LocatedError<T>` struct that preserves the original error while adding location metadata.
-
-## License
-
-Apache License, Version 2.0 [LICENSE-APACHE](http://www.apache.org/licenses/LICENSE-2.0)

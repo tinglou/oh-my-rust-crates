@@ -1,0 +1,3751 @@
+{
+    "graph": {
+        "nodes": {
+            "0": {
+                "ref": "conanfile",
+                "id": "0",
+                "recipe": "Consumer",
+                "package_id": null,
+                "prev": null,
+                "rrev": null,
+                "rrev_timestamp": null,
+                "prev_timestamp": null,
+                "remote": null,
+                "binary_remote": null,
+                "build_id": null,
+                "binary": null,
+                "invalid_build": false,
+                "info_invalid": null,
+                "name": null,
+                "user": null,
+                "channel": null,
+                "url": null,
+                "license": null,
+                "author": null,
+                "description": null,
+                "homepage": null,
+                "build_policy": null,
+                "upload_policy": null,
+                "revision_mode": "hash",
+                "provides": null,
+                "deprecated": null,
+                "win_bash": null,
+                "win_bash_run": null,
+                "default_options": null,
+                "options_description": null,
+                "version": null,
+                "topics": null,
+                "package_type": "unknown",
+                "languages": [],
+                "settings": {
+                    "os": "Windows",
+                    "arch": "x86_64",
+                    "compiler": "msvc",
+                    "compiler.cppstd": "14",
+                    "compiler.runtime": "dynamic",
+                    "compiler.runtime_type": "Release",
+                    "compiler.version": "194",
+                    "build_type": "Release"
+                },
+                "options": {},
+                "options_definitions": {},
+                "generators": [
+                    "CMakeDeps",
+                    "CMakeToolchain"
+                ],
+                "python_requires": null,
+                "system_requires": {},
+                "recipe_folder": null,
+                "source_folder": "E:\\workspace\\axescan\\axe-vectorscan\\axe-vectorscan-sys",
+                "build_folder": "E:\\workspace\\axescan\\axe-vectorscan\\target\\debug\\build\\axe-vectorscan-sys-14bd169944dc75e4\\out\\build",
+                "generators_folder": "E:\\workspace\\axescan\\axe-vectorscan\\target\\debug\\build\\axe-vectorscan-sys-14bd169944dc75e4\\out\\build\\generators",
+                "package_folder": null,
+                "immutable_package_folder": null,
+                "cpp_info": {
+                    "root": {
+                        "includedirs": [
+                            "include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "bin"
+                        ],
+                        "builddirs": null,
+                        "frameworkdirs": null,
+                        "system_libs": null,
+                        "frameworks": null,
+                        "libs": null,
+                        "defines": null,
+                        "cflags": null,
+                        "cxxflags": null,
+                        "sharedlinkflags": null,
+                        "exelinkflags": null,
+                        "objects": null,
+                        "sysroot": null,
+                        "requires": null,
+                        "properties": null,
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    }
+                },
+                "conf_info": {},
+                "label": "conanfile.txt",
+                "vendor": false,
+                "dependencies": {
+                    "1": {
+                        "ref": "hyperscan/5.4.2",
+                        "require": "hyperscan/5.4.2",
+                        "run": false,
+                        "libs": true,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": true,
+                        "build": false,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": true,
+                        "package_id_mode": null,
+                        "visible": true
+                    },
+                    "2": {
+                        "ref": "boost/1.83.0",
+                        "require": "boost/1.83.0",
+                        "run": false,
+                        "libs": true,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": false,
+                        "build": false,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": false,
+                        "package_id_mode": null,
+                        "visible": true
+                    },
+                    "3": {
+                        "ref": "zlib/1.3.1",
+                        "require": "zlib/1.3.1",
+                        "run": false,
+                        "libs": true,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": false,
+                        "build": false,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": false,
+                        "package_id_mode": null,
+                        "visible": true
+                    },
+                    "4": {
+                        "ref": "bzip2/1.0.8",
+                        "require": "bzip2/1.0.8",
+                        "run": false,
+                        "libs": true,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": false,
+                        "build": false,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": false,
+                        "package_id_mode": null,
+                        "visible": true
+                    }
+                },
+                "context": "host",
+                "test": false
+            },
+            "1": {
+                "ref": "hyperscan/5.4.2#b883284c407e18841c373a3070fb8d3f",
+                "id": "1",
+                "recipe": "Cache",
+                "package_id": "8669560128af886d75f78627346fe35ffb59d85d",
+                "prev": "7135a26845e57f8ef9cdb45f250fd5e3",
+                "rrev": "b883284c407e18841c373a3070fb8d3f",
+                "rrev_timestamp": 1692596923.869,
+                "prev_timestamp": 1707386411.43,
+                "remote": null,
+                "binary_remote": null,
+                "build_id": null,
+                "binary": "Cache",
+                "invalid_build": false,
+                "info_invalid": null,
+                "name": "hyperscan",
+                "user": null,
+                "channel": null,
+                "url": "https://github.com/conan-io/conan-center-index",
+                "license": "BSD-3-Clause",
+                "author": null,
+                "description": "High-performance regular expression matching library",
+                "homepage": "https://www.hyperscan.io",
+                "build_policy": null,
+                "upload_policy": null,
+                "revision_mode": "hash",
+                "provides": null,
+                "deprecated": null,
+                "win_bash": null,
+                "win_bash_run": null,
+                "default_options": {
+                    "shared": false,
+                    "fPIC": true,
+                    "optimise": "auto",
+                    "debug_output": "auto",
+                    "build_avx512": false,
+                    "fat_runtime": false,
+                    "build_chimera": false,
+                    "dump_support": "auto"
+                },
+                "options_description": null,
+                "version": "5.4.2",
+                "topics": [
+                    "regex",
+                    "regular expressions"
+                ],
+                "package_type": "static-library",
+                "languages": [],
+                "settings": {
+                    "os": "Windows",
+                    "arch": "x86_64",
+                    "compiler": "msvc",
+                    "compiler.cppstd": "14",
+                    "compiler.runtime": "dynamic",
+                    "compiler.runtime_type": "Release",
+                    "compiler.version": "193",
+                    "build_type": "Release"
+                },
+                "options": {
+                    "build_avx512": "False",
+                    "build_chimera": "False",
+                    "debug_output": "auto",
+                    "dump_support": "auto",
+                    "fat_runtime": "False",
+                    "optimise": "auto",
+                    "shared": "False"
+                },
+                "options_definitions": {
+                    "shared": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "optimise": [
+                        "True",
+                        "False",
+                        "auto",
+                        "ANY"
+                    ],
+                    "debug_output": [
+                        "True",
+                        "False",
+                        "auto",
+                        "ANY"
+                    ],
+                    "build_avx512": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "fat_runtime": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "build_chimera": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "dump_support": [
+                        "True",
+                        "False",
+                        "auto",
+                        "ANY"
+                    ]
+                },
+                "generators": [],
+                "python_requires": null,
+                "system_requires": {},
+                "recipe_folder": "C:\\Users\\admin\\.conan2\\p\\hyper0cc4e447eccff\\e",
+                "source_folder": null,
+                "build_folder": null,
+                "generators_folder": null,
+                "package_folder": "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p",
+                "immutable_package_folder": "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p",
+                "cpp_info": {
+                    "root": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p\\lib"
+                        ],
+                        "resdirs": null,
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p\\bin"
+                        ],
+                        "builddirs": null,
+                        "frameworkdirs": null,
+                        "system_libs": null,
+                        "frameworks": null,
+                        "libs": null,
+                        "defines": null,
+                        "cflags": null,
+                        "cxxflags": null,
+                        "sharedlinkflags": null,
+                        "exelinkflags": null,
+                        "objects": null,
+                        "sysroot": null,
+                        "requires": [],
+                        "properties": null,
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "hs": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "hs"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "boost::headers"
+                        ],
+                        "properties": {
+                            "pkg_config_name": "libhs"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "hs_runtime": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\hyper27821b2c523f8\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "hs_runtime"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [],
+                        "properties": null,
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    }
+                },
+                "conf_info": {},
+                "label": "hyperscan/5.4.2",
+                "info": {
+                    "settings": {
+                        "os": "Windows",
+                        "arch": "x86_64",
+                        "compiler": "msvc",
+                        "compiler.cppstd": "14",
+                        "compiler.runtime": "dynamic",
+                        "compiler.runtime_type": "Release",
+                        "compiler.version": "193",
+                        "build_type": "Release"
+                    },
+                    "options": {
+                        "build_avx512": "False",
+                        "build_chimera": "False",
+                        "debug_output": "auto",
+                        "dump_support": "auto",
+                        "fat_runtime": "False",
+                        "optimise": "auto",
+                        "shared": "False"
+                    },
+                    "requires": [
+                        "boost/1.83.Z",
+                        "zlib/1.3.Z",
+                        "bzip2/1.0.Z"
+                    ],
+                    "compatibility_delta": {
+                        "settings": [
+                            [
+                                "compiler.cppstd",
+                                "14"
+                            ],
+                            [
+                                "compiler.version",
+                                "193"
+                            ]
+                        ]
+                    }
+                },
+                "vendor": false,
+                "dependencies": {
+                    "2": {
+                        "ref": "boost/1.83.0",
+                        "require": "boost/1.83.0",
+                        "run": false,
+                        "libs": true,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": true,
+                        "build": false,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": true,
+                        "package_id_mode": "minor_mode",
+                        "visible": true
+                    },
+                    "3": {
+                        "ref": "zlib/1.3.1",
+                        "require": "zlib/1.3.1",
+                        "run": false,
+                        "libs": true,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": false,
+                        "build": false,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": false,
+                        "package_id_mode": "minor_mode",
+                        "visible": true
+                    },
+                    "4": {
+                        "ref": "bzip2/1.0.8",
+                        "require": "bzip2/1.0.8",
+                        "run": false,
+                        "libs": true,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": false,
+                        "build": false,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": false,
+                        "package_id_mode": "minor_mode",
+                        "visible": true
+                    },
+                    "6": {
+                        "ref": "ragel/6.10",
+                        "require": "ragel/6.10",
+                        "run": true,
+                        "libs": false,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": true,
+                        "build": true,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": false,
+                        "package_id_mode": null,
+                        "visible": false
+                    }
+                },
+                "context": "host",
+                "test": false
+            },
+            "2": {
+                "ref": "boost/1.83.0#8eb22f36ddfb61f54bbc412c4555bd66",
+                "id": "2",
+                "recipe": "Cache",
+                "package_id": "5d72bae26b292186b394bf49abc33edbee34a6b3",
+                "prev": "ee6aa57420bf766fea9f7bf253614117",
+                "rrev": "8eb22f36ddfb61f54bbc412c4555bd66",
+                "rrev_timestamp": 1744128941.888,
+                "prev_timestamp": 1744142214.987,
+                "remote": null,
+                "binary_remote": null,
+                "build_id": null,
+                "binary": "Cache",
+                "invalid_build": false,
+                "info_invalid": null,
+                "name": "boost",
+                "user": null,
+                "channel": null,
+                "url": "https://github.com/conan-io/conan-center-index",
+                "license": "BSL-1.0",
+                "author": null,
+                "description": "Boost provides free peer-reviewed portable C++ source libraries",
+                "homepage": "https://www.boost.org",
+                "build_policy": null,
+                "upload_policy": null,
+                "revision_mode": "hash",
+                "provides": null,
+                "deprecated": null,
+                "win_bash": null,
+                "win_bash_run": null,
+                "default_options": {
+                    "shared": false,
+                    "fPIC": true,
+                    "header_only": false,
+                    "error_code_header_only": false,
+                    "system_no_deprecated": false,
+                    "asio_no_deprecated": false,
+                    "filesystem_no_deprecated": false,
+                    "filesystem_use_std_fs": false,
+                    "filesystem_version": null,
+                    "layout": "system",
+                    "magic_autolink": false,
+                    "diagnostic_definitions": false,
+                    "python_executable": null,
+                    "python_version": null,
+                    "namespace": "boost",
+                    "namespace_alias": false,
+                    "multithreading": true,
+                    "numa": true,
+                    "zlib": true,
+                    "bzip2": true,
+                    "lzma": false,
+                    "zstd": false,
+                    "segmented_stacks": false,
+                    "debug_level": 0,
+                    "pch": true,
+                    "extra_b2_flags": null,
+                    "i18n_backend": "deprecated",
+                    "i18n_backend_iconv": "libc",
+                    "i18n_backend_icu": false,
+                    "visibility": "hidden",
+                    "addr2line_location": "/usr/bin/addr2line",
+                    "with_stacktrace_backtrace": true,
+                    "buildid": null,
+                    "python_buildid": null,
+                    "system_use_utf8": false,
+                    "without_atomic": false,
+                    "without_charconv": false,
+                    "without_chrono": false,
+                    "without_cobalt": false,
+                    "without_container": false,
+                    "without_context": false,
+                    "without_contract": false,
+                    "without_coroutine": false,
+                    "without_date_time": false,
+                    "without_exception": false,
+                    "without_fiber": false,
+                    "without_filesystem": false,
+                    "without_graph": false,
+                    "without_graph_parallel": true,
+                    "without_iostreams": false,
+                    "without_json": false,
+                    "without_locale": false,
+                    "without_log": false,
+                    "without_math": false,
+                    "without_mpi": true,
+                    "without_nowide": false,
+                    "without_process": false,
+                    "without_program_options": false,
+                    "without_python": true,
+                    "without_random": false,
+                    "without_regex": false,
+                    "without_serialization": false,
+                    "without_stacktrace": false,
+                    "without_system": false,
+                    "without_test": false,
+                    "without_thread": false,
+                    "without_timer": false,
+                    "without_type_erasure": false,
+                    "without_url": false,
+                    "without_wave": false
+                },
+                "options_description": null,
+                "version": "1.83.0",
+                "topics": [
+                    "libraries",
+                    "cpp"
+                ],
+                "package_type": "static-library",
+                "languages": [],
+                "settings": {
+                    "os": "Windows",
+                    "arch": "x86_64",
+                    "compiler": "msvc",
+                    "compiler.cppstd": "14",
+                    "compiler.runtime": "dynamic",
+                    "compiler.runtime_type": "Release",
+                    "compiler.version": "193",
+                    "build_type": "Release"
+                },
+                "options": {
+                    "asio_no_deprecated": "False",
+                    "buildid": "None",
+                    "bzip2": "True",
+                    "debug_level": "0",
+                    "diagnostic_definitions": "False",
+                    "error_code_header_only": "False",
+                    "extra_b2_flags": "None",
+                    "filesystem_no_deprecated": "False",
+                    "filesystem_use_std_fs": "False",
+                    "filesystem_version": null,
+                    "header_only": "False",
+                    "i18n_backend": "deprecated",
+                    "i18n_backend_iconv": "off",
+                    "i18n_backend_icu": "False",
+                    "layout": "system",
+                    "lzma": "False",
+                    "magic_autolink": "False",
+                    "multithreading": "True",
+                    "namespace": "boost",
+                    "namespace_alias": "False",
+                    "numa": "True",
+                    "pch": "True",
+                    "python_executable": null,
+                    "python_version": null,
+                    "segmented_stacks": "False",
+                    "shared": "False",
+                    "system_no_deprecated": "False",
+                    "system_use_utf8": "False",
+                    "visibility": "hidden",
+                    "without_atomic": "False",
+                    "without_chrono": "False",
+                    "without_container": "False",
+                    "without_context": "False",
+                    "without_contract": "False",
+                    "without_coroutine": "False",
+                    "without_date_time": "False",
+                    "without_exception": "False",
+                    "without_fiber": "False",
+                    "without_filesystem": "False",
+                    "without_graph": "False",
+                    "without_graph_parallel": "True",
+                    "without_iostreams": "False",
+                    "without_json": "False",
+                    "without_locale": "False",
+                    "without_log": "False",
+                    "without_math": "False",
+                    "without_mpi": "True",
+                    "without_nowide": "False",
+                    "without_program_options": "False",
+                    "without_python": "True",
+                    "without_random": "False",
+                    "without_regex": "False",
+                    "without_serialization": "False",
+                    "without_stacktrace": "False",
+                    "without_system": "False",
+                    "without_test": "False",
+                    "without_thread": "False",
+                    "without_timer": "False",
+                    "without_type_erasure": "False",
+                    "without_url": "False",
+                    "without_wave": "False",
+                    "zlib": "True",
+                    "zstd": "False"
+                },
+                "options_definitions": {
+                    "shared": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "header_only": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "error_code_header_only": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "system_no_deprecated": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "asio_no_deprecated": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "filesystem_no_deprecated": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "filesystem_use_std_fs": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "filesystem_version": [
+                        null,
+                        "3",
+                        "4",
+                        "ANY"
+                    ],
+                    "layout": [
+                        "system",
+                        "versioned",
+                        "tagged",
+                        "ANY"
+                    ],
+                    "magic_autolink": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "diagnostic_definitions": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "python_executable": [
+                        null,
+                        "ANY",
+                        "ANY"
+                    ],
+                    "python_version": [
+                        null,
+                        "ANY",
+                        "ANY"
+                    ],
+                    "namespace": [
+                        "ANY",
+                        "ANY"
+                    ],
+                    "namespace_alias": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "multithreading": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "numa": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "zlib": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "bzip2": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "lzma": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "zstd": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "segmented_stacks": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "debug_level": [
+                        "0",
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                        "13",
+                        "ANY"
+                    ],
+                    "pch": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "extra_b2_flags": [
+                        null,
+                        "ANY",
+                        "ANY"
+                    ],
+                    "i18n_backend": [
+                        "iconv",
+                        "icu",
+                        null,
+                        "deprecated",
+                        "ANY"
+                    ],
+                    "i18n_backend_iconv": [
+                        "libc",
+                        "libiconv",
+                        "off",
+                        "ANY"
+                    ],
+                    "i18n_backend_icu": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "visibility": [
+                        "global",
+                        "protected",
+                        "hidden",
+                        "ANY"
+                    ],
+                    "buildid": [
+                        null,
+                        "ANY",
+                        "ANY"
+                    ],
+                    "system_use_utf8": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_atomic": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_chrono": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_container": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_context": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_contract": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_coroutine": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_date_time": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_exception": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_fiber": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_filesystem": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_graph": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_graph_parallel": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_iostreams": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_json": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_locale": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_log": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_math": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_mpi": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_nowide": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_program_options": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_python": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_random": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_regex": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_serialization": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_stacktrace": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_system": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_test": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_thread": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_timer": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_type_erasure": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_url": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "without_wave": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ]
+                },
+                "generators": [],
+                "python_requires": null,
+                "system_requires": {},
+                "recipe_folder": "C:\\Users\\admin\\.conan2\\p\\boost711df6118e12e\\e",
+                "source_folder": null,
+                "build_folder": null,
+                "generators_folder": null,
+                "package_folder": "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p",
+                "immutable_package_folder": "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p",
+                "cpp_info": {
+                    "root": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": null,
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": null,
+                        "frameworkdirs": null,
+                        "system_libs": null,
+                        "frameworks": null,
+                        "libs": null,
+                        "defines": null,
+                        "cflags": null,
+                        "cxxflags": null,
+                        "sharedlinkflags": null,
+                        "exelinkflags": null,
+                        "objects": null,
+                        "sysroot": null,
+                        "requires": [],
+                        "properties": {
+                            "cmake_file_name": "Boost"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "headers": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "diagnostic_definitions",
+                            "disable_autolinking",
+                            "dynamic_linking"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::headers"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "_boost_cmake": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "headers"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::boost"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "_libboost": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [
+                            "bcrypt"
+                        ],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "headers"
+                        ],
+                        "properties": null,
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "diagnostic_definitions": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [],
+                        "properties": {
+                            "cmake_target_name": "Boost::diagnostic_definitions"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "disable_autolinking": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [
+                            "BOOST_ALL_NO_LIB"
+                        ],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [],
+                        "properties": {
+                            "cmake_target_name": "Boost::disable_autolinking"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "dynamic_linking": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [],
+                        "properties": {
+                            "cmake_target_name": "Boost::dynamic_linking"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "atomic": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_atomic"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::atomic"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "chrono": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_chrono"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "system",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::chrono"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "container": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_container"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::container"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "context": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_context"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::context"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "contract": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_contract"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "exception",
+                            "thread",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::contract"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "coroutine": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_coroutine"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "context",
+                            "exception",
+                            "system",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::coroutine"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "date_time": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_date_time"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::date_time"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "exception": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_exception"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::exception"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "fiber": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_fiber"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "context",
+                            "filesystem",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::fiber"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "fiber_numa": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_fiber_numa"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "fiber",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::fiber_numa"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "filesystem": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_filesystem"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "atomic",
+                            "system",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::filesystem"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "graph": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_graph"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "math",
+                            "random",
+                            "regex",
+                            "serialization",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::graph"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "iostreams": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_iostreams"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "random",
+                            "regex",
+                            "_libboost",
+                            "bzip2::bzip2",
+                            "zlib::zlib"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::iostreams"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "json": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_json"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "container",
+                            "system",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::json"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "locale": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_locale"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "thread",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::locale"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "log": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_log"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "atomic",
+                            "container",
+                            "date_time",
+                            "exception",
+                            "filesystem",
+                            "random",
+                            "regex",
+                            "system",
+                            "thread",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::log"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "log_setup": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_log_setup"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "log",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::log_setup"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "math": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::math"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "math_c99": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_math_c99"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "math",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::math_c99"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "math_c99f": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_math_c99f"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "math",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::math_c99f"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "math_c99l": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_math_c99l"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "math",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::math_c99l"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "math_tr1": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_math_tr1"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "math",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::math_tr1"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "math_tr1f": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_math_tr1f"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "math",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::math_tr1f"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "math_tr1l": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_math_tr1l"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "math",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::math_tr1l"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "nowide": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_nowide"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "filesystem",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::nowide"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "prg_exec_monitor": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_prg_exec_monitor"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "test",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::prg_exec_monitor"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "program_options": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_program_options"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::program_options"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "random": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_random"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "system",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::random"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "regex": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_regex"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::regex"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "serialization": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_serialization"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::serialization"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "stacktrace": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::stacktrace"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "stacktrace_noop": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_stacktrace_noop"
+                        ],
+                        "defines": [
+                            "BOOST_STACKTRACE_USE_NOOP"
+                        ],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "stacktrace",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::stacktrace_noop"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "stacktrace_windbg": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [
+                            "ole32",
+                            "dbgeng"
+                        ],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_stacktrace_windbg"
+                        ],
+                        "defines": [
+                            "BOOST_STACKTRACE_USE_WINDBG"
+                        ],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "stacktrace",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::stacktrace_windbg"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "stacktrace_windbg_cached": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [
+                            "ole32",
+                            "dbgeng"
+                        ],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_stacktrace_windbg_cached"
+                        ],
+                        "defines": [
+                            "BOOST_STACKTRACE_USE_WINDBG_CACHED"
+                        ],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "stacktrace",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::stacktrace_windbg_cached"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "system": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::system"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "test": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "exception",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::test"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "test_exec_monitor": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_test_exec_monitor"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "test",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::test_exec_monitor"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "thread": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_thread"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "atomic",
+                            "chrono",
+                            "container",
+                            "date_time",
+                            "exception",
+                            "system",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::thread"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "timer": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_timer"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::timer"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "type_erasure": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_type_erasure"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "thread",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::type_erasure"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "unit_test_framework": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_unit_test_framework"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "prg_exec_monitor",
+                            "test",
+                            "test_exec_monitor",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::unit_test_framework"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "url": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_url"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "system",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::url"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "wave": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_wave"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "filesystem",
+                            "serialization",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::wave"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "wserialization": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [],
+                        "frameworks": [],
+                        "libs": [
+                            "libboost_wserialization"
+                        ],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [
+                            "serialization",
+                            "_libboost"
+                        ],
+                        "properties": {
+                            "cmake_target_name": "Boost::wserialization"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    },
+                    "process": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\lib"
+                        ],
+                        "resdirs": [],
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\boost7c9888dfb1138\\p\\bin"
+                        ],
+                        "builddirs": [],
+                        "frameworkdirs": [],
+                        "system_libs": [
+                            "ntdll",
+                            "shell32",
+                            "advapi32",
+                            "user32"
+                        ],
+                        "frameworks": [],
+                        "libs": [],
+                        "defines": [],
+                        "cflags": [],
+                        "cxxflags": [],
+                        "sharedlinkflags": [],
+                        "exelinkflags": [],
+                        "objects": [],
+                        "sysroot": null,
+                        "requires": [],
+                        "properties": null,
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    }
+                },
+                "conf_info": {
+                    "user.boost:stacktrace_addr2line_available": false
+                },
+                "label": "boost/1.83.0",
+                "info": {
+                    "settings": {
+                        "os": "Windows",
+                        "arch": "x86_64",
+                        "compiler": "msvc",
+                        "compiler.cppstd": "14",
+                        "compiler.runtime": "dynamic",
+                        "compiler.runtime_type": "Release",
+                        "compiler.version": "193",
+                        "build_type": "Release"
+                    },
+                    "options": {
+                        "asio_no_deprecated": "False",
+                        "buildid": null,
+                        "bzip2": "True",
+                        "diagnostic_definitions": "False",
+                        "error_code_header_only": "False",
+                        "extra_b2_flags": null,
+                        "filesystem_no_deprecated": "False",
+                        "filesystem_use_std_fs": "False",
+                        "header_only": "False",
+                        "i18n_backend_iconv": "off",
+                        "i18n_backend_icu": "False",
+                        "layout": "system",
+                        "lzma": "False",
+                        "magic_autolink": "False",
+                        "multithreading": "True",
+                        "namespace": "boost",
+                        "namespace_alias": "False",
+                        "numa": "True",
+                        "segmented_stacks": "False",
+                        "shared": "False",
+                        "system_no_deprecated": "False",
+                        "system_use_utf8": "False",
+                        "visibility": "hidden",
+                        "without_atomic": "False",
+                        "without_chrono": "False",
+                        "without_container": "False",
+                        "without_context": "False",
+                        "without_contract": "False",
+                        "without_coroutine": "False",
+                        "without_date_time": "False",
+                        "without_exception": "False",
+                        "without_fiber": "False",
+                        "without_filesystem": "False",
+                        "without_graph": "False",
+                        "without_graph_parallel": "True",
+                        "without_iostreams": "False",
+                        "without_json": "False",
+                        "without_locale": "False",
+                        "without_log": "False",
+                        "without_math": "False",
+                        "without_mpi": "True",
+                        "without_nowide": "False",
+                        "without_program_options": "False",
+                        "without_python": "True",
+                        "without_random": "False",
+                        "without_regex": "False",
+                        "without_serialization": "False",
+                        "without_stacktrace": "False",
+                        "without_system": "False",
+                        "without_test": "False",
+                        "without_thread": "False",
+                        "without_timer": "False",
+                        "without_type_erasure": "False",
+                        "without_url": "False",
+                        "without_wave": "False",
+                        "zlib": "True",
+                        "zstd": "False"
+                    },
+                    "requires": [
+                        "zlib/1.3.Z",
+                        "bzip2/1.0.Z"
+                    ],
+                    "compatibility_delta": {
+                        "settings": [
+                            [
+                                "compiler.cppstd",
+                                "14"
+                            ],
+                            [
+                                "compiler.version",
+                                "193"
+                            ]
+                        ]
+                    }
+                },
+                "vendor": false,
+                "dependencies": {
+                    "3": {
+                        "ref": "zlib/1.3.1",
+                        "require": "zlib/[>=1.2.11 <2]",
+                        "run": false,
+                        "libs": true,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": true,
+                        "build": false,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": true,
+                        "package_id_mode": "minor_mode",
+                        "visible": true
+                    },
+                    "4": {
+                        "ref": "bzip2/1.0.8",
+                        "require": "bzip2/1.0.8",
+                        "run": false,
+                        "libs": true,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": true,
+                        "build": false,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": true,
+                        "package_id_mode": "minor_mode",
+                        "visible": true
+                    },
+                    "5": {
+                        "ref": "b2/5.3.2",
+                        "require": "b2/[>=5.2 <6]",
+                        "run": true,
+                        "libs": false,
+                        "skip": false,
+                        "test": false,
+                        "force": false,
+                        "direct": true,
+                        "build": true,
+                        "transitive_headers": null,
+                        "transitive_libs": null,
+                        "headers": false,
+                        "package_id_mode": null,
+                        "visible": false
+                    }
+                },
+                "context": "host",
+                "test": false
+            },
+            "3": {
+                "ref": "zlib/1.3.1#b8bc2603263cf7eccbd6e17e66b0ed76",
+                "id": "3",
+                "recipe": "Cache",
+                "package_id": "7bfde258ff4f62f75668d0896dbddedaa7480a0f",
+                "prev": "79ec8125ebd42591897da4cf270e6146",
+                "rrev": "b8bc2603263cf7eccbd6e17e66b0ed76",
+                "rrev_timestamp": 1733936244.862,
+                "prev_timestamp": 1733936492.457,
+                "remote": null,
+                "binary_remote": null,
+                "build_id": null,
+                "binary": "Cache",
+                "invalid_build": false,
+                "info_invalid": null,
+                "name": "zlib",
+                "user": null,
+                "channel": null,
+                "url": "https://github.com/conan-io/conan-center-index",
+                "license": "Zlib",
+                "author": null,
+                "description": "A Massively Spiffy Yet Delicately Unobtrusive Compression Library (Also Free, Not to Mention Unencumbered by Patents)",
+                "homepage": "https://zlib.net",
+                "build_policy": null,
+                "upload_policy": null,
+                "revision_mode": "hash",
+                "provides": null,
+                "deprecated": null,
+                "win_bash": null,
+                "win_bash_run": null,
+                "default_options": {
+                    "shared": false,
+                    "fPIC": true
+                },
+                "options_description": null,
+                "version": "1.3.1",
+                "topics": [
+                    "zlib",
+                    "compression"
+                ],
+                "package_type": "static-library",
+                "languages": [],
+                "settings": {
+                    "os": "Windows",
+                    "arch": "x86_64",
+                    "compiler": "msvc",
+                    "compiler.runtime": "dynamic",
+                    "compiler.runtime_type": "Release",
+                    "compiler.version": "193",
+                    "build_type": "Release"
+                },
+                "options": {
+                    "shared": "False"
+                },
+                "options_definitions": {
+                    "shared": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ]
+                },
+                "generators": [],
+                "python_requires": null,
+                "system_requires": {},
+                "recipe_folder": "C:\\Users\\admin\\.conan2\\p\\zlib204752602052d\\e",
+                "source_folder": null,
+                "build_folder": null,
+                "generators_folder": null,
+                "package_folder": "C:\\Users\\admin\\.conan2\\p\\zlib0e715158c1dfd\\p",
+                "immutable_package_folder": "C:\\Users\\admin\\.conan2\\p\\zlib0e715158c1dfd\\p",
+                "cpp_info": {
+                    "root": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\zlib0e715158c1dfd\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\zlib0e715158c1dfd\\p\\lib"
+                        ],
+                        "resdirs": null,
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\zlib0e715158c1dfd\\p\\bin"
+                        ],
+                        "builddirs": null,
+                        "frameworkdirs": null,
+                        "system_libs": null,
+                        "frameworks": null,
+                        "libs": [
+                            "zlib"
+                        ],
+                        "defines": null,
+                        "cflags": null,
+                        "cxxflags": null,
+                        "sharedlinkflags": null,
+                        "exelinkflags": null,
+                        "objects": null,
+                        "sysroot": null,
+                        "requires": [],
+                        "properties": {
+                            "cmake_find_mode": "both",
+                            "cmake_file_name": "ZLIB",
+                            "cmake_target_name": "ZLIB::ZLIB",
+                            "pkg_config_name": "zlib"
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    }
+                },
+                "conf_info": {},
+                "label": "zlib/1.3.1",
+                "info": {
+                    "settings": {
+                        "os": "Windows",
+                        "arch": "x86_64",
+                        "compiler": "msvc",
+                        "compiler.runtime": "dynamic",
+                        "compiler.runtime_type": "Release",
+                        "compiler.version": "193",
+                        "build_type": "Release"
+                    },
+                    "options": {
+                        "shared": "False"
+                    },
+                    "compatibility_delta": {
+                        "settings": [
+                            [
+                                "compiler.version",
+                                "193"
+                            ]
+                        ]
+                    }
+                },
+                "vendor": false,
+                "dependencies": {},
+                "context": "host",
+                "test": false
+            },
+            "4": {
+                "ref": "bzip2/1.0.8#00b4a4658791c1f06914e087f0e792f5",
+                "id": "4",
+                "recipe": "Cache",
+                "package_id": "67bfcb7b4b78262b9d05495e479dcd92f747316b",
+                "prev": "c04f63d499585a336129d85d111eed24",
+                "rrev": "00b4a4658791c1f06914e087f0e792f5",
+                "rrev_timestamp": 1744702067.178,
+                "prev_timestamp": 1744702274.34,
+                "remote": null,
+                "binary_remote": null,
+                "build_id": null,
+                "binary": "Cache",
+                "invalid_build": false,
+                "info_invalid": null,
+                "name": "bzip2",
+                "user": null,
+                "channel": null,
+                "url": "https://github.com/conan-io/conan-center-index",
+                "license": "bzip2-1.0.8",
+                "author": null,
+                "description": "bzip2 is a free and open-source file compression program that uses the Burrows Wheeler algorithm.",
+                "homepage": "https://sourceware.org/bzip2",
+                "build_policy": null,
+                "upload_policy": null,
+                "revision_mode": "hash",
+                "provides": null,
+                "deprecated": null,
+                "win_bash": null,
+                "win_bash_run": null,
+                "default_options": {
+                    "shared": false,
+                    "fPIC": true,
+                    "build_executable": true
+                },
+                "options_description": null,
+                "version": "1.0.8",
+                "topics": [
+                    "data-compressor",
+                    "file-compression"
+                ],
+                "package_type": "static-library",
+                "languages": [],
+                "settings": {
+                    "os": "Windows",
+                    "arch": "x86_64",
+                    "compiler": "msvc",
+                    "compiler.runtime": "dynamic",
+                    "compiler.runtime_type": "Release",
+                    "compiler.version": "193",
+                    "build_type": "Release"
+                },
+                "options": {
+                    "build_executable": "True",
+                    "shared": "False"
+                },
+                "options_definitions": {
+                    "shared": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ],
+                    "build_executable": [
+                        "True",
+                        "False",
+                        "ANY"
+                    ]
+                },
+                "generators": [],
+                "python_requires": null,
+                "system_requires": {},
+                "recipe_folder": "C:\\Users\\admin\\.conan2\\p\\bzip28d32b93e26a49\\e",
+                "source_folder": null,
+                "build_folder": null,
+                "generators_folder": null,
+                "package_folder": "C:\\Users\\admin\\.conan2\\p\\bzip2e1752ec0a98ec\\p",
+                "immutable_package_folder": "C:\\Users\\admin\\.conan2\\p\\bzip2e1752ec0a98ec\\p",
+                "cpp_info": {
+                    "root": {
+                        "includedirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\bzip2e1752ec0a98ec\\p\\include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\bzip2e1752ec0a98ec\\p\\lib"
+                        ],
+                        "resdirs": null,
+                        "bindirs": [
+                            "C:\\Users\\admin\\.conan2\\p\\bzip2e1752ec0a98ec\\p\\bin"
+                        ],
+                        "builddirs": null,
+                        "frameworkdirs": null,
+                        "system_libs": null,
+                        "frameworks": null,
+                        "libs": [
+                            "bz2"
+                        ],
+                        "defines": null,
+                        "cflags": null,
+                        "cxxflags": null,
+                        "sharedlinkflags": null,
+                        "exelinkflags": null,
+                        "objects": null,
+                        "sysroot": null,
+                        "requires": [],
+                        "properties": {
+                            "cmake_find_mode": "both",
+                            "cmake_file_name": "BZip2",
+                            "cmake_target_name": "BZip2::BZip2",
+                            "cmake_build_modules": [
+                                "C:\\Users\\admin\\.conan2\\p\\bzip2e1752ec0a98ec\\p\\lib\\cmake\\conan-official-bzip2-variables.cmake"
+                            ]
+                        },
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    }
+                },
+                "conf_info": {},
+                "label": "bzip2/1.0.8",
+                "info": {
+                    "settings": {
+                        "os": "Windows",
+                        "arch": "x86_64",
+                        "compiler": "msvc",
+                        "compiler.runtime": "dynamic",
+                        "compiler.runtime_type": "Release",
+                        "compiler.version": "193",
+                        "build_type": "Release"
+                    },
+                    "options": {
+                        "build_executable": "True",
+                        "shared": "False"
+                    },
+                    "compatibility_delta": {
+                        "settings": [
+                            [
+                                "compiler.version",
+                                "193"
+                            ]
+                        ]
+                    }
+                },
+                "vendor": false,
+                "dependencies": {},
+                "context": "host",
+                "test": false
+            },
+            "5": {
+                "ref": "b2/5.3.2#7b5fabfe7088ae933fb3e78302343ea0",
+                "id": "5",
+                "recipe": "Cache",
+                "package_id": "522dcea5982a3f8a5b624c16477e47195da2f84f",
+                "prev": "56bbcea71cc3027026b2886b50ae86e7",
+                "rrev": "7b5fabfe7088ae933fb3e78302343ea0",
+                "rrev_timestamp": 1744766677.76,
+                "prev_timestamp": 1744766757.864,
+                "remote": null,
+                "binary_remote": null,
+                "build_id": null,
+                "binary": "Skip",
+                "invalid_build": false,
+                "info_invalid": null,
+                "name": "b2",
+                "user": null,
+                "channel": null,
+                "url": "https://github.com/conan-io/conan-center-index",
+                "license": "BSL-1.0",
+                "author": null,
+                "description": "B2 makes it easy to build C++ projects, everywhere.",
+                "homepage": "https://www.bfgroup.xyz/b2/",
+                "build_policy": null,
+                "upload_policy": null,
+                "revision_mode": "hash",
+                "provides": null,
+                "deprecated": null,
+                "win_bash": null,
+                "win_bash_run": null,
+                "default_options": {
+                    "use_cxx_env": false,
+                    "toolset": "auto"
+                },
+                "options_description": null,
+                "version": "5.3.2",
+                "topics": [
+                    "installer",
+                    "builder",
+                    "build",
+                    "build-system"
+                ],
+                "package_type": "application",
+                "languages": [],
+                "settings": {
+                    "os": "Windows",
+                    "arch": "x86_64"
+                },
+                "options": {
+                    "toolset": "auto",
+                    "use_cxx_env": "False"
+                },
+                "options_definitions": {
+                    "use_cxx_env": [
+                        "False",
+                        "True"
+                    ],
+                    "toolset": [
+                        "auto",
+                        "cxx",
+                        "cross-cxx",
+                        "acc",
+                        "borland",
+                        "clang",
+                        "como",
+                        "gcc-nocygwin",
+                        "gcc",
+                        "intel-darwin",
+                        "intel-linux",
+                        "intel-win32",
+                        "kcc",
+                        "kylix",
+                        "mingw",
+                        "mipspro",
+                        "pathscale",
+                        "pgi",
+                        "qcc",
+                        "sun",
+                        "sunpro",
+                        "tru64cxx",
+                        "vacpp",
+                        "vc12",
+                        "vc14",
+                        "vc141",
+                        "vc142",
+                        "vc143"
+                    ]
+                },
+                "generators": [],
+                "python_requires": null,
+                "system_requires": {},
+                "recipe_folder": "C:\\Users\\admin\\.conan2\\p\\b202c7668f1ca0a\\e",
+                "source_folder": null,
+                "build_folder": null,
+                "generators_folder": null,
+                "package_folder": null,
+                "immutable_package_folder": null,
+                "cpp_info": {
+                    "root": {
+                        "includedirs": [
+                            "include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "lib"
+                        ],
+                        "resdirs": null,
+                        "bindirs": [
+                            "bin"
+                        ],
+                        "builddirs": null,
+                        "frameworkdirs": null,
+                        "system_libs": null,
+                        "frameworks": null,
+                        "libs": null,
+                        "defines": null,
+                        "cflags": null,
+                        "cxxflags": null,
+                        "sharedlinkflags": null,
+                        "exelinkflags": null,
+                        "objects": null,
+                        "sysroot": null,
+                        "requires": null,
+                        "properties": null,
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    }
+                },
+                "conf_info": {},
+                "label": "b2/5.3.2",
+                "info": {
+                    "settings": {
+                        "os": "Windows",
+                        "arch": "x86_64"
+                    }
+                },
+                "vendor": false,
+                "dependencies": {},
+                "context": "build",
+                "test": false
+            },
+            "6": {
+                "ref": "ragel/6.10#e98775a5336c9405758fe9670f4608a3",
+                "id": "6",
+                "recipe": "Cache",
+                "package_id": "723257509aee8a72faf021920c2874abc738e029",
+                "prev": "7cd8e0806b01a56b3c2fba4a6b2ffc80",
+                "rrev": "e98775a5336c9405758fe9670f4608a3",
+                "rrev_timestamp": 1741858957.802,
+                "prev_timestamp": 1741866662.785,
+                "remote": null,
+                "binary_remote": null,
+                "build_id": null,
+                "binary": "Skip",
+                "invalid_build": false,
+                "info_invalid": null,
+                "name": "ragel",
+                "user": null,
+                "channel": null,
+                "url": "https://github.com/conan-io/conan-center-index",
+                "license": "GPL-2.0-or-later",
+                "author": null,
+                "description": "Ragel compiles executable finite state machines from regular languages",
+                "homepage": "http://www.colm.net/open-source/ragel",
+                "build_policy": null,
+                "upload_policy": null,
+                "revision_mode": "hash",
+                "provides": null,
+                "deprecated": null,
+                "win_bash": null,
+                "win_bash_run": null,
+                "default_options": null,
+                "options_description": null,
+                "version": "6.10",
+                "topics": [
+                    "FSM",
+                    "regex",
+                    "fsm-compiler"
+                ],
+                "package_type": "application",
+                "languages": [],
+                "settings": {
+                    "os": "Windows",
+                    "arch": "x86_64",
+                    "compiler": "msvc",
+                    "compiler.cppstd": "14",
+                    "compiler.runtime": "dynamic",
+                    "compiler.runtime_type": "Release",
+                    "compiler.version": "194",
+                    "build_type": "Release"
+                },
+                "options": {},
+                "options_definitions": {},
+                "generators": [],
+                "python_requires": null,
+                "system_requires": {},
+                "recipe_folder": "C:\\Users\\admin\\.conan2\\p\\rageldd1c114179be3\\e",
+                "source_folder": null,
+                "build_folder": null,
+                "generators_folder": null,
+                "package_folder": null,
+                "immutable_package_folder": null,
+                "cpp_info": {
+                    "root": {
+                        "includedirs": [
+                            "include"
+                        ],
+                        "srcdirs": null,
+                        "libdirs": [
+                            "lib"
+                        ],
+                        "resdirs": null,
+                        "bindirs": [
+                            "bin"
+                        ],
+                        "builddirs": null,
+                        "frameworkdirs": null,
+                        "system_libs": null,
+                        "frameworks": null,
+                        "libs": null,
+                        "defines": null,
+                        "cflags": null,
+                        "cxxflags": null,
+                        "sharedlinkflags": null,
+                        "exelinkflags": null,
+                        "objects": null,
+                        "sysroot": null,
+                        "requires": null,
+                        "properties": null,
+                        "exe": null,
+                        "type": null,
+                        "location": null,
+                        "link_location": null,
+                        "languages": null
+                    }
+                },
+                "conf_info": {},
+                "label": "ragel/6.10",
+                "info": {
+                    "settings": {
+                        "os": "Windows",
+                        "arch": "x86_64",
+                        "build_type": "Release"
+                    }
+                },
+                "vendor": false,
+                "dependencies": {},
+                "context": "build",
+                "test": false
+            }
+        },
+        "root": {
+            "0": "None"
+        },
+        "overrides": {},
+        "resolved_ranges": {
+            "zlib/[>=1.2.11 <2]": "zlib/1.3.1",
+            "b2/[>=5.2 <6]": "b2/5.3.2"
+        },
+        "replaced_requires": {},
+        "error": null
+    }
+}

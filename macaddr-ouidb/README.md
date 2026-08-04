@@ -99,11 +99,11 @@ let is_virtual = mac.is_virtual_nic(); // bool
 
 Supports three OUI types:
 
-| Type | Bits | Format | Description |
-|------|------|--------|-------------|
-| OUI-24 (MA-L) | 24 | `XX:XX:XX` | Legacy assignment, first 3 bytes |
-| OUI-28 (MA-M) | 28 | `XX:XX:XX:X` | Medium-sized, first 3 bytes + high 4 bits of 4th byte |
-| OUI-36 (MA-S) | 36 | `XX:XX:XX:XX:X` | Small-sized, first 4 bytes + high 4 bits of 5th byte |
+| Type          | Bits | Format          | Description                                           |
+| ------------- | ---- | --------------- | ----------------------------------------------------- |
+| OUI-24 (MA-L) | 24   | `XX:XX:XX`      | Legacy assignment, first 3 bytes                      |
+| OUI-28 (MA-M) | 28   | `XX:XX:XX:X`    | Medium-sized, first 3 bytes + high 4 bits of 4th byte |
+| OUI-36 (MA-S) | 36   | `XX:XX:XX:XX:X` | Small-sized, first 4 bytes + high 4 bits of 5th byte  |
 
 Automatically matches the most precise type during lookup.
 
@@ -118,12 +118,12 @@ Data is automatically generated at compile time via `build.rs`, ensuring:
 
 ## Features
 
-| Feature | Description | Default |
-|---------|-------------|---------|
-| `std` | Enable std library support | Yes |
-| `serde` | Enable serde serialization | Yes |
-| `pnet` | Enable pnet interoperability | Yes |
-| `ma-s` | Enable 36-bit OUI (MA-S) support | Yes |
+| Feature | Description                      | Default |
+| ------- | -------------------------------- | ------- |
+| `std`   | Enable std library support       | Yes     |
+| `serde` | Enable serde serialization       | Yes     |
+| `pnet`  | Enable pnet interoperability     | Yes     |
+| `ma-s`  | Enable 36-bit OUI (MA-S) support | Yes     |
 
 ## no_std Support
 
@@ -160,10 +160,3 @@ Organization: Shinko Technos
 - **Memory Usage**: ~1.7MB for full database (38,000+ OUI-24, 6,000+ OUI-28, 6,000+ OUI-36 entries)
 - **Initialization**: Zero runtime initialization (compile-time generated)
 
-## License
-
-Apache-2.0
-
-## Contributing
-
-Issues and Pull Requests are welcome!

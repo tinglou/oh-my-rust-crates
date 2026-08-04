@@ -1,0 +1,9 @@
+[requires]
+hyperscan/5.4.2
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout

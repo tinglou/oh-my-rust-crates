@@ -6,6 +6,7 @@ members = [
     "backerror-rs/backerror-macros",
     "init-log4rs",
     "macaddr-ouidb",
+    "conan2-rs",
 ]
 
 # Exclude sample projects from workspace
