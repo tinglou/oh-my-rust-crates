@@ -1,0 +1,28 @@
+[package]
+name = "hyperscan-src"
+version = "5.4.2"
+
+description = "Bundled source of [intel/hyperscan](https://github.com/intel/hyperscan) (BSD-3-Clause)."
+
+categories = ["text-processing", "parsing"]             # https://crates.io/category_slugs
+documentation = "https://docs.rs/hyperscan-src/"
+keywords = ["hyperscan", "regexp", "vectorscan", "ffi"]
+
+# version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+exclude = [
+    "hyperscan/unit",
+    "hyperscan/tools",
+    "hyperscan/doc",
+    "hyperscan/examples",
+]
+
+[lib]
+doctest = false
+
+[dependencies]
+cmake = "0.1"

@@ -1,0 +1,56 @@
+[package]
+name = "hypervectorscan-sys"
+
+description = "Raw FFI bindings to [Hyperscan](https://github.com/intel/hyperscan) / [Vectorscan](https://github.com/VectorCamp/vectorscan)."
+
+categories = ["text-processing", "parsing"]             # https://crates.io/category_slugs
+documentation = "https://docs.rs/hypervectorscan-sys/"
+keywords = ["hyperscan", "regexp", "vectorscan", "ffi"]
+
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[lib]
+doctest = false
+
+[dependencies]
+
+[build-dependencies]
+hyperscan-src = { workspace = true, optional = true }
+vectorscan-src = { workspace = true, optional = true }
+
+anyhow = "1"
+conan2-rs = { version = "0.1", optional = true }
+vcpkg = { version = "0.2", optional = true }
+pkg-config = { version = "0.3", optional = true }
+bindgen = "0.72.0"
+
+[features]
+
+# autobuild: 自动检测 → conan2 > vcpkg > system > vendored 优先级
+autobuild = [
+    "dep:conan2-rs",
+    "dep:hyperscan-src",
+    "dep:vectorscan-src",
+    "dep:vcpkg",
+    "dep:pkg-config",
+]
+
+# 显式指定使用 conan2 构建（需系统安装 conan CLI）
+conan2 = ["dep:conan2-rs"]
+
+# 显式指定使用 vcpkg 构建（需系统安装 vcpkg）
+vcpkg = ["dep:vcpkg"]
+
+# 显式指定使用系统已安装的库（通过 pkg-config 检测，如 apt install libhyperscan-dev）
+system = ["dep:pkg-config"]
+
+# 显式指定使用 vendored 构建（需系统安装 cmake、ragel、boost-dev）
+vendored = ["dep:hyperscan-src", "dep:vectorscan-src"]
+
+# 可选 SIMD 扩展（仅 vendored x86_64 生效）
+avx512 = []
+avxvnni = []

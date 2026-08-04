@@ -1,0 +1,30 @@
+[package]
+name = "vectorscan-src"
+version = "5.4.12"
+
+description = "Bundled source of [VectorCamp/vectorscan](https://github.com/VectorCamp/vectorscan) (BSD-3-Clause)."
+
+categories = ["text-processing", "parsing"]             # https://crates.io/category_slugs
+documentation = "https://docs.rs/vectorscan-src/"
+keywords = ["hyperscan", "regexp", "vectorscan", "ffi"]
+
+# version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+exclude = [
+    "vectorscan/unit",
+    "vectorscan/tools",
+    "vectorscan/doc",
+    "vectorscan/examples",
+    "vectorscan/benchmarks",
+    "vectorscan/scripts",
+]
+
+[lib]
+doctest = false
+
+[dependencies]
+cmake = "0.1"

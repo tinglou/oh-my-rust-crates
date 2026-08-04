@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+
+members = ["hypervectorscan-sys", "hypervectorscan", "hyperscan-src", "vectorscan-src"]
+
+[workspace.package]
+version = "0.1.11"
+authors = ["Ting Lou <ting.lou@gmail.com>"]
+license = "Apache-2.0"
+edition = "2024"
+repository = "https://github.com/tinglou/oh-my-rust-crates"
+
+[workspace.dependencies]
+hypervectorscan-sys = { path = "hypervectorscan-sys", version = "0.1.11" }
+hyperscan-src = { path = "hyperscan-src", version = "5.4.2" }
+vectorscan-src = { path = "vectorscan-src", version = "5.4.12" }

@@ -1,0 +1,32 @@
+[package]
+name = "hypervectorscan"
+
+description = "Safe Rust wrapper for [Hyperscan](https://github.com/intel/hyperscan) / [Vectorscan](https://github.com/VectorCamp/vectorscan) — high-performance multi-pattern regex matching"
+
+categories = ["text-processing", "parsing"]             # https://crates.io/category_slugs
+documentation = "https://docs.rs/hypervectorscan/"
+keywords = ["hyperscan", "regexp", "vectorscan", "ffi"]
+
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[features]
+default = ["autobuild"]
+autobuild = ["hypervectorscan-sys/autobuild"]
+conan2 = ["hypervectorscan-sys/conan2"]
+vcpkg = ["hypervectorscan-sys/vcpkg"]
+system = ["hypervectorscan-sys/system"]
+vendored = ["hypervectorscan-sys/vendored"]
+avx512 = ["hypervectorscan-sys/avx512"]
+avxvnni = ["hypervectorscan-sys/avxvnni"]
+
+[dependencies]
+hypervectorscan-sys = { workspace = true }
+
+thiserror = "1.0.26"
+bitflags = "2.0"
+foreign-types = "0.5"
+libc ="0.2"

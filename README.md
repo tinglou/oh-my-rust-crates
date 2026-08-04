@@ -30,6 +30,14 @@ See [macaddr-ouidb/README.md](macaddr-ouidb/README.md) for more details.
 
 See [conan2-rs/README.md](conan2-rs/README.md) for more details.
 
+### 4. hypervectorscan
+
+**Safe Rust wrapper for Hyperscan / Vectorscan**
+
+`hypervectorscan` provides a safe, high-level Rust API for [Hyperscan](https://github.com/intel/hyperscan) / [Vectorscan](https://github.com/VectorCamp/vectorscan) — a high-performance multi-pattern regex matching engine. Supports block, streaming, and vectored scanning modes with automatic C library detection via conan, vcpkg, system, or vendored builds.
+
+See [hypervectorscan-rs/hypervectorscan/README.md](hypervectorscan-rs/hypervectorscan/README.md) for more details.
+
 ## License
 
 All crates in this workspace are licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.

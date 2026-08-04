@@ -1,0 +1,9 @@
+[requires]
+vectorscan/5.4.11
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[layout]
+cmake_layout
