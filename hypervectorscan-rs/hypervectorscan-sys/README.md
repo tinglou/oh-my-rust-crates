@@ -54,3 +54,7 @@ vendored (bundled 源码 cmake 编译)
 
 - `conanfile-hyperscan.txt` — Hyperscan 5.4.2
 - `conanfile-vectorscan.txt` — Vectorscan 5.4.11
+
+## publish
+
+`cargo publish --dry-run  --features autobuild`

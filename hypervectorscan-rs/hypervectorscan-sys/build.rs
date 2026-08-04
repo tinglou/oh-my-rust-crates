@@ -31,6 +31,13 @@
 //! vendored 构建的 cmake 调用在 *-src/src/lib.rs 中（非 build.rs）。
 //! cargo:rustc-link-* 指令在**本进程内**发出 → 正确传递到最终产物。
 
+#[cfg(any(
+    feature = "autobuild",
+    feature = "conan2",
+    feature = "vcpkg",
+    feature = "system",
+    feature = "vendored",
+))]
 use std::path::Path;
 
 // ───────────── 入口分发 ─────────────
@@ -58,6 +65,26 @@ fn main() -> anyhow::Result<()> {
 #[cfg(all(feature = "vendored", not(feature = "autobuild")))]
 fn main() -> anyhow::Result<()> {
     vendored_build()
+}
+
+#[cfg(not(any(
+    feature = "autobuild",
+    feature = "conan2",
+    feature = "vcpkg",
+    feature = "system",
+    feature = "vendored",
+)))]
+fn main() -> anyhow::Result<()> {
+    anyhow::bail!(
+        "hypervectorscan-sys: 未启用构建模式 feature。\n\
+         请启用以下之一: autobuild, conan2, vcpkg, system, vendored\n\
+         \n\
+         推荐用法 (通过 hypervectorscan 顶层 crate, 默认 autobuild):\n\
+           hypervectorscan = \"0.1\"\n\
+         \n\
+         或显式指定 vendored 模式:\n\
+           hypervectorscan = {{ default-features = false, features = [\"vendored\"] }}"
+    );
 }
 
 // ── autobuild：四级自动回退 ────────────────────────────────────────────
@@ -181,6 +208,13 @@ fn vendored_build() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(any(
+    feature = "autobuild",
+    feature = "conan2",
+    feature = "vcpkg",
+    feature = "system",
+    feature = "vendored",
+))]
 fn is_x86_64(target: &str) -> bool {
     target.contains("x86_64")
 }
@@ -335,6 +369,13 @@ fn conan2_build() -> anyhow::Result<()> {
 // ── 共享 ──────────────────────────────────────────────────────────────
 
 /// Linux release 下静态链接 libstdc++
+#[cfg(any(
+    feature = "autobuild",
+    feature = "conan2",
+    feature = "vcpkg",
+    feature = "system",
+    feature = "vendored",
+))]
 fn link_stdcpp() {
     #[cfg(target_os = "linux")]
     println!("cargo:rustc-link-lib=stdc++");
@@ -347,6 +388,13 @@ fn link_stdcpp() {
 
 /// bindgen 从 hs/hs.h 生成 Rust FFI 绑定 → src/hyperscan.rs
 /// 仅当生成内容与现有文件不同时才覆写
+#[cfg(any(
+    feature = "autobuild",
+    feature = "conan2",
+    feature = "vcpkg",
+    feature = "system",
+    feature = "vendored",
+))]
 fn generate_bindings(include_dirs: &[&Path], header_file: &str) -> anyhow::Result<()> {
     let out_path = "src/hyperscan.rs";
     println!("cargo:rerun-if-changed={header_file}");
@@ -378,6 +426,13 @@ fn generate_bindings(include_dirs: &[&Path], header_file: &str) -> anyhow::Resul
     Ok(())
 }
 
+#[cfg(any(
+    feature = "autobuild",
+    feature = "conan2",
+    feature = "vcpkg",
+    feature = "system",
+    feature = "vendored",
+))]
 fn normalize_line_endings(s: &str) -> String {
     s.replace("\r\n", "\n")
 }
