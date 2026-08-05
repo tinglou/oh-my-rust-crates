@@ -1,6 +1,6 @@
 [package]
 name = "vectorscan-src"
-version = "5.4.12"
+version = "5.4.12-1"
 
 description = "Bundled source of [VectorCamp/vectorscan](https://github.com/VectorCamp/vectorscan) (BSD-3-Clause)."
 

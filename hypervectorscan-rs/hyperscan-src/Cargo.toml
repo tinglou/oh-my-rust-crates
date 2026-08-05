@@ -1,6 +1,6 @@
 [package]
 name = "hyperscan-src"
-version = "5.4.2"
+version = "5.4.2-1"
 
 description = "Bundled source of [intel/hyperscan](https://github.com/intel/hyperscan) (BSD-3-Clause)."
 
@@ -15,9 +15,7 @@ edition.workspace = true
 repository.workspace = true
 
 exclude = [
-    "hyperscan/unit",
     "hyperscan/tools",
-    "hyperscan/doc",
     "hyperscan/examples",
 ]
 

@@ -1,4 +1,6 @@
 #[allow(non_camel_case_types)]
-mod hyperscan;
+mod bindings {
+    include!(concat!(env!("OUT_DIR"), "/hyperscan.rs"));
+}
 
-pub use hyperscan::*;
+pub use bindings::*;

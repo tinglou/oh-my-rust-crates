@@ -69,6 +69,10 @@ impl Build {
             .define("BUILD_SHARED_LIBS", "OFF")
             .define("CMAKE_BUILD_TYPE", "Release")
             .define("BUILD_UNIT", "OFF")
+            .define("BUILD_TOOLS", "OFF")
+            .define("BUILD_EXAMPLES", "OFF")
+            .define("BUILD_DOC", "OFF")
+            .define("BUILD_BENCHMARKS", "OFF")
             .define("USE_CPU_NATIVE", "OFF");
 
         if self.fat_runtime {

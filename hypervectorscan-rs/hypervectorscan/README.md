@@ -1,5 +1,7 @@
 # hypervectorscan
 
+[:us: English](README.md) | [:cn: 中文](README-cn.md)
+
 Safe Rust wrapper for [Hyperscan](https://github.com/intel/hyperscan) / [Vectorscan](https://github.com/VectorCamp/vectorscan) — high-performance multi-pattern regex matching.
 
 ## Usage
@@ -21,22 +23,22 @@ scanner.scan(b"Hello, world!", |id, from, to, _flags| {
 
 ## Features
 
-| Feature | 说明 |
-|---------|------|
-| `autobuild` (default) | 自动检测 conan → vcpkg → system → vendored |
-| `conan2` | 强制 Conan 包管理器 |
-| `vcpkg` | 强制 vcpkg 包管理器 |
-| `system` | 强制系统已安装库 (`apt install libhyperscan-dev`) |
-| `vendored` | 强制 bundled 源码 cmake 编译 |
-| `avx512` | 启用 AVX512（需 vendored x86_64） |
-| `avxvnni` | 启用 AVX512VBMI（需 vendored x86_64） |
+| Feature        | Description                                        |
+|----------------|----------------------------------------------------|
+| `autobuild`    | Auto-detect: conan → vcpkg → system → vendored     |
+| `conan2`       | Force Conan package manager                        |
+| `vcpkg`        | Force vcpkg package manager                        |
+| `system`       | Force system-installed library (`apt install libhyperscan-dev`) |
+| `vendored`     | Force bundled source cmake build                   |
+| `avx512`       | Enable AVX512 (vendored x86_64 only)               |
+| `avxvnni`      | Enable AVX512VBMI (vendored x86_64 only)           |
 
 All features are passed through to `hypervectorscan-sys`.
 
 ## API
 
-| Module | Key Types | Description |
-|--------|-----------|-------------|
-| `native` | `BlockDatabase`, `BlockScanner`, `StreamingDatabase`, `StreamScanner` | High-level scanning API |
-| `wrapper` | `Database`, `Scratch`, `Pattern`, `SerializedDatabase` | FFI wrapper types |
-| `error` | `Error`, `HyperscanErrorCode`, `AsResult` | Error handling |
+| Module    | Key Types                                                             | Description            |
+|-----------|-----------------------------------------------------------------------|------------------------|
+| `native`  | `BlockDatabase`, `BlockScanner`, `StreamingDatabase`, `StreamScanner` | High-level scanning API |
+| `wrapper` | `Database`, `Scratch`, `Pattern`, `SerializedDatabase`               | FFI wrapper types      |
+| `error`   | `Error`, `HyperscanErrorCode`, `AsResult`                             | Error handling         |

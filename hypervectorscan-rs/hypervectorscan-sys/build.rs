@@ -386,8 +386,7 @@ fn link_stdcpp() {
     }
 }
 
-/// bindgen 从 hs/hs.h 生成 Rust FFI 绑定 → src/hyperscan.rs
-/// 仅当生成内容与现有文件不同时才覆写
+/// bindgen 从 hs/hs.h 生成 Rust FFI 绑定 → OUT_DIR/hyperscan.rs
 #[cfg(any(
     feature = "autobuild",
     feature = "conan2",
@@ -396,9 +395,9 @@ fn link_stdcpp() {
     feature = "vendored",
 ))]
 fn generate_bindings(include_dirs: &[&Path], header_file: &str) -> anyhow::Result<()> {
-    let out_path = "src/hyperscan.rs";
+    let out_dir = std::env::var("OUT_DIR")?;
+    let out_path = format!("{out_dir}/hyperscan.rs");
     println!("cargo:rerun-if-changed={header_file}");
-    println!("cargo:rerun-if-changed={out_path}");
 
     let mut bindgen = bindgen::builder();
     for include in include_dirs {
@@ -413,26 +412,7 @@ fn generate_bindings(include_dirs: &[&Path], header_file: &str) -> anyhow::Resul
         .allowlist_type("hs_.*")
         .allowlist_var("HS_.*");
     let bindings = bindgen.generate()?;
-    let new_content = bindings.to_string();
-
-    let need_write = std::fs::read_to_string(out_path)
-        .map(|old| normalize_line_endings(&old) != normalize_line_endings(&new_content))
-        .unwrap_or(true);
-
-    if need_write {
-        bindings.write_to_file(out_path)?;
-    }
+    bindings.write_to_file(out_path)?;
 
     Ok(())
-}
-
-#[cfg(any(
-    feature = "autobuild",
-    feature = "conan2",
-    feature = "vcpkg",
-    feature = "system",
-    feature = "vendored",
-))]
-fn normalize_line_endings(s: &str) -> String {
-    s.replace("\r\n", "\n")
 }

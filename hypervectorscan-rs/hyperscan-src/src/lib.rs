@@ -87,7 +87,6 @@ impl Build {
             .define("BUILD_STATIC_LIBS", "ON")
             .define("BUILD_SHARED_LIBS", "OFF")
             .define("CMAKE_BUILD_TYPE", "Release")
-            .define("BUILD_UNIT", "OFF")
             .define("BUILD_EXAMPLES", "OFF")
             .define("BUILD_BENCHMARKS", "OFF");
 

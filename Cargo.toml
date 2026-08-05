@@ -18,16 +18,16 @@ members = [
 exclude = ["samples", "erfs"]
 
 [workspace.package]
-version = "0.1.11"
+version = "0.1.12"
 authors = ["Ting Lou <ting.lou@gmail.com>"]
 license = "Apache-2.0"
 edition = "2024"
 repository = "https://github.com/tinglou/oh-my-rust-crates"
 
 [workspace.dependencies]
-backerror-macros = { path = "backerror-rs/backerror-macros", version = "0.1.11" }
+backerror-macros = { path = "backerror-rs/backerror-macros", version = "0.1.12" }
 
-hypervectorscan-sys = { path = "hypervectorscan-rs/hypervectorscan-sys", version = "0.1.11" }
-hyperscan-src = { path = "hypervectorscan-rs/hyperscan-src", version = "5.4.2" }
-vectorscan-src = { path = "hypervectorscan-rs/vectorscan-src", version = "5.4.12" }
+hypervectorscan-sys = { path = "hypervectorscan-rs/hypervectorscan-sys", version = "0.1.12" }
+hyperscan-src = { path = "hypervectorscan-rs/hyperscan-src", version = "5.4.2-1" }
+vectorscan-src = { path = "hypervectorscan-rs/vectorscan-src", version = "5.4.12-1" }
 

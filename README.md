@@ -1,5 +1,7 @@
 # Oh My Rust Crates
 
+[:us: English](README.md) | [:cn: 中文](README-cn.md)
+
 A collection of Rust crates for common utilities and tools.
 
 ## Crates
@@ -37,6 +39,14 @@ See [conan2-rs/README.md](conan2-rs/README.md) for more details.
 `hypervectorscan` provides a safe, high-level Rust API for [Hyperscan](https://github.com/intel/hyperscan) / [Vectorscan](https://github.com/VectorCamp/vectorscan) — a high-performance multi-pattern regex matching engine. Supports block, streaming, and vectored scanning modes with automatic C library detection via conan, vcpkg, system, or vendored builds.
 
 See [hypervectorscan-rs/hypervectorscan/README.md](hypervectorscan-rs/hypervectorscan/README.md) for more details.
+
+### 5. init-log4rs
+
+**Zero-config log4rs initialization**
+
+`init-log4rs` automatically discovers and initializes log4rs configuration, enabling logging for Rust applications without manual setup.
+
+See [init-log4rs/README.md](init-log4rs/README.md) for more details.
 
 ## License
 
