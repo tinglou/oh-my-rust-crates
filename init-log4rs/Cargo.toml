@@ -15,5 +15,15 @@ repository.workspace = true
 [dependencies]
 anyhow = "1.0.102"
 dirs = "6.0.0"
+log = "0.4"
 log4rs = "1.4.0"
 thiserror = "2.0.18"
+tracing = { version = "0.1", optional = true, features = ["log"] }
+tracing-subscriber = { version = "0.3", optional = true, features = ["registry", "env-filter"] }
+
+[dev-dependencies]
+tracing = "0.1"
+
+[features]
+default = []
+tracing = ["dep:tracing", "dep:tracing-subscriber"]

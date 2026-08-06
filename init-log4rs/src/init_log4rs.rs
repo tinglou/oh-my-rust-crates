@@ -65,6 +65,7 @@ pub fn init_log4rs(log_cfg_yaml: &str, log_stem: &str) -> Result<(), InitLog4rsE
         match log4rs::init_file(log_cfg_file.clone(), Default::default()) {
             Ok(_) => {
                 eprintln!("Log dir {}", path.display());
+                init_tracing_subscriber();
                 return Ok(());
             }
             Err(_err) => {
@@ -78,6 +79,7 @@ pub fn init_log4rs(log_cfg_yaml: &str, log_stem: &str) -> Result<(), InitLog4rsE
         match logger_yaml_file_create(path, log_cfg_yaml, log_stem) {
             Ok(_) => {
                 eprintln!("Log dir {}", path.display());
+                init_tracing_subscriber();
                 return Ok(());
             }
             Err(_err) => {
@@ -88,6 +90,23 @@ pub fn init_log4rs(log_cfg_yaml: &str, log_stem: &str) -> Result<(), InitLog4rsE
     return Err(InitLog4rsError::Other(
         "Failed to initialize log4rs.".to_string(),
     ));
+}
+
+/// Initialize tracing subscriber when the tracing feature is enabled.
+/// Does nothing when the feature is not enabled.
+fn init_tracing_subscriber() {
+    #[cfg(feature = "tracing")]
+    {
+        use tracing_subscriber::EnvFilter;
+        use tracing_subscriber::prelude::*;
+        let filter = EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| EnvFilter::new("info"));
+        let _ = tracing_subscriber::registry().with(filter).try_init();
+    }
+    #[cfg(not(feature = "tracing"))]
+    {
+        // no-op
+    }
 }
 
 /// create log4rs configuration file

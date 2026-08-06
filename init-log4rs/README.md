@@ -20,6 +20,8 @@ A utility crate that simplifies log4rs initialization for Rust applications. It 
 
 - **Hot-reload ready**: Configuration file refreshes every 60 seconds for dynamic log level changes
 
+- **Tracing support** (optional): When the `tracing` feature is enabled, `tracing` spans and events are automatically bridged to `log4rs` and written to the same log files.
+
 ## Installation
 
 Add this to your `Cargo.toml`:
@@ -30,10 +32,19 @@ init-log4rs = "1.0"
 log = "0.4"
 ```
 
+Or with tracing support:
+
+```toml
+[dependencies]
+init-log4rs = { version = "1.0", features = ["tracing"] }
+tracing = "0.1"
+```
+
 ## Usage
 
+### Basic (log crate)
+
 ```rust
-use init_log4rs;
 use log::{info, debug, error};
 
 fn main() -> anyhow::Result<()> {
@@ -47,6 +58,31 @@ fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
+```
+
+### Tracing support (optional)
+
+Enable the `tracing` feature to bridge `tracing` events into the same log4rs pipeline:
+
+```rust,no_run
+use tracing::{info, debug, error};
+
+fn main() -> anyhow::Result<()> {
+    // Same init call — tracing subscriber is set up automatically
+    init_log4rs::init_log4rs("log4rs.yaml", "app_log")?;
+
+    // Use tracing macros — output goes to log4rs files
+    info!("This goes to the log file");
+    debug!("Debug level trace");
+
+    Ok(())
+}
+```
+
+Control the tracing log level via the `RUST_LOG` environment variable:
+
+```sh
+RUST_LOG=debug ./your_app
 ```
 
 ### Parameters
