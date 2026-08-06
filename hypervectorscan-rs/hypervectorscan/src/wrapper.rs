@@ -221,7 +221,8 @@ impl SerializedDatabase {
 
     pub fn wrap_slice(slice: &[u8]) -> Self {
         Self {
-            bytes: slice.as_ptr() as *mut i8,
+            // c_char is different in amd64 or arm64
+            bytes: slice.as_ptr() as *mut _,
             length: slice.len(),
             c_alloc: false,
         }
