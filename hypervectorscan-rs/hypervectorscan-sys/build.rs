@@ -177,7 +177,6 @@ fn system_build() -> anyhow::Result<()> {
     let include_paths: Vec<&Path> = lib.include_paths.iter().map(|p| p.as_path()).collect();
     generate_bindings(&include_paths, "wrapper.h")?;
 
-    link_stdcpp();
     Ok(())
 }
 
@@ -204,7 +203,6 @@ fn vendored_build() -> anyhow::Result<()> {
         generate_bindings(&[&artifacts.include_dir], "wrapper.h")?;
     }
 
-    link_stdcpp();
     Ok(())
 }
 
@@ -245,7 +243,6 @@ fn vcpkg_build() -> anyhow::Result<()> {
     let include_paths: Vec<&Path> = lib.include_paths.iter().map(|p| p.as_path()).collect();
     generate_bindings(&include_paths, "wrapper.h")?;
 
-    link_stdcpp();
     Ok(())
 }
 
@@ -357,8 +354,6 @@ fn conan2_build() -> anyhow::Result<()> {
         println!("cargo:rustc-link-lib=static={}", lib);
     }
 
-    link_stdcpp();
-
     let include_dirs: Vec<String> = cpp_info.include_dirs.iter().cloned().collect();
     let include_paths: Vec<&Path> = include_dirs.iter().map(|d| Path::new(d)).collect();
     generate_bindings(&include_paths, "wrapper.h")?;
@@ -367,24 +362,6 @@ fn conan2_build() -> anyhow::Result<()> {
 }
 
 // ── 共享 ──────────────────────────────────────────────────────────────
-
-/// Linux release 下静态链接 libstdc++
-#[cfg(any(
-    feature = "autobuild",
-    feature = "conan2",
-    feature = "vcpkg",
-    feature = "system",
-    feature = "vendored",
-))]
-fn link_stdcpp() {
-    #[cfg(target_os = "linux")]
-    println!("cargo:rustc-link-lib=stdc++");
-    #[cfg(all(target_os = "linux", not(debug_assertions)))]
-    {
-        println!("cargo:rustc-target-feature=+crt-static");
-        println!("cargo:rustc-link-arg=-static-libstdc++");
-    }
-}
 
 /// bindgen 从 hs/hs.h 生成 Rust FFI 绑定 → OUT_DIR/hyperscan.rs
 #[cfg(any(

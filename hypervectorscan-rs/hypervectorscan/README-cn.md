@@ -35,6 +35,10 @@ scanner.scan(b"Hello, world!", |id, from, to, _flags| {
 
 All features are passed through to `hypervectorscan-sys`.
 
+## Linking
+
+Linux 上应用程序需要链接 `stdc++`。在 crate 中添加 `build.rs` — 详见 [hypervectorscan-sys/README.md](../hypervectorscan-sys/README.md#linking)。
+
 ## API
 
 | Module    | Key Types                                                             | Description          |

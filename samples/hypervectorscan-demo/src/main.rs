@@ -10,7 +10,9 @@
 
 use std::sync::Arc;
 
-use hypervectorscan::{BlockDatabase, BlockScanner, Flag, Pattern, Scan, StreamingDatabase, StreamingScanner};
+use hypervectorscan::{
+    BlockDatabase, BlockScanner, Flag, Pattern, Scan, StreamingDatabase, StreamingScanner,
+};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("╔═══════════════════════════════════════════════════════════╗");
@@ -95,7 +97,10 @@ fn demo_pattern_flags() -> Result<(), Box<dyn std::error::Error>> {
         let mut scanner = BlockScanner::new(db)?;
 
         let data = b"a\nb";
-        println!("  Input:   \"{}\"", String::from_utf8_lossy(data).replace('\n', "\\n"));
+        println!(
+            "  Input:   \"{}\"",
+            String::from_utf8_lossy(data).replace('\n', "\\n")
+        );
         println!("  Pattern: \"a.b\" with DOTALL flag");
 
         let mut matches = Vec::new();
@@ -115,7 +120,10 @@ fn demo_pattern_flags() -> Result<(), Box<dyn std::error::Error>> {
         let mut scanner = BlockScanner::new(db)?;
 
         let data = b"world\nhello rust";
-        println!("  Input:   \"{}\"", String::from_utf8_lossy(data).replace('\n', "\\n"));
+        println!(
+            "  Input:   \"{}\"",
+            String::from_utf8_lossy(data).replace('\n', "\\n")
+        );
         println!("  Pattern: \"^hello\" with MULTILINE flag");
 
         let mut matches = Vec::new();
@@ -178,9 +186,11 @@ fn demo_serialization() -> Result<(), Box<dyn std::error::Error>> {
     println!("│ 4. Database Serialization / Deserialization              │");
     println!("└───────────────────────────────────────────────────────────┘");
 
-    let patterns = vec![
-        Pattern::new(b"hypervectorscan".to_vec(), Flag::default(), None),
-    ];
+    let patterns = vec![Pattern::new(
+        b"hypervectorscan".to_vec(),
+        Flag::default(),
+        None,
+    )];
     let db = BlockDatabase::new(patterns)?;
     let original_size = db.size()?;
     println!("  Original DB size: {} bytes", original_size);
@@ -189,7 +199,10 @@ fn demo_serialization() -> Result<(), Box<dyn std::error::Error>> {
     let sdb = db.serialize()?;
     let serialized = sdb.to_vec();
     println!("  Serialized size:  {} bytes", serialized.len());
-    println!("  Deserialized required: {} bytes", sdb.deserialized_size()?);
+    println!(
+        "  Deserialized required: {} bytes",
+        sdb.deserialized_size()?
+    );
 
     // Deserialize
     let db2 = BlockDatabase::deserialize(sdb)?;

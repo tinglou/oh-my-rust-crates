@@ -99,8 +99,7 @@ fn init_tracing_subscriber() {
     {
         use tracing_subscriber::EnvFilter;
         use tracing_subscriber::prelude::*;
-        let filter = EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::new("info"));
+        let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
         let _ = tracing_subscriber::registry().with(filter).try_init();
     }
     #[cfg(not(feature = "tracing"))]

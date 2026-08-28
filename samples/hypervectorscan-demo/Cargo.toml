@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-hypervectorscan = "0.1.11"
+hypervectorscan = "0.1.14"

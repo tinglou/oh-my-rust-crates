@@ -1,0 +1,4 @@
+# Link stdc++ on Linux for workspace members that depend on hyperscan/vectorscan.
+# This is required for `cargo test` / `cargo build` of the hypervectorscan crate.
+[target.'cfg(target_os = "linux")']
+rustflags = ["-C", "link-args=-lstdc++"]
