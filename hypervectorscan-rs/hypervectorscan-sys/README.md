@@ -72,10 +72,14 @@ fn link_stdcpp() {
         println!("cargo:rustc-link-lib=stdc++");
 
         #[cfg(not(debug_assertions))]
-        // Use `static=` prefix — rustc handles the `-Bstatic`/`-Bdynamic` wrapping.
-        // The `-Wl,-Bstatic` approach via `cargo:rustc-link-arg` does NOT work here
-        // because rustc adds its own `-lstdc++` (dynamic) before build.rs flags.
-        println!("cargo:rustc-link-lib=static=stdc++");
+        {
+            // Use `static=` prefix — rustc handles the `-Bstatic`/`-Bdynamic` wrapping.
+            // The `-Wl,-Bstatic` approach via `cargo:rustc-link-arg` does NOT work here
+            // because rustc adds its own `-lstdc++` (dynamic) before build.rs flags.
+            println!("cargo:rustc-link-lib=static=stdc++");
+            println!("cargo:rustc-link-lib=static=gcc_eh");
+            println!("cargo:rustc-link-lib=static=gcc");
+        }
     }
 }
 ```
@@ -96,7 +100,7 @@ When multiple mechanisms are active, they **accumulate** (not override). The lin
 
 ```
 rustc's own system libs      -lstdc++ (dynamic)        ← always present, comes first
-build.rs native-lib dirs     -Bstatic -lstdc++ -Bdynamic  ← cargo:rustc-link-lib=static=stdc++
+build.rs native-lib dirs     -Bstatic -lstdc++ -lgcc_eh -lgcc -Bdynamic  ← cargo:rustc-link-lib=static=...
 .cargo/config.toml rustflags  -lstdc++ (dynamic)        ← appended at the end
 RUSTFLAGS env var             -lstdc++ (dynamic)        ← appended last
 ```

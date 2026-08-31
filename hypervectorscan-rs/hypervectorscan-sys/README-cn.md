@@ -72,10 +72,14 @@ fn link_stdcpp() {
         println!("cargo:rustc-link-lib=stdc++");
 
         #[cfg(not(debug_assertions))]
-        // 使用 `static=` 前缀 — rustc 会正确处理 `-Bstatic`/`-Bdynamic` 包裹。
-        // `cargo:rustc-link-arg` 的 `-Wl,-Bstatic` 方式无效，因为 rustc 自己的
-        // `-lstdc++`（动态）会在 build.rs 的 flags 之前出现。
-        println!("cargo:rustc-link-lib=static=stdc++");
+        {
+            // 使用 `static=` 前缀 — rustc 会正确处理 `-Bstatic`/`-Bdynamic` 包裹。
+            // `cargo:rustc-link-arg` 的 `-Wl,-Bstatic` 方式无效，因为 rustc 自己的
+            // `-lstdc++`（动态）会在 build.rs 的 flags 之前出现。
+            println!("cargo:rustc-link-lib=static=stdc++");
+            println!("cargo:rustc-link-lib=static=gcc_eh");
+            println!("cargo:rustc-link-lib=static=gcc");
+        }
     }
 }
 ```
@@ -96,7 +100,7 @@ fn link_stdcpp() {
 
 ```
 rustc 自带的系统库            -lstdc++ (动态)          ← 始终存在，最先出现
-build.rs 的 native-lib 指令   -Bstatic -lstdc++ -Bdynamic  ← cargo:rustc-link-lib=static=stdc++
+build.rs 的 native-lib 指令   -Bstatic -lstdc++ -lgcc_eh -lgcc -Bdynamic  ← cargo:rustc-link-lib=static=...
 .cargo/config.toml rustflags  -lstdc++ (动态)          ← 追加在末尾
 RUSTFLAGS 环境变量             -lstdc++ (动态)          ← 追加在最后
 ```
