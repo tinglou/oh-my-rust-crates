@@ -76,13 +76,13 @@ fn main() -> anyhow::Result<()> {
 )))]
 fn main() -> anyhow::Result<()> {
     anyhow::bail!(
-        "hypervectorscan-sys: 未启用构建模式 feature。\n\
-         请启用以下之一: autobuild, conan2, vcpkg, system, vendored\n\
+        "hypervectorscan-sys: no build mode feature enabled.\n\
+         Enable one of: autobuild, conan2, vcpkg, system, vendored\n\
          \n\
-         推荐用法 (通过 hypervectorscan 顶层 crate, 默认 autobuild):\n\
+         Recommended usage (via hypervectorscan top-level crate, default autobuild):\n\
            hypervectorscan = \"0.1\"\n\
          \n\
-         或显式指定 vendored 模式:\n\
+         Or explicitly specify vendored mode:\n\
            hypervectorscan = {{ default-features = false, features = [\"vendored\"] }}"
     );
 }
@@ -92,18 +92,18 @@ fn main() -> anyhow::Result<()> {
 #[cfg(feature = "autobuild")]
 fn autobuild() -> anyhow::Result<()> {
     if conan_available() {
-        println!("cargo:warning=autobuild: 检测到 conan，使用 conan2 构建");
+        println!("cargo:warning=autobuild: conan detected, using conan2 build");
         return conan2_build();
     }
     if vcpkg_available() {
-        println!("cargo:warning=autobuild: 检测到 vcpkg，使用 vcpkg 构建");
+        println!("cargo:warning=autobuild: vcpkg detected, using vcpkg build");
         return vcpkg_build();
     }
     if system_available() {
-        println!("cargo:warning=autobuild: 检测到系统已安装库，使用 system 构建");
+        println!("cargo:warning=autobuild: system library detected, using system build");
         return system_build();
     }
-    println!("cargo:warning=autobuild: 回退到 vendored 构建（bundled 源码 cmake 编译）");
+    println!("cargo:warning=autobuild: falling back to vendored build (bundled source cmake compile)");
     vendored_build()
 }
 
@@ -166,13 +166,13 @@ fn system_build() -> anyhow::Result<()> {
     } else {
         "vectorscan"
     };
-    println!("cargo:warning=system: 通过 pkg-config 查找 {package}");
+    println!("cargo:warning=system: looking up {package} via pkg-config");
 
     // 优先链接静态库
     let lib = pkg_config::Config::new()
         .statik(true)
         .probe(package)
-        .map_err(|_| anyhow::anyhow!("pkg-config 未找到 {package}，请安装对应的 dev 包"))?;
+        .map_err(|_| anyhow::anyhow!("pkg-config: {package} not found, please install the corresponding dev package"))?;
 
     let include_paths: Vec<&Path> = lib.include_paths.iter().map(|p| p.as_path()).collect();
     generate_bindings(&include_paths, "wrapper.h")?;
@@ -184,12 +184,12 @@ fn system_build() -> anyhow::Result<()> {
 
 #[cfg(any(feature = "vendored", feature = "autobuild"))]
 fn vendored_build() -> anyhow::Result<()> {
-    println!("cargo:warning=vendored: 从 bundled 源码编译（无需外部包管理器）");
+    println!("cargo:warning=vendored: compiling from bundled source (no external package manager)");
 
     let target = std::env::var("TARGET").unwrap_or_default();
 
     if is_x86_64(&target) {
-        println!("cargo:warning=vendored 后端: hyperscan-src (x86_64)");
+        println!("cargo:warning=vendored backend: hyperscan-src (x86_64)");
         let mut build = hyperscan_src::Build::new();
         #[cfg(feature = "avx512")]
         build.avx512(true);
@@ -198,7 +198,7 @@ fn vendored_build() -> anyhow::Result<()> {
         let artifacts = build.build();
         generate_bindings(&[&artifacts.include_dir], "wrapper.h")?;
     } else {
-        println!("cargo:warning=vendored 后端: vectorscan-src (非 x86_64)");
+        println!("cargo:warning=vendored backend: vectorscan-src (non-x86_64)");
         let artifacts = vectorscan_src::Build::new().build();
         generate_bindings(&[&artifacts.include_dir], "wrapper.h")?;
     }
@@ -221,7 +221,7 @@ fn is_x86_64(target: &str) -> bool {
 
 #[cfg(any(feature = "vcpkg", feature = "autobuild"))]
 fn vcpkg_build() -> anyhow::Result<()> {
-    println!("cargo:warning=vcpkg 构建模式");
+    println!("cargo:warning=vcpkg build mode");
 
     let target = std::env::var("TARGET").unwrap_or_default();
     let package = if is_x86_64(&target) {
@@ -229,12 +229,12 @@ fn vcpkg_build() -> anyhow::Result<()> {
     } else {
         "vectorscan"
     };
-    println!("cargo:warning=vcpkg: 查找包 {package}");
+    println!("cargo:warning=vcpkg: looking for package {package}");
 
     let lib = match vcpkg::find_package(package) {
         Ok(lib) => lib,
         Err(_) => {
-            println!("cargo:warning=vcpkg: 未找到 {package}，执行 vcpkg install...");
+            println!("cargo:warning=vcpkg: {package} not found, running vcpkg install...");
             vcpkg_install(package)?;
             vcpkg::find_package(package)?
         }
@@ -251,7 +251,7 @@ fn vcpkg_install(package: &str) -> anyhow::Result<()> {
     let status = std::process::Command::new("vcpkg")
         .args(["install", package])
         .status()?;
-    anyhow::ensure!(status.success(), "vcpkg install {package} 失败");
+    anyhow::ensure!(status.success(), "vcpkg install {package} failed");
     Ok(())
 }
 
@@ -281,7 +281,7 @@ fn detect_backend() -> anyhow::Result<Backend> {
     } else if target.contains("apple-darwin") {
         "macos"
     } else {
-        anyhow::bail!("conan2 不支持的目标平台: {target}")
+        anyhow::bail!("conan2: unsupported target platform: {target}")
     };
 
     let arch = if target.contains("aarch64") || target.contains("arm64") {
@@ -289,7 +289,7 @@ fn detect_backend() -> anyhow::Result<Backend> {
     } else if target.contains("x86_64") {
         "x86_64"
     } else {
-        anyhow::bail!("conan2 不支持的目标架构: {target}")
+        anyhow::bail!("conan2: unsupported target architecture: {target}")
     };
 
     match (os, arch) {
@@ -315,7 +315,7 @@ fn detect_backend() -> anyhow::Result<Backend> {
             ],
             force_build: Some("vectorscan*"),
         }),
-        _ => anyhow::bail!("conan2 不支持的目标: {os}/{arch}"),
+        _ => anyhow::bail!("conan2: unsupported target: {os}/{arch}"),
     }
 }
 

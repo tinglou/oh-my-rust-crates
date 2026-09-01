@@ -1,6 +1,6 @@
 [package]
 name = "hyperscan-src"
-version = "5.4.2-1"
+version = "5.4.2-2"
 
 description = "Bundled source of [intel/hyperscan](https://github.com/intel/hyperscan) (BSD-3-Clause)."
 

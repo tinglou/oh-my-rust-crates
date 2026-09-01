@@ -87,6 +87,7 @@ impl Build {
             .define("BUILD_STATIC_LIBS", "ON")
             .define("BUILD_SHARED_LIBS", "OFF")
             .define("CMAKE_BUILD_TYPE", "Release")
+            .define("CMAKE_INSTALL_LIBDIR", "lib")
             .define("BUILD_EXAMPLES", "OFF")
             .define("BUILD_BENCHMARKS", "OFF");
 
@@ -102,7 +103,20 @@ impl Build {
 
         let dst = config.build();
 
-        let lib_dir = dst.join("lib");
+        // Some cmake versions install to lib64 or multiarch paths;
+        // search lib/, lib64/, lib/<arch>-linux-gnu/ — first containing libhs.a wins.
+        let lib_dir = {
+            let candidates: Vec<PathBuf> = vec![
+                dst.join("lib"),
+                dst.join("lib64"),
+                dst.join(format!("lib/{}-linux-gnu", std::env::consts::ARCH)),
+            ];
+            candidates
+                .into_iter()
+                .find(|d| d.join("libhs.a").exists())
+                .unwrap_or_else(|| dst.join("lib"))
+        };
+
         println!("cargo:rustc-link-search=native={}", lib_dir.display());
         println!("cargo:rustc-link-lib=static=hs");
         println!("cargo:rustc-link-lib=static=hs_runtime");
