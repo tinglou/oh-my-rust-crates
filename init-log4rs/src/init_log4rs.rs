@@ -118,8 +118,12 @@ pub fn init_log4rs_with_dir(
     log_stem: &str,
     dir: PathBuf,
 ) -> Result<(), InitLog4rsError> {
-    let mut dirs = generate_dir_list();
-    dirs.insert(0, dir);
+    let dirs = vec![dir];
+    if init_log4rs_dirs(log_cfg_yaml, log_stem, &dirs).is_ok() {
+        return Ok(());
+    }
+
+    let dirs = generate_dir_list();
     init_log4rs_dirs(log_cfg_yaml, log_stem, &dirs)
 }
 
@@ -230,7 +234,7 @@ pub fn init_log4rs_dirs(
 }
 
 fn generate_dir_list() -> Vec<PathBuf> {
-    let mut log_path: Vec<PathBuf> = Vec::new();
+    let mut log_path = Vec::new();
 
     // First, check RUST_LOG_DIR environment variable
     if let Ok(log_dir) = env::var("RUST_LOG_DIR") {
