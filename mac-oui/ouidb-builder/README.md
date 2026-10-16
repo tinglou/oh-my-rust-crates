@@ -62,13 +62,15 @@ E80AB9 US Cisco Systems, Inc
 F0EE7A US Apple, Inc.
 ```
 
+Full names are kept as-is, applying only necessary normalizations: HTML entities (`&amp;` → `&`), fullwidth parentheses → ASCII, known spelling typos, and collapsed whitespace. No suffix trimming.
+
 ## Output Format
 
 Each line: `<MAC_prefix> <2-char_country> <organization_name>`
 
 - **MAC prefix**: uppercase hex, 6/7/9 chars for 24/28/36-bit OUI
 - **Country code**: 2-letter ISO code extracted from address (`US`, `CN`, `DE`, etc.), `--` if unavailable
-- **Organization name**: company name with corporate suffixes stripped (default) or kept (`--keep-suffix`)
+- **Organization name**: company name with corporate suffixes stripped (default) or kept with necessary normalizations only (`--keep-suffix`)
 
 ## Suffix Trimming
 

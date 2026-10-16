@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::{BufWriter, Write};
 use std::path::Path;
@@ -15,6 +15,8 @@ const OUTPUT_DEFAULT: &str = "../macaddr-ouidb/ieee-mac-oui.txt";
 const OUTPUT_FULLNAME: &str = "../macaddr-ouidb/ieee-mac-oui-fullname.txt";
 
 const TIMESTAMP_FILE: &str = "db/timestamp.txt";
+const TRIM_LOG: &str = "trim-suffix.log";
+const FIX_TYPO_LOG: &str = "fix-typo.log";
 
 /// ISO 3166-1 alpha-2 country codes. Sorted for binary search.
 /// Used to validate extracted 2-letter tokens are actual country codes,
@@ -41,150 +43,6 @@ const ISO_3166_ALPHA2: &[&str] = &[
 
 fn is_known_country(code: &str) -> bool {
     ISO_3166_ALPHA2.binary_search(&code).is_ok()
-}
-
-/// Corporate suffixes ordered longest-first for greedy matching.
-/// Each entry is the normalized (lowercase, no punctuation) form.
-const CORP_SUFFIXES: &[&str] = &[
-    "gmbh & co kg",     // Germany: GmbH & Co. KG
-    "gmbh & co",        // Germany: GmbH & Co. (truncated)
-    "gmbh co kg",       // Germany: GmbH Co. KG (no &)
-    "sdn bhd",          // Malaysia: Sendirian Berhad
-    "co ltd",           // China: Co., Ltd. / Co.,Ltd
-    "corp ltd",         // China: Corp., Ltd.
-    "pte ltd",          // Singapore: Pte. Ltd.
-    "pty ltd",          // Australia: Pty. Ltd.
-    "pvt ltd",          // India: Pvt. Ltd. (Private Limited)
-    "s p a",            // Italy: S.p.A.
-    "s r l",            // Italy: S.r.l.
-    "s r o",            // Czech: s.r.o.
-    "s a s",            // France: SAS (simplified stock corp)
-    "s a u",            // Spain: S.A.U.
-    "b v",              // Netherlands: B.V. (dotted variant)
-    "n v",              // Netherlands/Belgium: N.V. (dotted variant)
-    "k k",              // Japan: Kabushiki Kaisha (K.K.)
-    "g k",              // Japan: Gōdō Kaisha (G.K.)
-    "corporation",      // USA: Corporation
-    "incorporated",     // USA: Incorporated
-    "corporate",        // USA: Corporate
-    "limited liability company", // full form: Limited Liability Company
-    "ltd co",           // e.g. "Ltd. Co."
-    "limited",          // UK: Limited
-    "spa",              // Italy: S.p.A (alternate form)
-    "llc",              // USA: Limited Liability Company
-    "llp",              // USA: Limited Liability Partnership
-    "ltd",              // UK: Ltd / Ltd.
-    "plc",              // UK: Public Limited Company
-    "gmbh",             // Germany: GmbH
-    "corp",             // USA: Corp / Corp.
-    "inc",              // USA: Inc / Inc.
-    "l p",              // USA: Limited Partnership
-    "ag",               // Germany/Switzerland: AG
-    "bv",               // Netherlands: BV
-    "nv",               // Netherlands/Belgium: NV
-    "kg",               // Germany: KG (limited partnership)
-    "kft",              // Hungary: Korlátolt Felelősségű Társaság (LLC)
-    "zrt",              // Hungary: Zártkörűen Működő Részvénytársaság (private)
-    "nyrt",             // Hungary: Nyilvánosan Működő Részvénytársaság (public)
-    "bt",               // Hungary: Betéti Társaság (limited partnership)
-    "kkt",              // Hungary: Közkereseti Társaság (general partnership)
-    "ab",               // Sweden: Aktiebolag
-    "oy",               // Finland: Osakeyhtiö
-    "oyj",              // Finland: Julkinen osakeyhtiö
-    "aps",              // Denmark: ApS
-    "as",               // Norway: AS / Denmark: A/S
-    "a s",              // Denmark/Norway: A/S (alternate form)
-    "s a",              // France/Spain/Latin: S.A. / SA
-    "ulc",              // Canada: Unlimited Liability Company
-    "pc",               // USA: Professional Corporation
-];
-
-/// Split a name into normalized lowercase word tokens (strips all punctuation).
-fn normalize_words(name: &str) -> Vec<String> {
-    name.to_lowercase()
-        .split(|c: char| !c.is_ascii_alphanumeric())
-        .filter(|s| !s.is_empty())
-        .map(|s| s.to_string())
-        .collect()
-}
-
-/// Trim known corporate suffixes from the end of an organization name.
-fn trim_corp_suffix(name: &str) -> String {
-    let words = normalize_words(name);
-    if words.len() < 2 {
-        return name.to_string();
-    }
-
-    // Try matching from longest suffix first
-    for suffix in CORP_SUFFIXES {
-        let suffix_words: Vec<&str> = suffix.split_whitespace().collect();
-        let n = suffix_words.len();
-        if words.len() <= n {
-            continue;
-        }
-
-        let tail = &words[words.len() - n..];
-        if tail != suffix_words.as_slice() {
-            continue;
-        }
-
-        // Build (start_pos, end_pos) for each normalized word in the original
-        let mut word_spans: Vec<(usize, usize)> = Vec::with_capacity(words.len());
-        let mut in_word = false;
-        let mut start = 0usize;
-
-        for (i, c) in name.char_indices() {
-            if c.is_ascii_alphanumeric() && !in_word {
-                start = i;
-                in_word = true;
-            } else if !c.is_ascii_alphanumeric() && in_word {
-                in_word = false;
-                word_spans.push((start, i));
-            }
-        }
-        if in_word {
-            word_spans.push((start, name.len()));
-        }
-
-        let keep_count = words.len() - n;
-        // Validate the word spans match our normalized words
-        if word_spans.len() < words.len()
-            || word_spans
-                .iter()
-                .zip(words.iter())
-                .any(|((s, e), w)| name[*s..*e].to_lowercase() != *w)
-        {
-            continue;
-        }
-
-        // Cut after the last keep word (end position of that span),
-        // then keep trailing non-alnum chars that belong to the keep word
-        // (e.g., closing paren) but stop before the suffix separator.
-        let last_keep_end = word_spans[keep_count - 1].1;
-        let suffix_start = word_spans[keep_count].0;
-
-        // Walk chars backwards from suffix_start to find the cut point
-        // (skip trailing whitespace/commas/dots between keep words and suffix).
-        let mut cut_pos = suffix_start;
-        for (j, c) in name[last_keep_end..suffix_start].char_indices().rev() {
-            if c.is_whitespace() || c == ',' || c == '.' {
-                cut_pos = last_keep_end + j;
-            } else {
-                break;
-            }
-        }
-
-        // If nothing remains, return original
-        if cut_pos == 0 {
-            return name.to_string();
-        }
-
-        return name[..cut_pos]
-            .trim_end_matches(|c: char| c == ',' || c == '.' || c.is_whitespace())
-            .to_string();
-    }
-
-    name.to_string()
 }
 
 /// Map spelled-out country/region names to ISO 3166-1 alpha-2 codes.
@@ -368,14 +226,18 @@ pub fn run(keep_suffix: bool) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut total = 0usize;
     let mut trimmed_count = 0usize;
-    let mut seen_names: HashSet<String> = HashSet::new();
-    let mut unique_names: HashSet<String> = HashSet::new();
-    let mut unique_trimmed: HashSet<String> = HashSet::new();
+    let mut unique_names: BTreeSet<String> = BTreeSet::new();
+    let mut unique_trimmed: BTreeSet<String> = BTreeSet::new();
     let mut saved_bytes = 0usize;
 
     // Collect all lines in memory so we can write the header after analysis
     let mut lines: Vec<String> = Vec::new();
     let mut unfixable: Vec<(String, String)> = Vec::new(); // (mac_prefix, org_name)
+
+    // Unique organization-name changes, kept sorted (BTreeMap) for the log:
+    // "original -> result". Written alphabetically after processing, to
+    // trim-suffix.log (default) or fix-typo.log (--keep-suffix).
+    let mut change_map: BTreeMap<String, String> = BTreeMap::new();
 
     for csv_path in CSV_FILES {
         let path = Path::new(csv_path);
@@ -391,21 +253,28 @@ pub fn run(keep_suffix: bool) -> Result<(), Box<dyn std::error::Error>> {
             let record = result?;
 
             let mac_prefix = record[1].to_string();
-            let org_name = record[2].to_string();
+            let org_name = record[2].trim().to_string(); // trim leading/trailing spaces
             let address = &record[3];
 
             let country = extract_country_code(address, &org_name);
             let org_name_trimmed = if keep_suffix {
-                org_name.clone()
+                crate::corp_suffix::fix_fullname(&org_name)
             } else {
-                trim_corp_suffix(&org_name)
+                crate::corp_suffix::trim(&org_name)
             };
 
             if org_name_trimmed != org_name {
-                trimmed_count += 1;
-                unique_trimmed.insert(org_name.clone());
-                if seen_names.insert(org_name.clone()) {
-                    saved_bytes += org_name.len() - org_name_trimmed.len();
+                if !keep_suffix {
+                    trimmed_count += 1;
+                    unique_trimmed.insert(org_name.clone());
+                }
+                if change_map
+                    .insert(org_name.clone(), org_name_trimmed.clone())
+                    .is_none()
+                {
+                    if !keep_suffix {
+                        saved_bytes += org_name.len().saturating_sub(org_name_trimmed.len());
+                    }
                     println!("  {} -> {}", org_name, org_name_trimmed);
                 }
             }
@@ -450,6 +319,16 @@ pub fn run(keep_suffix: bool) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     writer.flush()?;
+
+    // Write the change log alphabetically sorted by original name.
+    // Default mode logs suffix trims; --keep-suffix logs typo/entity fixes.
+    let log_path = if keep_suffix { FIX_TYPO_LOG } else { TRIM_LOG };
+    let mut log = BufWriter::new(fs::File::create(log_path)?);
+    for (original, result) in &change_map {
+        writeln!(log, "{} -> {}", original, result)?;
+    }
+    log.flush()?;
+
     println!("Done: {} entries written to {}", total, output);
     if total > 0 && !keep_suffix {
         println!(

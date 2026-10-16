@@ -1,4 +1,5 @@
 mod convert;
+mod corp_suffix;
 mod download;
 mod region_map;
 
