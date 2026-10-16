@@ -7,3 +7,7 @@ edition.workspace = true
 repository.workspace = true
 
 [dependencies]
+clap = { version = "4", features = ["derive"] }
+ureq = "2"
+csv = "1"
+chrono = "0.4"
