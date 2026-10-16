@@ -5,13 +5,13 @@ members = [
     "backerror-rs/backerror",
     "backerror-rs/backerror-macros",
     "init-log4rs",
-    "macaddr-ouidb",
+    "mac-oui/macaddr-ouidb",
     "conan2-rs",
 
     "hypervectorscan-rs/hypervectorscan",
     "hypervectorscan-rs/hypervectorscan-sys",
     "hypervectorscan-rs/hyperscan-src",
-    "hypervectorscan-rs/vectorscan-src",
+    "hypervectorscan-rs/vectorscan-src", "mac-oui/ouidb-builder",
 ]
 
 # Exclude sample projects from workspace
