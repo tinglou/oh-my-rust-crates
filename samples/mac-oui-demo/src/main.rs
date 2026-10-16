@@ -84,7 +84,8 @@ fn demo_oui_lookup() {
         let mac = mac_str.parse::<MacAddress>().unwrap();
         match OUI_DB.lookup_mac(mac) {
             Some(org) => {
-                println!("  {:25} {}", desc, org);
+                let (name, region) = org;
+                println!("  {:25} {} ({})", desc, name, region);
                 println!("    MAC: {}", mac);
             }
             None => println!("  {:25} Not found in database", desc),
@@ -108,10 +109,10 @@ fn demo_virtual_detection() {
 
     for (desc, mac_str) in vms {
         let mac = mac_str.parse::<MacAddress>().unwrap();
-        if let Some(org) = OUI_DB.lookup_mac(mac) {
-            let is_virtual = OuiDb::is_virtual_nic(org);
+        if let Some((name, region)) = OUI_DB.lookup_mac(mac) {
+            let is_virtual = OuiDb::is_virtual_nic(name);
             let icon = if is_virtual { "🖥️ " } else { "💻 " };
-            println!("  {}{:20} {}", icon, desc, org);
+            println!("  {}{:20} {} ({})", icon, desc, name, region);
             println!("    Virtual: {}, MAC: {}", is_virtual, mac);
         }
     }
@@ -243,9 +244,10 @@ fn demo_batch_processing() {
             if mac.is_local() { stats.local += 1; }
             if mac.is_universal() { stats.universal += 1; }
 
-            if let Some(org) = OUI_DB.lookup_mac(mac) {
+            if let Some((name, region)) = OUI_DB.lookup_mac(mac) {
                 stats.with_oui += 1;
-                if OuiDb::is_virtual_nic(org) {
+                println!("    OUI: {} ({})", name, region);
+                if OuiDb::is_virtual_nic(name) {
                     stats.is_virtual += 1;
                 }
             }

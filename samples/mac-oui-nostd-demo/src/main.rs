@@ -60,9 +60,9 @@ fn main() {
     for (mac_str, _expected) in &oui_test_cases {
         match mac_str.parse::<MacAddress>() {
             Ok(mac) => match OUI_DB.lookup_mac(mac) {
-                Some(org_name) => {
-                    println!("   {} -> {}", mac_str, org_name);
-                    if OuiDb::is_virtual_nic(org_name) {
+                Some((name, _region)) => {
+                    println!("   {} -> {}", mac_str, name);
+                    if OuiDb::is_virtual_nic(name) {
                         println!("      ⚠️  Virtual NIC detected");
                     }
                 }
