@@ -20,9 +20,9 @@ See [backerror-rs/backerror/README.md](backerror-rs/backerror/README.md) for mor
 
 **High-performance MAC Address OUI Lookup**
 
-`macaddr-ouidb` provides fast MAC address to manufacturer (OUI - Organizationally Unique Identifier) lookup with a pre-compiled database.
+`macaddr-ouidb` provides fast MAC address to manufacturer (OUI - Organizationally Unique Identifier) lookup with a pre-compiled database, plus region info, virtual NIC detection, and no_std support.
 
-See [macaddr-ouidb/README.md](macaddr-ouidb/README.md) for more details.
+See [mac-oui/macaddr-ouidb/README.md](mac-oui/macaddr-ouidb/README.md) for more details.
 
 ### 3. conan2-rs
 

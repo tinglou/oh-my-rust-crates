@@ -18,6 +18,7 @@ const OUTPUT_FULLNAME: &str = "../macaddr-ouidb/ieee-mac-oui-fullname.txt";
 const TIMESTAMP_FILE: &str = "db/timestamp.txt";
 const TRIM_LOG: &str = "trim-suffix.log";
 const FIX_TYPO_LOG: &str = "fix-typo.log";
+const DUPLICATE_LOG: &str = "duplicate-prefix.log";
 
 /// ISO 3166-1 alpha-2 country codes. Sorted for binary search.
 /// Used to validate extracted 2-letter tokens are actual country codes,
@@ -44,6 +45,48 @@ const ISO_3166_ALPHA2: &[&str] = &[
 
 fn is_known_country(code: &str) -> bool {
     ISO_3166_ALPHA2.binary_search(&code).is_ok()
+}
+
+/// Replace Unicode space separators (Zs category, e.g. NBSP, en space, ideographic
+/// space) with a regular ASCII space. Only U+0020 is kept as-is among spaces.
+fn is_unicode_space(c: char) -> bool {
+    matches!(c,
+        '\u{00A0}' | '\u{1680}' | '\u{2000}'..='\u{200A}' | '\u{202F}' | '\u{205F}' | '\u{3000}'
+    )
+}
+
+/// Strip invisible Unicode characters from IEEE-supplied organization names.
+///
+/// IEEE CSV data is vendor-submitted and contains various invisible artifacts:
+/// - Unicode space separators (NBSP, en space, etc.): replaced with ASCII space
+/// - U+00AD (soft hyphen): removed
+/// - U+200B..U+200F (zero-width/bidi marks): removed
+/// - U+2060..U+2064, U+2066..U+206F (word joiner, format controls): removed
+/// - U+FEFF (BOM/ZWNBSP): removed
+/// - U+061C (ALM): removed
+/// - U+202A..U+202E (bidi embedding/override): removed
+///
+/// Strategy: map chars to Option<char>, then flatten. Normal chars pass through,
+/// space separators become ASCII space, invisible chars become None (removed).
+fn sanitize_org_name(name: &str) -> String {
+    name.chars()
+        .filter_map(|c| {
+            if is_unicode_space(c) {
+                Some(' ')
+            } else if c == '\u{00AD}'
+                || ('\u{200B}'..='\u{200F}').contains(&c)
+                || ('\u{202A}'..='\u{202E}').contains(&c)
+                || ('\u{2060}'..='\u{2064}').contains(&c)
+                || ('\u{2066}'..='\u{206F}').contains(&c)
+                || c == '\u{FEFF}'
+                || c == '\u{061C}'
+            {
+                None
+            } else {
+                Some(c)
+            }
+        })
+        .collect()
 }
 
 /// Map spelled-out country/region names to ISO 3166-1 alpha-2 codes.
@@ -240,6 +283,16 @@ pub fn run(keep_suffix: bool) -> Result<(), Box<dyn std::error::Error>> {
     // trim-suffix.log (default) or fix-typo.log (--keep-suffix).
     let mut change_map: BTreeMap<String, String> = BTreeMap::new();
 
+    // Duplicate prefix handling: IEEE reassigns prefixes over time, so the same
+    // prefix can appear multiple times in the source CSVs. We keep the LAST
+    // occurrence (most recent allocation) and record the dropped ones.
+    // prefix -> index into `lines`
+    let mut prefix_index: std::collections::HashMap<String, usize> =
+        std::collections::HashMap::new();
+    // prefix -> dropped lines (earlier occurrences, in source order)
+    let mut duplicate_map: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    let mut duplicate_occurrences = 0usize;
+
     for csv_path in CSV_FILES {
         let path = Path::new(csv_path);
         if !path.exists() {
@@ -254,7 +307,7 @@ pub fn run(keep_suffix: bool) -> Result<(), Box<dyn std::error::Error>> {
             let record = result?;
 
             let mac_prefix = record[1].to_string();
-            let org_name = record[2].trim().to_string(); // trim leading/trailing spaces
+            let org_name = sanitize_org_name(record[2].trim());
             let address = &record[3];
 
             let country = extract_country_code(address, &org_name);
@@ -285,7 +338,22 @@ pub fn run(keep_suffix: bool) -> Result<(), Box<dyn std::error::Error>> {
                 unfixable.push((mac_prefix.clone(), org_name.clone()));
             }
 
-            lines.push(format!("{} {} {}", mac_prefix, country, org_name_trimmed));
+            let line = format!("{} {} {}", mac_prefix, country, org_name_trimmed);
+            match prefix_index.get(&mac_prefix).copied() {
+                Some(idx) => {
+                    // Prefix already seen: keep the LAST occurrence (most recent
+                    // allocation). Record the replaced (dropped) line if it differs.
+                    duplicate_occurrences += 1;
+                    let dropped = std::mem::replace(&mut lines[idx], line);
+                    if dropped != lines[idx] {
+                        duplicate_map.entry(mac_prefix).or_default().push(dropped);
+                    }
+                }
+                None => {
+                    prefix_index.insert(mac_prefix, lines.len());
+                    lines.push(line);
+                }
+            }
             total += 1;
         }
     }
@@ -302,6 +370,15 @@ pub fn run(keep_suffix: bool) -> Result<(), Box<dyn std::error::Error>> {
         writeln!(writer, "# {}: {}", name, url)?;
     }
     writeln!(writer, "# Updated: {}", date)?;
+    writeln!(
+        writer,
+        "# Duplicate prefixes are deduplicated: the LAST occurrence (most recent"
+    )?;
+    writeln!(
+        writer,
+        "# allocation) is kept. Dropped entries are logged to {}.",
+        DUPLICATE_LOG
+    )?;
 
     if !unfixable.is_empty() {
         writeln!(writer, "#")?;
@@ -330,7 +407,46 @@ pub fn run(keep_suffix: bool) -> Result<(), Box<dyn std::error::Error>> {
     }
     log.flush()?;
 
-    println!("Done: {} entries written to {}", total, output);
+    // Write the duplicate-prefix log (only if there were any duplicates).
+    if !duplicate_map.is_empty() {
+        let mut dup_log = BufWriter::new(fs::File::create(DUPLICATE_LOG)?);
+        writeln!(
+            dup_log,
+            "# Duplicate OUI/prefix assignments in the source data (IEEE reassignments)."
+        )?;
+        writeln!(
+            dup_log,
+            "# Policy: keep the LAST occurrence (most recent allocation), drop earlier ones."
+        )?;
+        writeln!(dup_log, "# Format: <prefix> (bits)")?;
+        writeln!(dup_log, "#           kept:    <kept entry>")?;
+        writeln!(dup_log, "#           dropped: <dropped entry>")?;
+        writeln!(dup_log, "#")?;
+        for (prefix, dropped_lines) in &duplicate_map {
+            let bits = match prefix.len() {
+                6 => 24,
+                7 => 28,
+                9 => 36,
+                _ => 0,
+            };
+            writeln!(dup_log, "{} ({} bits)", prefix, bits)?;
+            if let Some(&idx) = prefix_index.get(prefix) {
+                writeln!(dup_log, "  kept:    {}", lines[idx])?;
+            }
+            for dropped in dropped_lines {
+                writeln!(dup_log, "  dropped: {}", dropped)?;
+            }
+        }
+        dup_log.flush()?;
+    }
+
+    println!(
+        "Done: {} entries written to {} ({} duplicate occurrences across {} prefixes)",
+        lines.len(),
+        output,
+        duplicate_occurrences,
+        duplicate_map.len()
+    );
     if total > 0 && !keep_suffix {
         println!(
             "Trimmed: {}/{} ({:.1}%), unique: {}/{} ({:.1}%), saved: {} bytes",

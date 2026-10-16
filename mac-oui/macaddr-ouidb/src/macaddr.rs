@@ -88,13 +88,17 @@ impl MacAddress {
 
     /// Return true if the MacAddr is a virtual NIC
     pub fn is_virtual_nic(&self) -> bool {
-        crate::OUI_DB
-            .lookup_mac(*self)
-            .map_or(false, |name| OuiDb::is_virtual_nic(name))
+        self.oui_and_region()
+            .map_or(false, |(name, _)| OuiDb::is_virtual_nic(name))
     }
 
-    /// Return OUI (Organizationally Unique Identifier)
+    /// Return OUI (Organizationally Unique Identifier) name only
     pub fn oui(&self) -> Option<&'static str> {
+        self.oui_and_region().map(|(name, _)| name)
+    }
+
+    /// Return OUI (name, region)
+    pub fn oui_and_region(&self) -> Option<(&'static str, &'static str)> {
         crate::OUI_DB.lookup_mac(*self)
     }
 

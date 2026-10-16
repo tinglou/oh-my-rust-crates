@@ -56,22 +56,38 @@ fn test_oui_lookup_24bit() {
     // Xerox (00:00:00)
     let mac: MacAddress = "00:00:01:00:00:00".parse().unwrap();
     let org = OUI_DB.lookup_mac(mac);
-    assert_eq!(org, Some("Xerox"));
+    assert!(
+        matches!(org, Some((name, "US")) if name.starts_with("XEROX")),
+        "Expected XEROX (US), got {:?}",
+        org
+    );
 
     // Cisco Systems (00:00:0C)
     let mac: MacAddress = "00:00:0C:00:00:00".parse().unwrap();
     let org = OUI_DB.lookup_mac(mac);
-    assert_eq!(org, Some("Cisco Systems"));
+    assert!(
+        matches!(org, Some((name, "US")) if name.starts_with("Cisco Systems")),
+        "Expected Cisco Systems (US), got {:?}",
+        org
+    );
 
     // Microsoft (00:03:FF)
     let mac: MacAddress = "00:03:FF:00:00:00".parse().unwrap();
     let org = OUI_DB.lookup_mac(mac);
-    assert_eq!(org, Some("Microsoft"));
+    assert!(
+        matches!(org, Some((name, "US")) if name.starts_with("Microsoft")),
+        "Expected Microsoft (US), got {:?}",
+        org
+    );
 
     // Apple (00:03:93)
     let mac: MacAddress = "00:03:93:FF:FF:FF".parse().unwrap();
     let org = OUI_DB.lookup_mac(mac);
-    assert_eq!(org, Some("Apple"));
+    assert!(
+        matches!(org, Some((name, "US")) if name.starts_with("Apple")),
+        "Expected Apple (US), got {:?}",
+        org
+    );
 }
 
 #[test]
@@ -86,7 +102,7 @@ fn test_oui_lookup_28bit() {
         org.is_some(),
         "28-bit OUI lookup failed for 00:55:DA:0A:BB:CC"
     );
-    println!("28-bit OUI: 00:55:DA:0A:BB:CC -> {}", org.unwrap());
+    println!("28-bit OUI: 00:55:DA:0A:BB:CC -> {:?}", org.unwrap());
 
     // 同一 24 位前缀下，不同 28 位子条目应该匹配不同组织
     let mac1: MacAddress = "00:55:DA:00:00:00".parse().unwrap();
@@ -216,25 +232,31 @@ fn test_mac_address_debug() {
 
 #[test]
 fn test_oui_lookup_batch() {
-    // 批量测试一些已知的 OUI
+    // 批量测试一些已知的 OUI（用 starts_with 兼容精简名和 fullname 两种模式）
     let test_cases = vec![
-        ("00:00:00:00:00:00", "Xerox"),
-        ("00:00:01:00:00:00", "Xerox"),
-        ("00:00:02:00:00:00", "Xerox"),
+        ("00:00:00:00:00:00", "XEROX"),
+        ("00:00:01:00:00:00", "XEROX"),
+        ("00:00:02:00:00:00", "XEROX"),
         ("00:00:0C:00:00:00", "Cisco Systems"),
         ("00:00:17:00:00:00", "Oracle"),
-        ("00:00:39:00:00:00", "Toshiba"),
+        ("00:00:39:00:00:00", "TOSHIBA"),
         ("00:00:4C:00:00:00", "NEC"),
-        ("00:00:60:00:00:00", "Kontron Europe GmbH"),
-        ("00:00:85:00:00:00", "Canon"),
-        ("00:00:87:00:00:00", "Hitachi"),
+        ("00:00:60:00:00:00", "Kontron Europe"),
+        ("00:00:85:00:00:00", "CANON"),
+        ("00:00:87:00:00:00", "HITACHI"),
         ("fa:16:3e:05:44:9b", "OpenStack"),
     ];
 
     for (mac_str, expected_org) in test_cases {
         let mac: MacAddress = mac_str.parse().unwrap();
         let org = OUI_DB.lookup_mac(mac);
-        assert_eq!(org, Some(expected_org), "Failed for MAC: {}", mac_str);
+        assert!(
+            matches!(org, Some((name, _)) if name.starts_with(expected_org)),
+            "Failed for MAC: {} (expected prefix '{}', got {:?})",
+            mac_str,
+            expected_org,
+            org
+        );
     }
 }
 
@@ -274,7 +296,11 @@ fn test_oui_all_types_coverage() {
     // === 24 位 OUI (MA-L) ===
     let mac_24: MacAddress = "00:00:01:00:00:00".parse().unwrap();
     let org_24 = OUI_DB.lookup_mac(mac_24);
-    assert_eq!(org_24, Some("Xerox"), "24-bit OUI lookup failed");
+    assert!(
+        matches!(org_24, Some((name, "US")) if name.starts_with("XEROX")),
+        "24-bit OUI lookup failed: {:?}",
+        org_24
+    );
     println!("✓ 24-bit OUI: {} -> {:?}", mac_24, org_24);
 
     // === 28 位 OUI (MA-M) ===

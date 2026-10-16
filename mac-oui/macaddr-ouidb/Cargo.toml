@@ -18,12 +18,12 @@ repository.workspace = true
 build = "build.rs"
 
 [features]
-default = ["std", "serde", "pnet", "ma-s"]
+default = ["std", "serde", "pnet"]
 
 std = ["pnet_base/std", "serde/std", "thiserror/std"]
 pnet = []
 serde = ["dep:serde"]
-ma-s = []
+fullname = []
 
 [[bin]]
 name = "mac-oui"

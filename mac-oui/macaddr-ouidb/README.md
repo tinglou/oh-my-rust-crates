@@ -1,13 +1,16 @@
 # macaddr-ouidb
 
+[:us: English](README.md) | [:cn: 中文](README-cn.md)
+
 High-performance MAC address OUI (Organizationally Unique Identifier) lookup library, supporting manufacturer information lookup from MAC addresses.
 
 ## Features
 
 - 🚀 **Zero-Cost Abstraction**: Compile-time generated lookup tables, only binary search at runtime
-- 💾 **Memory Efficient**: Columnar storage + compact encoding, full database only 900KB
+- 💾 **Memory Efficient**: Columnar storage + compact encoding
 - ⚡ **Fast Lookup**: O(log n) time complexity, supports 24/28/36-bit OUI
-- 🔍 **Comprehensive Coverage**: Contains 38,000+ OUI-24 entries, 6,000+ OUI-28 entries, 6,000+ OUI-36 entries
+- 🔍 **Comprehensive Coverage**: Contains 40,000+ OUI-24 entries, 6,600+ OUI-28 (MA-M) entries, 11,000+ OUI-36 (MA-S/IAB) entries
+- 🌍 **Region Info**: Each entry carries an ISO 3166-1 alpha-2 country code alongside the organization name
 - 🎯 **Virtual NIC Detection**: Built-in common virtualization platform NIC recognition (VMware, QEMU, VirtualBox, OpenStack, etc.)
 - 📦 **Flexible Integration**: Supports `serde` serialization, optional `pnet` interoperability
 - 🔒 **no_std Support**: Works in `no_std` environments (optional features for std)
@@ -28,10 +31,15 @@ use std::str::FromStr;
 // Create a MAC address
 let mac = MacAddress::from_str("00:55:DA:0A:BB:CC").unwrap();
 
-// Lookup manufacturer information
+// Lookup manufacturer information (name only)
 match mac.oui() {
     Some(org_name) => println!("Manufacturer: {}", org_name),
     None => println!("OUI information not found"),
+}
+
+// Lookup manufacturer name together with its region
+if let Some((name, region)) = mac.oui_and_region() {
+    println!("Manufacturer: {} ({})", name, region);
 }
 
 // Check if virtual NIC
@@ -91,7 +99,8 @@ assert!(!mac.is_zero());
 // Methods
 let octets = mac.octets();           // [u8; 6]
 let value = mac.to_u64();            // u64
-let oui = mac.oui();                 // Option<&'static str>
+let oui = mac.oui();                 // Option<&'static str>  (name only)
+let pair = mac.oui_and_region();     // Option<(&'static str, &'static str)>  (name, region)
 let is_virtual = mac.is_virtual_nic(); // bool
 ```
 
@@ -109,7 +118,21 @@ Automatically matches the most precise type during lookup.
 
 ## Data Source
 
-OUI data comes from the `nmap-mac-prefixes` file of the [Nmap project](https://nmap.org/), which integrates IEEE official OUI assignment data.
+OUI data is derived from the IEEE official registries (MA-L, MA-M, MA-S/IAB) and
+generated at compile time by the [`ouidb-builder`](../ouidb-builder) tool into
+`ieee-mac-oui.txt`. A small hand-maintained `custom-mac-oui.txt` supplements the
+IEEE data with virtual NIC prefixes (QEMU, Bochs, OpenStack, etc.).
+
+`build.rs` merges both sources at compile time:
+
+- Organization names are stored as `<2-letter region code><name>` (e.g. `JPSony`);
+  the country code is extracted from the IEEE organization address.
+- Invisible Unicode artifacts present in the vendor-submitted IEEE data (NBSP,
+  zero-width spaces, soft hyphens, …) are stripped during generation.
+- Duplicate prefixes caused by IEEE reassignments are de-duplicated, keeping the
+  **most recent** allocation (see `ouidb-builder/duplicate-prefix.log`).
+- If a prefix exists in **both** `custom-mac-oui.txt` and the IEEE data, the build
+  fails with an error instead of silently overriding.
 
 Data is automatically generated at compile time via `build.rs`, ensuring:
 - Consistency with source code version
@@ -118,12 +141,12 @@ Data is automatically generated at compile time via `build.rs`, ensuring:
 
 ## Features
 
-| Feature | Description                      | Default |
-| ------- | -------------------------------- | ------- |
-| `std`   | Enable std library support       | Yes     |
-| `serde` | Enable serde serialization       | Yes     |
-| `pnet`  | Enable pnet interoperability     | Yes     |
-| `ma-s`  | Enable 36-bit OUI (MA-S) support | Yes     |
+| Feature    | Description                                         | Default |
+| ---------- | --------------------------------------------------- | ------- |
+| `std`      | Enable std library support                          | Yes     |
+| `serde`    | Enable serde serialization                          | Yes     |
+| `pnet`     | Enable pnet interoperability                        | Yes     |
+| `fullname` | Use the full (untrimmed) organization names dataset | No      |
 
 ## no_std Support
 
@@ -151,12 +174,12 @@ Address Type:
   Universal:   Yes
   Local:       No
 
-Organization: Shinko Technos
+Organization: Shinko Technos (JP)
 ```
 
 ## Performance
 
 - **Lookup Time**: O(log n) binary search
-- **Memory Usage**: ~1.7MB for full database (38,000+ OUI-24, 6,000+ OUI-28, 6,000+ OUI-36 entries)
+- **Memory Usage**: ~1.0 MB embedded static data (measured in a release build), covering 40,000+ OUI-24, 6,600+ OUI-28, 11,000+ OUI-36 entries
 - **Initialization**: Zero runtime initialization (compile-time generated)
 

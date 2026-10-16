@@ -34,9 +34,19 @@ struct Oui36Entry {
     name_idx: usize,
 }
 
-/// 解析 nmap-mac-prefixes 文件
-fn parse_nmap_file(path: &Path) -> Vec<OuiEntry> {
-    let file = fs::File::open(path).expect("Failed to open nmap-mac-prefixes file");
+/// 解析 `PREFIX CC ORG` 格式文件（ieee-mac-oui.txt / ieee-mac-oui-fullname.txt / custom-mac-oui.txt）
+///
+/// - `PREFIX`：6/7/9 字符 hex 前缀（24/28/36 位）
+/// - `CC`：2 字节国家码
+/// - `ORG`：组织名称（可能含空格）
+///
+/// 返回的 `OuiEntry.org_name` 已拼接为 `CC + ORG`，
+/// 后续 `names` blob 中每条目即为 cc(2 字节) + name，与 `oui.rs` 的解码逻辑对应。
+fn parse_oui_file(path: &Path) -> Vec<OuiEntry> {
+    if !path.exists() {
+        return Vec::new();
+    }
+    let file = fs::File::open(path).expect("Failed to open oui file");
     let reader = BufReader::new(file);
     let mut entries = Vec::new();
 
@@ -49,13 +59,13 @@ fn parse_nmap_file(path: &Path) -> Vec<OuiEntry> {
             continue;
         }
 
-        // 分割前缀和名称
-        let mut parts = line.splitn(2, ' ');
+        // 格式：PREFIX CC ORG
+        let mut parts = line.splitn(3, ' ');
         let prefix_str = parts.next().unwrap().trim();
+        let cc = parts.next().unwrap_or("").trim();
         let org_name = parts.next().unwrap_or("").trim();
 
         // 根据前缀长度判断位数
-        // 6 字符 = 24 位，7 字符 = 28 位，8 字符 = 36 位
         let bit_len = match prefix_str.len() {
             6 => 24,
             7 => 28,
@@ -69,9 +79,12 @@ fn parse_nmap_file(path: &Path) -> Vec<OuiEntry> {
             }
         };
 
+        // 拼接新 name：CC + ORG
+        let combined = format!("{}{}", cc, org_name);
+
         entries.push(OuiEntry {
             prefix_str: prefix_str.to_uppercase(),
-            org_name: org_name.to_string(),
+            org_name: combined,
             bit_len,
         });
     }
@@ -145,7 +158,7 @@ impl OuiDataBuilder {
     }
 
     /// 构建所有数据结构
-    fn build(&mut self, entries: Vec<OuiEntry>, has_ma_s: bool) {
+    fn build(&mut self, entries: Vec<OuiEntry>) {
         // 按前缀长度分组
         // entries_24: 3 字节前缀 -> 名称列表
         // entries_28: 3 字节前缀 -> (4 字节高 4 位，名称) 列表
@@ -155,11 +168,6 @@ impl OuiDataBuilder {
         let mut entries_36: BTreeMap<[u8; 3], Vec<(u16, usize)>> = BTreeMap::new();
 
         for entry in entries {
-            // 如果是 36-bit 且未启用 ma-s，跳过整个条目（包括名称）
-            if entry.bit_len == 36 && !has_ma_s {
-                continue;
-            }
-
             let name_idx = self.get_or_add_name(&entry.org_name);
             let bytes = Self::parse_prefix_hex(&entry.prefix_str);
 
@@ -181,16 +189,13 @@ impl OuiDataBuilder {
                         .push((key4, name_idx));
                 }
                 36 => {
-                    // 只有启用 ma-s feature 时才处理 36-bit 条目
-                    if has_ma_s {
-                        // 按 3 字节前缀分组，存储第 4 字节 + 第 5 字节高 4 位
-                        let prefix3: [u8; 3] = [bytes[0], bytes[1], bytes[2]];
-                        let key5 = ((bytes[3] as u16) << 8) | ((bytes[4] & 0xF0) as u16);
-                        entries_36
-                            .entry(prefix3)
-                            .or_insert_with(Vec::new)
-                            .push((key5, name_idx));
-                    }
+                    // 按 3 字节前缀分组，存储第 4 字节 + 第 5 字节高 4 位
+                    let prefix3: [u8; 3] = [bytes[0], bytes[1], bytes[2]];
+                    let key5 = ((bytes[3] as u16) << 8) | ((bytes[4] & 0xF0) as u16);
+                    entries_36
+                        .entry(prefix3)
+                        .or_insert_with(Vec::new)
+                        .push((key5, name_idx));
                 }
                 _ => {}
             }
@@ -226,8 +231,8 @@ impl OuiDataBuilder {
             }
         }
 
-        // 构建 36 位子表：每个 3 字节前缀对应一个子表（只有启用 ma-s 时才构建）
-        if has_ma_s {
+        // 构建 36 位子表：每个 3 字节前缀对应一个子表
+        {
             for (prefix3, entries_list) in entries_36 {
                 let subtable_idx = self.oui36_tables.len();
                 let entry_count = entries_list.len(); // 先保存长度
@@ -294,7 +299,7 @@ impl OuiDataBuilder {
     }
 
     /// 生成 Rust 代码
-    fn generate_code(&self, output_path: &Path, has_ma_s: bool) {
+    fn generate_code(&self, output_path: &Path) {
         let mut code = String::new();
 
         // 生成 names 字符串
@@ -312,7 +317,6 @@ impl OuiDataBuilder {
         let oui24_prefixes: Vec<[u8; 3]> = self.oui24_map.keys().copied().collect();
 
         // 计算唯一名称总长度
-        // let unique_names_total_length: usize = self.names.iter().map(|s| s.len()).sum();
         let unique_names_total_length: usize = names_string.len();
 
         // 统计名称长度
@@ -328,10 +332,6 @@ impl OuiDataBuilder {
         // 添加统计信息注释
         code.push_str("// === Generation Statistics ===\n");
         code.push_str(&format!(
-            "// - ma-s feature: {}\n",
-            if has_ma_s { "enabled" } else { "disabled" }
-        ));
-        code.push_str(&format!(
             "// - Unique names: {}, total length: {unique_names_total_length}\n",
             self.names.len()
         ));
@@ -346,15 +346,13 @@ impl OuiDataBuilder {
             self.oui28_tables.len(),
             oui28_entries
         ));
-        if has_ma_s {
+        {
             let oui36_entries: usize = self.oui36_tables.iter().map(|t| t.len()).sum();
             code.push_str(&format!(
                 "// - OUI-36 tables: {}, entries: {}\n",
                 self.oui36_tables.len(),
                 oui36_entries
             ));
-        } else {
-            code.push_str("// - OUI-36 tables: 0, entries: 0 (ma-s feature disabled)\n");
         }
         code.push_str(&format!(
             "// - Subtable-only prefixes: {}\n",
@@ -465,45 +463,38 @@ impl OuiDataBuilder {
         }
         code.push_str("];\n\n");
 
-        // 生成 oui_36 数组 - 只有启用 ma-s 时才生成
-        if has_ma_s {
-            code.push_str("#[rustfmt::skip]\n");
-            code.push_str("const OUI_36_TABLES: &[OuiSubtable<u16>] = &[\n");
-            for (idx, table) in self.oui36_tables.iter().enumerate() {
-                // 获取 24 位前缀注释
-                let prefix3 = self.oui36_idx_to_prefix.get(&idx).unwrap();
-                code.push_str(&format!(
-                    "    /* {:02X}{:02X}{:02X} */ OuiSubtable {{ prefix: &[",
-                    prefix3[0], prefix3[1], prefix3[2]
-                ));
-                for (i, entry) in table.iter().enumerate() {
-                    if i > 0 {
-                        code.push_str(",");
-                    }
-                    code.push_str(&format!("0x{:04X}", entry.prefix));
+        // 生成 oui_36 数组
+        code.push_str("#[rustfmt::skip]\n");
+        code.push_str("const OUI_36_TABLES: &[OuiSubtable<u16>] = &[\n");
+        for (idx, table) in self.oui36_tables.iter().enumerate() {
+            // 获取 24 位前缀注释
+            let prefix3 = self.oui36_idx_to_prefix.get(&idx).unwrap();
+            code.push_str(&format!(
+                "    /* {:02X}{:02X}{:02X} */ OuiSubtable {{ prefix: &[",
+                prefix3[0], prefix3[1], prefix3[2]
+            ));
+            for (i, entry) in table.iter().enumerate() {
+                if i > 0 {
+                    code.push_str(",");
                 }
-                code.push_str("], loc: &[");
-
-                // loc 字段 - 单行
-                for (i, entry) in table.iter().enumerate() {
-                    if i > 0 {
-                        code.push_str(",");
-                    }
-                    let offset = name_offsets[entry.name_idx];
-                    let name = &self.names[entry.name_idx];
-                    let length = name.len();
-                    let loc = ((offset as u32) << 8) | (length as u32);
-                    code.push_str(&format!("0x{:08X}", loc));
-                }
-                code.push_str("] },\n");
+                code.push_str(&format!("0x{:04X}", entry.prefix));
             }
-            code.push_str("];\n\n");
-        } else {
-            // ma-s 禁用时生成空数组（允许未使用代码）
-            code.push_str("#[rustfmt::skip]\n");
-            code.push_str("#[allow(dead_code)]\n");
-            code.push_str("const OUI_36_TABLES: &[OuiSubtable<u16>] = &[];\n\n");
+            code.push_str("], loc: &[");
+
+            // loc 字段 - 单行
+            for (i, entry) in table.iter().enumerate() {
+                if i > 0 {
+                    code.push_str(",");
+                }
+                let offset = name_offsets[entry.name_idx];
+                let name = &self.names[entry.name_idx];
+                let length = name.len();
+                let loc = ((offset as u32) << 8) | (length as u32);
+                code.push_str(&format!("0x{:08X}", loc));
+            }
+            code.push_str("] },\n");
         }
+        code.push_str("];\n\n");
 
         // 生成 OuiDb 常量
         code.push_str("/// Global static instance of OuiDb\n");
@@ -511,11 +502,7 @@ impl OuiDataBuilder {
         code.push_str("    names: OUI_NAMES,\n");
         code.push_str("    oui_24: &OUI_24_TABLE,\n");
         code.push_str("    oui_28: OUI_28_TABLES,\n");
-        if has_ma_s {
-            code.push_str("    oui_36: OUI_36_TABLES,\n");
-        } else {
-            code.push_str("    oui_36: &[],\n");
-        }
+        code.push_str("    oui_36: OUI_36_TABLES,\n");
         code.push_str("};\n");
 
         // 更新文件大小统计（替换占位符）
@@ -560,10 +547,6 @@ impl OuiDataBuilder {
         }
         println!("cargo:warning=Statistics:");
         println!(
-            "cargo:warning=  - ma-s feature: {}",
-            if has_ma_s { "enabled" } else { "disabled" }
-        );
-        println!(
             "cargo:warning=  - Unique names: {}, total length: {unique_names_total_length}",
             self.names.len()
         );
@@ -577,15 +560,13 @@ impl OuiDataBuilder {
             self.oui28_tables.len(),
             oui28_entries
         );
-        if has_ma_s {
+        {
             let oui36_entries: usize = self.oui36_tables.iter().map(|t| t.len()).sum();
             println!(
                 "cargo:warning=  - OUI-36 tables: {}, entries: {}",
                 self.oui36_tables.len(),
                 oui36_entries
             );
-        } else {
-            println!("cargo:warning=  - OUI-36 tables: 0, entries: 0 (ma-s feature disabled)");
         }
         println!("cargo:warning=Subtable-only prefixes (no 24-bit OUI entry):");
         for (prefix, subtable_type, entry_count) in &self.subtable_only_prefixes {
@@ -602,33 +583,60 @@ impl OuiDataBuilder {
 }
 
 fn main() {
-    let src = "nmap-mac-prefixes";
-    let my = "my-mac-prefixes";
-    // 监控源文件变化，当源文件变化时重新运行 build script
-    println!("cargo:rerun-if-changed={}", src);
-    println!("cargo:rerun-if-changed={}", my);
+    // 监控源文件变化
     println!("cargo:rerun-if-changed=build.rs");
 
-    // 检测 ma-s feature 是否启用
-    let has_ma_s = std::env::var("CARGO_FEATURE_MA_S").is_ok();
+    // fullname feature 控制数据源
+    let use_fullname = std::env::var("CARGO_FEATURE_FULLNAME").is_ok();
+    let ieee_file = if use_fullname {
+        "ieee-mac-oui-fullname.txt"
+    } else {
+        "ieee-mac-oui.txt"
+    };
+    println!("cargo:rerun-if-changed={}", ieee_file);
+    println!("cargo:rerun-if-changed=custom-mac-oui.txt");
+    println!("cargo:rerun-if-env-changed=CARGO_FEATURE_FULLNAME");
 
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    let input_path = Path::new(manifest_dir).join(src);
-    let my_input_path = Path::new(manifest_dir).join(my);
+    let ieee_path = Path::new(manifest_dir).join(ieee_file);
+    let custom_path = Path::new(manifest_dir).join("custom-mac-oui.txt");
 
     // 输出到 OUT_DIR（Rust 标准做法）
     let out_dir = std::env::var("OUT_DIR").unwrap();
     let output_path = Path::new(&out_dir).join("oui_data.rs");
 
-    // 解析文件
-    let mut entries = parse_nmap_file(&input_path);
-    let mut my_entries = parse_nmap_file(&my_input_path);
-    entries.append(&mut my_entries);
+    // 先解析 custom，再解析 ieee，custom 优先
+    // - custom 与 ieee 出现相同前缀时直接报错退出（不允许静默覆盖）
+    // - ieee 文件内部的重复前缀已由 ouidb-builder 在生成时去重，此处不再处理
+    let mut entries = parse_oui_file(&custom_path);
+    let ieee_entries = parse_oui_file(&ieee_path);
+
+    let custom_keys: std::collections::HashSet<(usize, String)> = entries
+        .iter()
+        .map(|e| (e.bit_len, e.prefix_str.clone()))
+        .collect();
+
+    for e in ieee_entries {
+        let key = (e.bit_len, e.prefix_str.clone());
+        if custom_keys.contains(&key) {
+            eprintln!(
+                "error: prefix {} ({} bits) appears in both custom-mac-oui.txt and {}",
+                e.prefix_str, e.bit_len, ieee_file
+            );
+            eprintln!("  custom entry org: {:?}", entries.iter()
+                .find(|x| x.bit_len == e.bit_len && x.prefix_str == e.prefix_str)
+                .map(|x| x.org_name.clone())
+                .unwrap_or_default());
+            eprintln!("  ieee entry org:   {:?}", e.org_name);
+            std::process::exit(1);
+        }
+        entries.push(e);
+    }
 
     // 构建数据结构
     let mut builder = OuiDataBuilder::new();
-    builder.build(entries, has_ma_s);
+    builder.build(entries);
 
     // 生成代码
-    builder.generate_code(&output_path, has_ma_s);
+    builder.generate_code(&output_path);
 }

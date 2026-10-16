@@ -98,6 +98,37 @@ impl OuiDb {
         OUI_SUBTABLE
     }
 
+    /// Returns the total size in bytes of the embedded static data referenced by this database.
+    ///
+    /// This sums the organization-name string, every lookup-table entry (the
+    /// `prefix` and `loc` arrays), and both the subtable descriptors and their
+    /// contents. It is useful for reporting the memory footprint of the OUI
+    /// database (e.g. in documentation or diagnostics).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use macaddr_ouidb::OUI_DB;
+    /// let bytes = OUI_DB.data_size_bytes();
+    /// assert!(bytes > 0);
+    /// ```
+    pub fn data_size_bytes(&self) -> usize {
+        let mut total = self.names.len();
+        total += core::mem::size_of_val(self.oui_24.prefix);
+        total += core::mem::size_of_val(self.oui_24.loc);
+        total += core::mem::size_of_val(self.oui_28);
+        for st in self.oui_28 {
+            total += core::mem::size_of_val(st.prefix);
+            total += core::mem::size_of_val(st.loc);
+        }
+        total += core::mem::size_of_val(self.oui_36);
+        for st in self.oui_36 {
+            total += core::mem::size_of_val(st.prefix);
+            total += core::mem::size_of_val(st.loc);
+        }
+        total
+    }
+
     /// Looks up the organization name (OUI vendor information) for a given MAC address.
     ///
     /// # Arguments
@@ -106,7 +137,7 @@ impl OuiDb {
     ///
     /// # Returns
     ///
-    /// Returns `Some(&'static str)` if the organization name is found, otherwise `None`.
+    /// Returns `Some((&str, &str))` with (name, region), otherwise `None`.
     ///
     /// # Example
     ///
@@ -115,11 +146,11 @@ impl OuiDb {
     /// let mac = MacAddress::new([0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
     /// let org = OUI_DB.lookup_mac(mac);
     /// ```
-    pub fn lookup_mac(&self, mac: MacAddress) -> Option<&'static str> {
+    pub fn lookup_mac(&self, mac: MacAddress) -> Option<(&'static str, &'static str)> {
         self.lookup(mac.octets())
     }
 
-    /// Looks up the organization name (OUI vendor information) for a given MAC address byte array.
+    /// Looks up the organization name and region for a given MAC address byte array.
     ///
     /// Supports 24-bit, 28-bit, and 36-bit OUI queries.
     ///
@@ -129,8 +160,7 @@ impl OuiDb {
     ///
     /// # Returns
     ///
-    /// Returns `Some(&'static str)` if the organization name is found. Returns `None` if the MAC
-    /// address length is not 6 bytes or no match is found.
+    /// Returns `Some((&str, &str))` if found, otherwise `None`.
     ///
     // # Query Logic
     //
@@ -139,37 +169,31 @@ impl OuiDb {
     //    - `00`: Retrieve string from `names` using offset and length
     //    - `01`: Look up in `oui_28` subtable using `mac[3] & 0xF0`
     //    - `02`: Look up in `oui_36` subtable using `mac[3]` and `mac[4] & 0xF0` combined
-    pub fn lookup(&self, mac: [u8; 6]) -> Option<&'static str> {
-        // 1. 提取前 3 字节作为 oui_24 的查找键
+    pub fn lookup(&self, mac: [u8; 6]) -> Option<(&'static str, &'static str)> {
         let key3 = [mac[0], mac[1], mac[2]];
-
-        // 2. 二分查找 oui_24
         let idx = match self.oui_24.prefix.binary_search(&key3) {
             Ok(idx) => idx,
             Err(_) => return None,
         };
-
-        // 3. 获取 loc 值
         let loc = self.oui_24.loc[idx];
-
-        // 4. 根据 bit-31-30 判断类型
         match (loc >> 30) & 0x03 {
             0 => {
-                // names 偏移量和长度
-                // bit-29-08: offset (22 bits), bit-07-00: length (8 bits)
                 let offset = ((loc >> 8) & 0x3FFFFF) as usize;
                 let length = (loc & 0xFF) as usize;
-                self.names.get(offset..offset + length)
+                let slice = self.names.get(offset..offset + length)?;
+                if slice.len() < 2 {
+                    return None;
+                }
+                let region = &slice[0..2];
+                let name = &slice[2..];
+                Some((name, region))
             }
             1 => {
-                // oui_28: 取 mac[3] & 0xF0
                 let sub_idx = (loc & 0xFFFF) as usize;
                 let key4 = mac[3] & 0xF0;
                 self.lookup_subtable(&self.oui_28[sub_idx], key4)
             }
             2 => {
-                // oui_36: 取 mac[3] 和 mac[4] & 0xF0
-                // 组合为 16 位：高 8 位是 mac[3], 低 8 位是 mac[4] & 0xF0
                 let sub_idx = (loc & 0xFFFF) as usize;
                 let key5 = ((mac[3] as u16) << 8) | ((mac[4] & 0xF0) as u16);
                 self.lookup_subtable(&self.oui_36[sub_idx], key5)
@@ -182,17 +206,47 @@ impl OuiDb {
         &self,
         subtable: &OuiSubtable<T>,
         key: T,
-    ) -> Option<&'static str> {
+    ) -> Option<(&'static str, &'static str)> {
         let idx = match subtable.prefix.binary_search(&key) {
             Ok(idx) => idx,
             Err(_) => return None,
         };
         let loc = subtable.loc[idx];
-
-        // subtable 的 loc 只可能是 type 0 (指向 names)
-        // bit-29-08: offset (22 bits), bit-07-00: length (8 bits)
         let offset = ((loc >> 8) & 0x3FFFFF) as usize;
         let length = (loc & 0xFF) as usize;
-        self.names.get(offset..offset + length)
+        let slice = self.names.get(offset..offset + length)?;
+        if slice.len() < 2 {
+            return None;
+        }
+        let region = &slice[0..2];
+        let name = &slice[2..];
+        Some((name, region))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The embedded database (names + lookup tables) currently occupies roughly
+    /// 1.0 MB with trimmed names and ~1.2 MB with the `fullname` dataset. This
+    /// test guards against accidental runaway growth while tolerating normal
+    /// data refreshes.
+    #[test]
+    fn data_size_is_within_expected_range() {
+        let db = &crate::OUI_DB;
+        let size = db.data_size_bytes();
+
+        // Always covers at least the name string itself.
+        assert!(size >= db.names.len());
+        assert!(size > 512 * 1024, "database unexpectedly small: {size} bytes");
+        assert!(size < 2 * 1024 * 1024, "database unexpectedly large: {size} bytes");
+    }
+
+    #[test]
+    fn data_size_is_deterministic() {
+        let db = &crate::OUI_DB;
+        assert_eq!(db.data_size_bytes(), db.data_size_bytes());
+    }
+}
+

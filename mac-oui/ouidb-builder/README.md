@@ -4,10 +4,12 @@ Build tool for downloading and converting IEEE OUI (Organizationally Unique Iden
 
 ## Features
 
-- **Download** — Fetch the latest IEEE OUI CSV files (MA-L, MA-M, MA-S) from standards-oui.ieee.org
-- **Convert** — Merge three CSVs into a single compact text file with country codes
+- **Download** — Fetch the latest IEEE OUI CSV files (MA-L, MA-M, MA-S, IAB) from standards-oui.ieee.org
+- **Convert** — Merge the CSVs into a single compact text file with country codes
 - **Suffix Trimming** — Automatically strip common corporate suffixes (Inc., Ltd., GmbH, Co., Ltd., etc.)
 - **Country Code Extraction** — Parse 2-letter country codes from organization addresses
+- **Sanitization** — Remove invisible Unicode artifacts (NBSP, zero-width spaces, soft hyphens, …) found in the vendor-submitted IEEE data
+- **De-duplication** — When IEEE reassigns a prefix, keep the most recent allocation
 
 ## Quick Start
 
@@ -26,29 +28,33 @@ cargo run -p ouidb-builder -- convert --keep-suffix
 
 ### `download`
 
-Downloads three IEEE OUI CSV files into the `db/` directory:
+Downloads four IEEE OUI CSV files into the `db/` directory:
 
 | File | Source | Size |
 |---|---|---|
 | `db/oui.csv` | MA-L (24-bit) | ~3.8 MB |
-| `db/iab.csv` | MA-M (28-bit) | ~380 KB |
+| `db/mam.csv` | MA-M (28-bit) | ~700 KB |
 | `db/oui36.csv` | MA-S (36-bit) | ~670 KB |
+| `db/iab.csv` | IAB (36-bit) | ~380 KB |
 
 Also writes `db/timestamp.txt` with the current date (`YYYY-MM-DD`).
 
 ### `convert`
 
-Parses the three CSV files and produces a unified output file.
+Parses the CSV files and produces a unified output file.
 
-**Default output** (`ieee-mac-oui.txt`): suffixes trimmed, ~52,000 entries
+**Default output** (`ieee-mac-oui.txt`): suffixes trimmed, ~58,000 entries
 
 ```
 # Organizationally Unique Identifiers (OUIs)
 # Original data comes from:
 # MA-L(24 bits): https://standards-oui.ieee.org/oui/oui.csv
-# MA-M(28 bits): https://standards-oui.ieee.org/iab/iab.csv
+# MA-M(28 bits): https://standards-oui.ieee.org/oui28/mam.csv
 # MA-S(36 bits): https://standards-oui.ieee.org/oui36/oui36.csv
+# IAB(36 bits): https://standards-oui.ieee.org/iab/iab.csv
 # Updated: 2026-10-16
+# Duplicate prefixes are deduplicated: the LAST occurrence (most recent
+# allocation) is kept. Dropped entries are logged to duplicate-prefix.log.
 286FB9 CN Nokia Shanghai Bell
 E80AB9 US Cisco Systems
 F0EE7A US Apple
@@ -95,8 +101,26 @@ Case-insensitive matching handles `Co.,LTD`, `co., ltd.`, `CO., LTD.`, etc.
 
 **Statistics** (per run):
 ```
-Done: 52145 entries written to ../macaddr-ouidb/ieee-mac-oui.txt
-Trimmed: 38259/52145 (73.4%), unique: 20242/28138 (71.9%), saved: 136793 bytes
+Done: 58779 entries written to ../macaddr-ouidb/ieee-mac-oui.txt (3 duplicate occurrences across 2 prefixes)
+Trimmed: 44324/58782 (75.4%), unique: 25186/33227 (75.8%), saved: 173020 bytes
+```
+
+## Sanitization
+
+IEEE CSV data is vendor-submitted and contains invisible Unicode artifacts. During conversion these are normalized/removed so the generated data (and the Rust source embedding it) stays clean:
+
+- Unicode space separators (NBSP, en space, ideographic space, …) → ASCII space
+- Soft hyphen (U+00AD), zero-width/bidi marks (U+200B..U+200F, U+202A..U+202E, U+2060..U+206F), BOM/ZWNBSP (U+FEFF), Arabic letter mark (U+061C) → removed
+
+## De-duplication
+
+IEEE reassigns prefixes over time, so the same prefix can appear multiple times across the source CSVs. `convert` keeps the **last** occurrence (the most recent allocation) and drops earlier ones. Every dropped entry is recorded in `duplicate-prefix.log`:
+
+```
+080030 (24 bits)
+  kept:    080030 CH CERN
+  dropped: 080030 US NETWORK RESEARCH CORPORATION
+  dropped: 080030 AU ROYAL MELBOURNE INST OF TECH
 ```
 
 ## Integration

@@ -20,9 +20,9 @@ Rust 公共工具库集合。
 
 **高性能 MAC 地址 OUI 查询**
 
-`macaddr-ouidb` 提供基于预编译数据库的 MAC 地址到制造商（OUI - 组织唯一标识符）的快速查询。
+`macaddr-ouidb` 提供基于预编译数据库的 MAC 地址到制造商（OUI - 组织唯一标识符）的快速查询，支持地区信息、虚拟网卡识别与 no_std。
 
-详见 [macaddr-ouidb/README-cn.md](macaddr-ouidb/README-cn.md)。（暂未提供中文文档）
+详见 [mac-oui/macaddr-ouidb/README-cn.md](mac-oui/macaddr-ouidb/README-cn.md)。
 
 ### 3. conan2-rs
 

@@ -5,6 +5,8 @@
 # MA-S(36 bits): https://standards-oui.ieee.org/oui36/oui36.csv
 # IAB(36 bits): https://standards-oui.ieee.org/iab/iab.csv
 # Updated: 2026-10-16
+# Duplicate prefixes are deduplicated: the LAST occurrence (most recent
+# allocation) is kept. Dropped entries are logged to duplicate-prefix.log.
 #
 # Entries with unresolved country code:
 #   70B3D575A Standard Backhaul Communications (empty address, no location clue)
@@ -152,7 +154,7 @@ FC59C0 US Arista Networks
 B0D888 JP Panasonic Automotive Systems
 40D4F6 CN Honor Device
 7C3180 JP SMK
-905607 CN Sichuan AI-Link Technology
+905607 CN Sichuan AI-Link Technology
 483133 HU Robert Bosch Elektronika
 B8AB61 US Cisco Meraki
 782DAD CN HUAWEI TECHNOLOGIES
@@ -1467,7 +1469,7 @@ B87BC5 US Apple
 B035B5 US Apple
 800C67 US Apple
 F072EA US Google
-EC9C32 CN Sichuan AI-Link Technology
+EC9C32 CN Sichuan AI-Link Technology
 4CADA8 KR PANOPTICS
 981BB5 KR ASSA ABLOY Korea Co., Ltd iRevo
 B887C6 CN Prudential Technology
@@ -1661,7 +1663,7 @@ DC962C GB NST Audio
 6063F9 US Ciholas
 AC8FF8 CA Nokia
 6003A6 SE Inteno Broadband Technology
-44B295 CN Sichuan AI-Link Technology
+44B295 CN Sichuan AI-Link Technology
 9424E1 US Alcatel-Lucent Enterprise
 108286 CN Luxshare Precision Industry
 6061DF US Z-meta Research
@@ -1703,7 +1705,7 @@ C8AACC -- Private
 7CD95C US Google
 1C2E1B CN Suzhou Tremenet Communication Technology
 907A58 HK Zegna-Daidong
-E009BF CN SHENZHEN TONG BO WEI TECHNOLOGY
+E009BF CN SHENZHEN TONG BO WEI TECHNOLOGY
 001BF7 SE Lund IP Products
 846991 CA Nokia
 00131E DE peiker acustic
@@ -6496,7 +6498,7 @@ A09805 CN OpenVox Communication
 080034 US FILENET
 080036 US INTERGRAPH
 080033 US BAUSCH & LOMB
-080030 US NETWORK RESEARCH
+080030 CH CERN
 080031 US LITTLE MACHINES
 08007E AU AMALGAMATED WIRELESS(AUS)
 08007F US CARNEGIE-MELLON UNIVERSITY
@@ -6529,7 +6531,7 @@ A09805 CN OpenVox Communication
 00800F US STANDARD MICROSYSTEMS
 00406B US SYSGEN
 00DD0C US UNGERMANN-BASS
-0001C8 US THOMAS CONRAD
+0001C8 DE CONRAD
 CC45A5 US Texas Instruments
 602602 US Texas Instruments
 ECBFD0 US Texas Instruments
@@ -9619,7 +9621,7 @@ AC15F4 US Apple
 7885F4 CN Huawei Device
 8086D9 KR Samsung Electronics
 386A77 KR Samsung Electronics
-00B810 CN Yichip Microelectronics (Hangzhou)
+00B810 CN Yichip Microelectronics (Hangzhou)
 A4B239 US Cisco Systems
 548D5A MY Intel
 F44955 TW MIMO TECH
@@ -9672,7 +9674,7 @@ E83F67 CN Huawei Device
 1CBFC0 CN CHONGQING FUGUI ELECTRONICS
 801609 US Sleep Number
 AC8B9C US Primera Technology
-1CC1BC CN Yichip Microelectronics (Hangzhou)
+1CC1BC CN Yichip Microelectronics (Hangzhou)
 2C3AFD DE AVM Audiovisuelles Marketing und Computersysteme
 AC61B9 HK WAMA Technology
 F855CD US Visteon
@@ -9763,7 +9765,7 @@ B03E51 GB SKY UK
 28167F CN Xiaomi Communications
 087190 MY Intel
 5CE883 CN HUAWEI TECHNOLOGIES
-6023A4 CN Sichuan AI-Link Technology
+6023A4 CN Sichuan AI-Link Technology
 A4530E US Cisco Systems
 00403A FR IMPACT TECHNOLOGIES
 C8B1CD US Apple
@@ -9827,7 +9829,7 @@ C850CE CN HUAWEI TECHNOLOGIES
 6CAB05 US Cisco Systems
 5CB15F HK Oceanblue Cloud Technology
 485DEB US Just Add Power
-501395 CN Sichuan AI-Link Technology
+501395 CN Sichuan AI-Link Technology
 18D9EF TW Shuttle
 88DA33 CN Beijing Xiaoyuer Network Technology
 84C78F DE APS Networks
@@ -9848,7 +9850,7 @@ F848FD CN China Mobile Group Device
 C821DA CN Shenzhen YOUHUA Technology
 20658E CN HUAWEI TECHNOLOGIES
 183D5E CN HUAWEI TECHNOLOGIES
-889746 CN Sichuan AI-Link Technology
+889746 CN Sichuan AI-Link Technology
 1CDE57 CN Fiberhome Telecommunication Technologies
 E0DCFF CN Xiaomi Communications
 00778D US Cisco Systems
@@ -10338,7 +10340,7 @@ CC66B2 CA Nokia
 78BC1A US Cisco Systems
 005C86 CN SHENZHEN FAST TECHNOLOGIES
 5C546D CN HUAWEI TECHNOLOGIES
-48BCA6 KR ​ASUNG TECHNO
+48BCA6 KR ASUNG TECHNO
 3C10E6 US PHAZR
 30053F KR JTI
 B009DA US Ring Solutions
@@ -17306,7 +17308,7 @@ E4842B CN HANGZHOU SOFTEL OPTIC
 084296 US Mobile Technology Solutions
 34EFB6 TW Edgecore Networks
 E874C7 FR Sentinhealth
-B4ADA3 CN Guangzhou Shiyuan Electronic Technology Company
+B4ADA3 CN Guangzhou Shiyuan Electronic Technology Company
 18FDCB US IEEE Registration Authority
 009023 US ZILOG
 B0FEE5 CN Huawei Device
@@ -17553,7 +17555,7 @@ ACEB51 US Universal Electronics
 C4B239 US Cisco Systems
 A82BCD CN HUAWEI TECHNOLOGIES
 48DC2D CN HUAWEI TECHNOLOGIES
-809F9B CN Sichuan AI-Link Technology
+809F9B CN Sichuan AI-Link Technology
 6010A2 GB Crompton Instruments
 349F7B JP CANON
 34F150 CN Hui Zhou Gaoshengda Technology
@@ -17583,7 +17585,7 @@ F81E6F DE EBG compleo
 00BB1C CN Huawei Device
 DC4BFE CN Shenzhen Belon Technology
 506255 US IEEE Registration Authority
-80AC7C CN Sichuan AI-Link Technology
+80AC7C CN Sichuan AI-Link Technology
 88A303 KR Samsung Electronics
 FCDE90 KR Samsung Electronics
 1854CF KR Samsung Electronics
@@ -17858,7 +17860,7 @@ B4EC02 JP ALPSALPINE
 CCD39D US IEEE Registration Authority
 BC7536 JP ALPSALPINE
 E0AE5E JP ALPSALPINE
-D4B761 CN Sichuan AI-Link Technology
+D4B761 CN Sichuan AI-Link Technology
 7C035E CN Xiaomi Communications
 44FE3B TW Arcadyan
 D83AF5 US Wideband Labs
@@ -23576,7 +23578,7 @@ C06E3D CN SHENZHEN TECNO TECHNOLOGY
 0C7474 CN Fiberhome Telecommunication Technologies
 94270E MY Intel
 7C013E VN GSD VIET NAM TECHNOLOGY COMPANY
-108321 CN Yichip Microelectronics (Hangzhou)
+108321 CN Yichip Microelectronics (Hangzhou)
 18CC88 JP Hitachi Global Life Solutions
 5496CB TW AMPAK Technology
 9041B2 US Ubiquiti
@@ -25546,7 +25548,7 @@ E44122 CN OnePlus Technology (Shenzhen)
 74CBF3 IN Lava international
 2CD066 CN Xiaomi Communications
 9016BA CN HUAWEI TECHNOLOGIES
-DCBD7A CN Guangzhou Shiyuan Electronic Technology Company
+DCBD7A CN Guangzhou Shiyuan Electronic Technology Company
 342EB7 MY Intel
 BC26A1 JP FACTORY FIVE
 60AAEF CN Huawei Device
@@ -25696,7 +25698,7 @@ FC8E5B CN China Mobile Iot Limited company
 A03C31 CN Shenzhen Belon Technology
 10082C US Texas Instruments
 9013DA NL Athom
-D49E3B CN Guangzhou Shiyuan Electronic Technology Company
+D49E3B CN Guangzhou Shiyuan Electronic Technology Company
 DC4BDD CN Shenzhen SuperElectron Technology
 C0B5CD CN Huawei Device
 4C5077 CN Huawei Device
@@ -26076,7 +26078,7 @@ A85AF3 CN Shanghai Siflower Communication Technology
 E00EE1 KR We Corporation
 8C9246 CN Oerlikon Textile
 000E94 NL Maas International
-4898CA CN Sichuan AI-Link Technology
+4898CA CN Sichuan AI-Link Technology
 247E51 CN zte
 E8B541 CN zte
 0C9D92 TW ASUSTek COMPUTER
@@ -30677,7 +30679,6 @@ A06A00 US Verilink
 00DD0D US UNGERMANN-BASS
 943F0C NL Genexis
 080016 US BARRISTER INFO SYS
-080030 AU ROYAL MELBOURNE INST OF TECH
 00000B US MATRIX
 00009B JP INFORMATION INTERNATIONAL
 84BB26 US Texas Instruments
@@ -33322,7 +33323,7 @@ A45802 KR SHIN-IL TECH
 143B42 CN Realfit(Shenzhen) Intelligent Technology
 A4DAD4 JP Yamato Denki
 F4B1C2 CN Zhejiang Dahua Technology
-BCFAB8 CN Guangzhou Shiyuan Electronic Technology Company
+BCFAB8 CN Guangzhou Shiyuan Electronic Technology Company
 A04A5E US Microsoft
 60C5E6 US Skullcandy
 109497 NA Logitech Hong Kong
@@ -34046,7 +34047,7 @@ A4F465 HK ITEL MOBILE
 CC70ED US Cisco Systems
 907E30 PL LARS
 84EB3E US Vivint Smart Home
-9C8275 CN Yichip Microelectronics (Hangzhou)
+9C8275 CN Yichip Microelectronics (Hangzhou)
 5CCBCA CN FUJIAN STAR-NET COMMUNICATION
 18BB26 CN FN-LINK TECHNOLOGY
 34F8E7 US Cisco Systems
@@ -34225,7 +34226,7 @@ A019B2 US IEEE Registration Authority
 641C67 BR DIGIBRAS INDUSTRIA DO BRASILS/A
 DC9914 CN HUAWEI TECHNOLOGIES
 B05365 CN China Mobile IOT Company
-308841 CN Sichuan AI-Link Technology
+308841 CN Sichuan AI-Link Technology
 44EFCF KR UGENE SOLUTION
 0080B6 US Mercury Systems – Trusted Mission Solutions
 08512E FI Orion Diagnostica
@@ -38756,11 +38757,9 @@ AA0003 US DIGITAL EQUIPMENT
 000000 US XEROX
 F82111 FI HMD Global
 EC9161 CN CLOUD NETWORK TECHNOLOGY SINGAPORE
-080030 CH CERN
 08008D US XYVISION
 00DD02 US UNGERMANN-BASS
 00DD04 US UNGERMANN-BASS
-0001C8 DE CONRAD
 08003F US FRED KOSCHARA ENTERPRISES
 C0D60A US Texas Instruments
 2883C9 US Apple
@@ -39634,7 +39633,7 @@ A82C89 US Apple
 801242 US Apple
 B8011F US Apple
 141416 CN Hui Zhou Gaoshengda Technology
-804005 CN Guangdong COROS Sports Technology
+804005 CN Guangdong COROS Sports Technology
 DC9396 US Apple
 18E671 US Apple
 CCEA27 US GE Appliances
@@ -40990,7 +40989,7 @@ CC9EEB KR Elentec
 0050C257F US Orderite
 0050C257E FR Digital Way
 0050C2575 FR SOLYSTIC
-0050C2574 ES Ingeniería AlmudÃ­
+0050C2574 ES Ingeniería AlmudÃ
 0050C2568 US GeoFocus
 0050C2565 BR WORKPOWER TECNOLOGIA ELETRONICA LTDA-EPP
 0050C2573 RU DATAMICRO
@@ -41305,7 +41304,7 @@ CC9EEB KR Elentec
 0050C2D88 DE T+A elektroakustik
 0050C2FBD DE EATON FHF Funke + Huster Fernsig
 0050C2379 AR Control LAN
-0050C23DE IT ABB Power Technologies S.p.A. Unità  Operativa SACE (PTMV)
+0050C23DE IT ABB Power Technologies S.p.A. Unità Operativa SACE (PTMV)
 0050C2913 GB Leonardo UK
 0050C2FD4 US Insitu
 40D85517C US Critical Link
@@ -43787,7 +43786,7 @@ CC9EEB KR Elentec
 0050C233F BE EXYS bvba
 0050C2364 IT Tattile srl
 0050C234A JP NIE
-0050C234E IT ABB Power Technologies S.p.A. Unità  Operativa SACE (PTMV)
+0050C234E IT ABB Power Technologies S.p.A. Unità Operativa SACE (PTMV)
 0050C2354 US Advanced IP Communications
 0050C2357 US Athena Semiconductor
 0050C2306 CA Noran Tel Communications
@@ -48704,7 +48703,7 @@ CC9EEB KR Elentec
 70B3D514D BE 2-Observe
 70B3D53CA RU TTI
 70B3D5F56 AU VirtualHere
-70B3D52FA JP Toray　Medical
+70B3D52FA JP Toray Medical
 70B3D55BE AU CASWA
 70B3D513C CA Detec Systems
 70B3D57F8 SI Solvera Lynx
@@ -50011,7 +50010,7 @@ CC9EEB KR Elentec
 70B3D51B6 DE DACOM West
 70B3D5108 IT TEX COMPUTER SRL
 70B3D5127 FR VITEC
-70B3D58AC KR ​ASUNG TECHNO
+70B3D58AC KR ASUNG TECHNO
 70B3D5211 IT Fracarro srl
 70B3D547F DE ASE
 70B3D50B4 US AVER
@@ -50058,7 +50057,7 @@ CC9EEB KR Elentec
 70B3D5E09 US L-3 communications ComCept Division
 70B3D5482 CA Aeryon Labs
 70B3D51C5 US ELSAG
-70B3D5269 AU Gilbarco Veeder-Root ‎
+70B3D5269 AU Gilbarco Veeder-Root
 70B3D5272 FR TELECOM SANTE
 70B3D58EC DE Rudy Tellert
 70B3D503D ES QUERCUS TECHNOLOGIES
@@ -54401,7 +54400,7 @@ F40E112 IT Axel srl
 141FBAB CN Newings Communication
 7C70BC3 DE FLEXIM
 F40E110 CN realphone technology
-7C70BCB JP Tohan　Engineering
+7C70BCB JP Tohan Engineering
 141FBA3 -- Private
 D07650D DE tecnotron elekronik
 BC34006 US Cameron
@@ -56545,7 +56544,7 @@ A0224E3 IE ProPhotonix
 C4954D9 US Shenzhen Xtooltech
 6431397 CN Dongguan Huili electroacoustic Industrial
 5062559 US Southern Ground Audio
-C4954D2 CN Shen Zhen Euse Technology
+C4954D2 CN Shen Zhen Euse Technology
 440377D TW OMNISENSE SYSTEMS PRIVATE LIMITED TAIWAN BRANCH
 10DCB62 BR CAL-COMP INDUSTRIA E COMERCIO DE ELETRONICOS E INFORMATICA
 10DCB66 HU Prolan
@@ -56622,7 +56621,7 @@ F81D788 RU TELEOFIS
 848BCD9 FR NORALSY
 B0FD0B6 JP DNESO TEN
 1C82593 US C&A Marketing
-848BCD1 CN Shenzhen LTIME In-Vehicle Entertainment System Company
+848BCD1 CN Shenzhen LTIME In-Vehicle Entertainment System Company
 B0FD0BB US MartinLogan
 E41E0A2 SG IDvaco Private
 B0FD0BC FI Haltian Products
@@ -56681,7 +56680,7 @@ D425CC9 JP TAKUMI JAPAN
 7CBC84E CN Beijing Topnew Group
 7CBC848 CN Shenzhen Kuang-chi Space Technology
 6CDFFB4 KR Lineable
-4C917AC CN Alibaba (Beijing) Software Service
+4C917AC CN Alibaba (Beijing) Software Service
 4C917A5 KR mtekvision
 7CBC84D GB VANTAGE INTEGRATED SECURITY SOLUTIONS
 98F9C7E CN NC-LINK Technology
@@ -57949,7 +57948,7 @@ BC9740B RU ForoTel
 848BCDE US Emotiv
 848BCDD PT ENGISAT LDA
 6095CE5 TW AdvanWISE
-848BCD7 CN Smart Code (Shenzhen) Technology
+848BCD7 CN Smart Code (Shenzhen) Technology
 C82C2B0 US Fungible
 E41E0AE CN Shanghai LeXiang Technology
 C82C2BA JP Shiftall
