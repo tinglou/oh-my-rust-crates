@@ -2,7 +2,8 @@
 B0C420 -- Bochs virtual NIC
 DEADCA -- PearPC virtual NIC
 00FFD1 -- Cooperative Linux virtual NIC
-080027 -- Oracle VirtualBox virtual NIC
+# 080027 -- Oracle VirtualBox virtual NIC
+0A0027 -- Oracle VirtualBox virtual NIC
 
 # OpenStack Neutron default configuration: FA163E
 FA163E -- OpenStack

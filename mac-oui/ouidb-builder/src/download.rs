@@ -16,6 +16,10 @@ const URLS: &[(&str, &str)] = &[
         "https://standards-oui.ieee.org/oui36/oui36.csv",
         "oui36.csv",
     ),
+    (
+        "https://standards-oui.ieee.org/oui28/mam.csv",
+        "mam.csv",
+    ),
 ];
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {

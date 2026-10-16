@@ -3,12 +3,13 @@ use std::fs;
 use std::io::{BufWriter, Write};
 use std::path::Path;
 
-const CSV_FILES: &[&str] = &["db/oui.csv", "db/iab.csv", "db/oui36.csv"];
+const CSV_FILES: &[&str] = &["db/oui.csv", "db/iab.csv", "db/oui36.csv", "db/mam.csv"];
 
 const SOURCE_URLS: &[(&str, &str)] = &[
     ("MA-L(24 bits)", "https://standards-oui.ieee.org/oui/oui.csv"),
-    ("MA-M(28 bits)", "https://standards-oui.ieee.org/iab/iab.csv"),
+    ("MA-M(28 bits)", "https://standards-oui.ieee.org/oui28/mam.csv"),
     ("MA-S(36 bits)", "https://standards-oui.ieee.org/oui36/oui36.csv"),
+    ("IAB(36 bits)", "https://standards-oui.ieee.org/iab/iab.csv"),
 ];
 
 const OUTPUT_DEFAULT: &str = "../macaddr-ouidb/ieee-mac-oui.txt";
