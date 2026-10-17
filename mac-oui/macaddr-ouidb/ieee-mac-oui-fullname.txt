@@ -3921,7 +3921,7 @@ BC4B79 TW SensingTek
 A49005 CN CHINA GREATWALL COMPUTER SHENZHEN CO.,LTD
 C40ACB US Cisco Systems, Inc
 D4A02A US Cisco Systems, Inc
-88C36E CN Beijing Ereneben lnformation Technology Limited
+88C36E CN Beijing Ereneben Information Technology Limited
 645422 US Equinox Payments
 00376D JP Murata Manufacturing Co., Ltd.
 50008C HK Hong Kong Telecommunications (HKT) Limited
@@ -5457,7 +5457,7 @@ A09805 CN OpenVox Communication Co Ltd
 000A0F KR Ilryung Telesys, Inc
 000A0C US Scientific Research Corporation
 0009EC US Daktronics, Inc.
-0009E7 JP ADC Techonology
+0009E7 JP ADC Technology
 0009CF DE iAd GmbH
 000A3F JP Data East Corporation
 000956 RU Network Systems Group, Ltd. (NSG)
@@ -6550,7 +6550,7 @@ A4978A DE LEAR
 8C6120 CH EM Microelectronic
 8C8E4E TR Baylan Olcu Aletleri San. ve Tic.A.S.
 F8ACC1 TW InnoXings Co., LTD.
-4064DC CN X-speed lnformation Technology Co.,Ltd
+4064DC CN X-speed Information Technology Co.,Ltd
 5CC787 CN Huawei Device Co., Ltd.
 845075 CN Huawei Device Co., Ltd.
 5CF838 US IEEE Registration Authority
@@ -6948,7 +6948,7 @@ DC2FFA US GE Lighting
 B82903 VN VIETNAM POST AND TELECOMMUNICATION INDUSTRY TECHNOLOGY JOIN STOCK COMPANY
 A8FECE CN Fiberhome Telecommunication Technologies Co.,LTD
 286DDA CN Fiberhome Telecommunication Technologies Co.,LTD
-84CC11 PL LG Electornics
+84CC11 PL LG Electronics
 C45746 US Texas Instruments
 20BEB4 CN Hisense broadband multimedia technology Co.,Ltd
 C47DA8 CN NXP Semiconductor (Tianjin) LTD.
@@ -8198,7 +8198,7 @@ BCB6FB ES P4Q ELECTRONICS, S.L.
 4435D3 CN GD Midea Air-Conditioning Equipment Co.,Ltd.
 88F00F KR Miraeil
 18A788 CN Shenzhen MEK Intellisys Pte Ltd
-BC8529 CN Jiangxi Remote lntelligence Technology Co.,Ltd
+BC8529 CN Jiangxi Remote Intelligence Technology Co.,Ltd
 289401 US NETGEAR
 D878C9 NA SERVERCOM (INDIA) PRIVATE LIMITED
 A85EF2 HK TECNO MOBILE LIMITED
@@ -11082,7 +11082,7 @@ E498D6 US Apple, Inc.
 006037 NL NXP Semiconductors
 DCC0EB FR ASSA ABLOY CÔTE PICARDE
 9CEFD5 US Panda Wireless, Inc.
-70CA4D CN Shenzhen lnovance Technology Co.,Ltd.
+70CA4D CN Shenzhen Inovance Technology Co.,Ltd.
 E4FAFD MY Intel Corporate
 94659C MY Intel Corporate
 484520 MY Intel Corporate
@@ -11736,7 +11736,7 @@ A4FB8D US Hangzhou Dunchong Technology Co.Ltd
 6C5779 US Aclima, Inc.
 C0DA74 CN Hangzhou Sunyard Technology Co., Ltd.
 882364 CA Watchnet DVR Inc
-2C922C JP Kishu Giken Kogyou Company Ltd,.
+2C922C JP Kishu Giken Kogyou Company Ltd.
 D8FEE3 SG D-Link International
 50A0BF US Alba Fiber Systems Inc.
 B836D8 AR Videoswitch
@@ -12930,7 +12930,7 @@ CC0080 IT BETTINI SRL
 001A0B KR BONA TECHNOLOGY INC.
 001A06 US OpVista, Inc.
 001A5D TW Mobinnova Corp.
-001993 CN Changshu Switchgear MFG. Co.,Ltd. (Former Changshu Switchgea
+001993 CN Changshu Switchgear MFG. Co.,Ltd. (Former Changshu Switchgear)
 00199B US Diversified Technical Systems, Inc.
 0019FA TW Cable Vision Electronics CO., LTD.
 0019F1 CN Star Communication Network Technology Co.,Ltd
@@ -13042,7 +13042,7 @@ CC0080 IT BETTINI SRL
 001764 DE ATMedia GmbH
 00175E US Zed-3
 00175B CH ACS Solutions Switzerland Ltd.
-001792 DE Falcom Wireless Comunications Gmbh
+001792 DE Falcom Wireless Communications Gmbh
 001797 IT Telsy Elettronica S.p.A.
 00178C US Independent Witness, Inc
 0017D3 US Etymotic Research, Inc.
@@ -14390,7 +14390,7 @@ CC0080 IT BETTINI SRL
 00201D GB KATANA PRODUCTS
 002046 US CIPRICO, INC.
 00205B US Kentrox, LLC
-0020D3 FR OST (OUEST STANDARD TELEMATIQU
+0020D3 FR OST (OUEST STANDARD TELEMATIQUE)
 0020F6 GB NET TEK AND KARLNET, INC.
 0020B0 US GATEWAY DEVICES, INC.
 00202A BE N.V. DZINE
@@ -14738,7 +14738,7 @@ A46DD4 US Silicon Laboratories
 205A1D CN zte corporation
 3425B4 US Silicon Laboratories
 4CB7E0 CN SHENZHEN MERCURY COMMUNICATION TECHNOLOGIES CO.,LTD.
-BC0FB7 CN sywinkey HongKong Co,. Limited?
+BC0FB7 CN sywinkey HongKong Co., Limited
 583BC2 US Silicon Laboratories
 006005 GB Touchstar ATC Limited
 54606D CN HUAWEI TECHNOLOGIES CO.,LTD
@@ -14808,7 +14808,7 @@ D07602 CN Hui Zhou Gaoshengda Technology Co.,LTD
 283984 CN Qidi Technology (shanghai) Co.,Ltd.
 5CFA5A PT Sinepower Lda
 F49D8A US Fantasia Trading LLC
-7C992E CN Shanghai Notion lnformatio Technology Co.,Ltd.
+7C992E CN Shanghai Notion Information Technology Co.,Ltd.
 8CEA88 CN Chengdu Yocto Communication Technology Co.Ltd.
 105FAD MY Intel Corporate
 4CB04A MY Intel Corporate
@@ -15830,7 +15830,7 @@ B064E0 KR Samsung Electronics Co.,Ltd
 3C3558 CN CLOUD NETWORK TECHNOLOGY SINGAPORE PTE. LTD.
 786559 FR Sagemcom Broadband SAS
 10D7B0 FR Sagemcom Broadband SAS
-70733A CN Jiangxi Remote lntelligence Technology Co.,Ltd
+70733A CN Jiangxi Remote Intelligence Technology Co.,Ltd
 5488D5 CN zte corporation
 880FA2 FR Sagemcom Broadband SAS
 DC97E6 FR Sagemcom Broadband SAS
@@ -16495,7 +16495,7 @@ A486AE CN Quectel Wireless Solutions Co.,Ltd.
 58D391 CN Quectel Wireless Solutions Co.,Ltd.
 0024AC CN Hangzhou DPtech Technologies Co., Ltd.
 CC087B CN HUAWEI TECHNOLOGIES CO.,LTD
-5C64F3 CN sywinkey HongKong Co,. Limited?
+5C64F3 CN sywinkey HongKong Co., Limited
 28E424 CN New H3C Technologies Co., Ltd
 50804A CN Quectel Wireless Solutions Co.,Ltd.
 601521 AU Redarc Electronics
@@ -16942,7 +16942,7 @@ C4170E CN Huawei Device Co., Ltd.
 C4E532 TW Arcadyan Corporation
 0CAAEE CN Ansjer Electronics Co., Ltd.
 906A94 CN hangzhou huacheng network technology co., ltd
-100C29 CN Shenzhen NORCO lntelligent Technology Co.,Ltd
+100C29 CN Shenzhen NORCO Intelligent Technology Co.,Ltd
 8C3DB1 CN Beijing H-IoT Technology Co., Ltd.
 D8A6F0 CN Wu Qi Technologies,Inc.
 08E4DF CN Shenzhen Sande Dacom Electronics Co., Ltd
@@ -18459,7 +18459,7 @@ BC024A FI HMD Global Oy
 1005CA US Cisco Systems, Inc
 7894B4 TW Sercomm Corporation.
 C4700B CN GUANGZHOU CHIP TECHNOLOGIES CO.,LTD
-443708 IL MRV Comunications
+443708 IL MRV Communications
 285F2F KR RNware Co.,Ltd.
 3CA067 TW Liteon Technology Corporation
 1C1EE3 CN Hui Zhou Gaoshengda Technology Co.,LTD
@@ -19539,7 +19539,7 @@ EC3C5A CN SHEN ZHEN HENG SHENG HUI DIGITAL TECHNOLOGY CO.,LTD
 841826 DE Osram GmbH
 50294D CN NANJING IOT SENSOR TECHNOLOGY CO,LTD
 0CCFD1 KR SPRINGWAVE Co., Ltd
-74BADB CN Longconn Electornics(shenzhen)Co.,Ltd
+74BADB CN Longconn Electronics(shenzhen)Co.,Ltd
 909F33 KR EFM Networks
 3077CB CN Maike Industry(Shenzhen)CO.,LTD
 102F6B FI Microsoft Corporation
@@ -20479,7 +20479,7 @@ B4B5AF KR Minsung Electronics
 0026AA TW Kenmec Mechanical Engineering Co., Ltd.
 002670 US Cinch Connectors
 002671 KR AUTOVISION Co., Ltd
-0026D7 CN KM Electornic Technology Co., Ltd.
+0026D7 CN KM Electronic Technology Co., Ltd.
 0026D0 PL Semihalf
 0026D2 US Pcube Systems, Inc.
 0026A0 KR moblic
@@ -21590,7 +21590,7 @@ B4B5AF KR Minsung Electronics
 0009FD GB Ubinetics Limited
 0009B6 US Cisco Systems, Inc
 0009B3 SI MCM Systems Ltd
-0009A3 TW Leadfly Techologies Corp. Ltd.
+0009A3 TW Leadfly Technologies Corp. Ltd.
 0009A5 KR HANSUNG ELETRONIC INDUSTRIES DEVELOPMENT CO., LTD
 0009D3 US Western DataCom Co., Inc.
 000A14 CZ TECO a.s.
@@ -21629,7 +21629,7 @@ B4B5AF KR Minsung Electronics
 000944 US Cisco Systems, Inc
 000962 NO Sonitor Technologies AS
 00095D TW Dialogue Technology Corp.
-00095C US Philips Medical Systems - Cardiac and Monitoring Systems (CM
+00095C US Philips Medical Systems - Cardiac and Monitoring Systems (CMS)
 000958 ES INTELNET S.A.
 000909 DK Telenor Connect A/S
 00090A TW SnedFar Technology Co., Ltd.
@@ -23460,7 +23460,7 @@ F8CF52 MY Intel Corporate
 44388C JP Sumitomo Electric Industries, Ltd
 BC515F IN Nokia Solutions and Networks India Private Limited
 28D41E CN Barrot Technology Co.,Ltd.
-D49D9D CN Shenzhen Goodocom lnformation Technology Co.,Ltd.
+D49D9D CN Shenzhen Goodocom Information Technology Co.,Ltd.
 7C7BBF KR Samsung Electronics Co.,Ltd
 8C2E72 KR Samsung Electronics Co.,Ltd
 80F1B2 CN Espressif Inc.
@@ -23475,7 +23475,7 @@ EC9EEA US Xtra Technology LLC
 18EBD4 CN Shenzhen Skyworth Digital Technology CO., Ltd
 E4B731 CN Hangzhou Advance IOT Connectivity System Co., Ltd.
 FC3882 HK Infinix mobility limited
-48A48C CN Shanghai Zenchant Electornics Co.,LTD
+48A48C CN Shanghai Zenchant Electronics Co.,LTD
 C4DBAD US Ring LLC
 94FF7D CN AltoBeam Inc.
 004B0D CN Huawei Device Co., Ltd.
@@ -26889,7 +26889,7 @@ C83870 KR Samsung Electronics Co.,Ltd
 1C553A CN QianGua Corp.
 008E73 US Cisco Systems, Inc
 9C9D5D US Raden Inc
-DC4D23 IL MRV Comunications
+DC4D23 IL MRV Communications
 0023B3 SE Lyyn AB
 405EE1 CN Shenzhen H&T Intelligent Control Co.,Ltd.
 002578 RU JSC Concern Sozvezdie
@@ -28418,7 +28418,7 @@ D0D286 JP Beckman Coulter K.K.
 78C40E SE H&D Wireless
 C8873B US Net Optics
 2C0623 MU Win Leader Inc.
-0C2755 IN Valuable Techologies Limited
+0C2755 IN Valuable Technologies Limited
 BCB181 JP SHARP CORPORATION
 E41F13 US IBM Corp
 C83A35 CN Tenda Technology Co., Ltd.
@@ -28689,7 +28689,7 @@ A07332 GB Cashmaster International Limited
 001FEE DE ubisys technologies GmbH
 001FEF JP SHINSEI INDUSTRIES CO.,LTD
 001FEC CA Synapse Électronique
-001FE8 JP KURUSUGAWA Electronics Industry Inc,.
+001FE8 JP KURUSUGAWA Electronics Industry Inc.
 002121 DE VRmagic GmbH
 002123 US Aerosat Avionics
 00211B US Cisco Systems, Inc
@@ -29507,7 +29507,7 @@ A07332 GB Cashmaster International Limited
 000CD9 KR Itcare Co., Ltd
 000CD5 US Passave Inc.
 000CCA US HGST a Western Digital Company
-000CB5 US Premier Technolgies, Inc
+000CB5 US Premier Technologies, Inc
 000CB6 CN NANJING SEU MOBILE & INTERNET TECHNOLOGY CO.,LTD
 000CC3 FR BeWAN systems
 000CB4 US AutoCell Laboratories, Inc.
@@ -29722,7 +29722,7 @@ A07332 GB Cashmaster International Limited
 000875 TW Acorp Electronics Corp.
 00086F HK Resources Computer Network Ltd.
 000867 US Uptime Devices
-000888 KR OULLIM Information Technology Inc,.
+000888 KR OULLIM Information Technology Inc.
 000885 DE EMS Dr. Thomas Wünsche
 000872 US Sorenson Communications
 00087C US Cisco Systems, Inc
@@ -30791,7 +30791,7 @@ B0C7DE US Silicon Laboratories
 881A14 US Silicon Laboratories
 44E2F8 US Silicon Laboratories
 30FB68 CN Wuhan Zmvision Technology Co. Ltd.
-F4ED37 CN Qingdao Yuze lntelligent Technology Co.,Ltd
+F4ED37 CN Qingdao Yuze Intelligent Technology Co.,Ltd
 B8DB38 US Google, Inc.
 5464BC CN GUANGDONG OPPO MOBILE TELECOMMUNICATIONS CORP.,LTD
 246830 CN Shenzhen Shokzhear Co., Ltd
@@ -32162,7 +32162,7 @@ E4C0FE US Apple, Inc.
 FC9DD2 US Apple, Inc.
 708536 TW Arcadyan Corporation
 F85333 CN Tashang Semiconductor(Shanghai) Co., Ltd.
-18F3C2 CN Ebot Digital Technoloy Co., Limited
+18F3C2 CN Ebot Digital Technology Co., Limited
 6CCB7F CN GD Midea Air-Conditioning Equipment Co.,Ltd.
 10E864 KR Nucode Co., Ltd.
 20AB53 US Motorola Mobility LLC, a Lenovo Company
@@ -32769,7 +32769,7 @@ B8AB62 CN Hui Zhou Gaoshengda Technology Co.,LTD
 FC22F4 TW Zyxel Communications Corporation
 F0EDB8 NA SERVERCOM (INDIA) PRIVATE LIMITED
 F87999 CN Guangdong Jiuzhi Technology Co.,Ltd
-CC2AAC CN Yunjing lntelligent Technology(Dongguan).,Ltd
+CC2AAC CN Yunjing Intelligent Technology(Dongguan).,Ltd
 20406A TW AMPAK Technology,Inc.
 84DBA4 CN Huawei Device Co., Ltd.
 245CC5 CN Huawei Device Co., Ltd.
@@ -33480,7 +33480,7 @@ D4910F US Amazon Technologies Inc.
 98063A SG Home Control Singapore Pte Ltd
 64A200 CN Xiaomi Communications Co Ltd
 703A2D CN Shenzhen V-Link Technology CO., LTD.
-1C45C2 CN Huizhou City Sunsin lntelligent Technology Co.,Ltd
+1C45C2 CN Huizhou City Sunsin Intelligent Technology Co.,Ltd
 84CC63 CN Huawei Device Co., Ltd.
 C07831 CN Huawei Device Co., Ltd.
 C4FBAA CN HUAWEI TECHNOLOGIES CO.,LTD
@@ -34898,7 +34898,7 @@ ECAAA0 TW PEGATRON CORPORATION
 90A46A KR SISNET CO., LTD
 14E7C8 MY Integrated Device Technology (Malaysia) Sdn. Bhd.
 ECCD6D US Allied Telesis, Inc.
-981E0F CN Jeelan (Shanghai Jeelan Technology Information Inc
+981E0F CN Jeelan (Shanghai Jeelan Technology Information Inc.)
 9CA3A9 CN Guangzhou Juan Optical and Electronical Tech Joint Stock Co., Ltd
 7CC709 CN SHENZHEN RF-LINK TECHNOLOGY CO.,LTD.
 18339D US Cisco Systems, Inc
@@ -35859,7 +35859,7 @@ E07F53 IT TECHBOARD SRL
 746F3D DE Contec GmbH
 4C0DEE CN JABIL CIRCUIT (SHANGHAI) LTD.
 D0634D DE Meiko Maschinenbau GmbH & Co. KG
-D86194 ES Objetivos y Sevicios de Valor Añadido
+D86194 ES Objetivos y Servicios de Valor Añadido
 589CFC US FreeBSD Foundation
 702C1F KR Wisol
 DC052F US National Products Inc.
@@ -36720,7 +36720,7 @@ E80B13 TW Akib Systems Taiwan, INC
 0024C6 FR Hager Electro SAS
 0024B4 DE ESCATRONIC GmbH
 0024B1 US Coulomb Technologies
-00249C CN Bimeng Comunication System Co. Ltd
+00249C CN Bimeng Communication System Co. Ltd
 002498 US Cisco Systems, Inc
 0024FD CA Accedian Networks Inc
 0024F5 US NDS Surgical Imaging
@@ -37096,7 +37096,7 @@ E80B13 TW Akib Systems Taiwan, INC
 0019EE IT CARLO GAVAZZI CONTROLS SPA-Controls Division
 0019EB GB Pyronix Ltd
 0019E7 US Cisco Systems, Inc
-0019E9 KR S-Information Technolgy, Co., Ltd.
+0019E9 KR S-Information Technology, Co., Ltd.
 0019DA CN Welltrans O&E Technology Co., Ltd.
 0019D0 ZA Cathexis
 001A14 CN Xin Hua Control Engineering Co.,Ltd.
@@ -38981,7 +38981,7 @@ CC8C17 HK ITEL MOBILE LIMITED
 849CA4 US Mimosa Networks
 00D6CB CN Quectel Wireless Solutions Co.,Ltd.
 883E0D KR HD Hyundai Electric
-B83B8F CN Hangzhou Hylin IoT Techonology Co.,Ltd.
+B83B8F CN Hangzhou Hylin IoT Technology Co.,Ltd.
 0003C5 DE Mobotix AG
 58A8E8 US Amazon Technologies Inc.
 00E05C JP PHC Corporation
@@ -39451,7 +39451,7 @@ A80B6B CN Chipsea Technologies (Shenzhen) Corp.
 C0A810 MY Intel Corporate
 04F0EE MY Intel Corporate
 BCF105 MY Intel Corporate
-F47257 CN Jiangxi Remote lntelligence Technology Co.,Ltd
+F47257 CN Jiangxi Remote Intelligence Technology Co.,Ltd
 1CF43F TW Arcadyan Corporation
 348D13 US Silicon Laboratories
 84AF1F JP GopherTec Inc.
@@ -41619,7 +41619,7 @@ CC9EEB KR Elentec
 0050C2B73 JP ARKRAY, Inc. Kyoto Laboratory
 0050C2B66 DE 8185
 0050C2B7A DE Schnoor Industrieelektronik GmbH & Co. KG
-0050C2B81 DE GHL Advanced Technolgy GmbH & Co. KG
+0050C2B81 DE GHL Advanced Technology GmbH & Co. KG
 0050C2B5E JP Palgiken Co.,Ltd.
 0050C2B70 JP Nisshin Electronics co.,ltd.
 0050C2B7F NZ Enatel
@@ -45003,7 +45003,7 @@ CC9EEB KR Elentec
 8C1F64CFA JP YUYAMA MFG Co.,Ltd
 8C1F64B14 JP Murata Manufacturing CO., Ltd.
 8C1F64744 KR CHASEO CONNECTOME
-8C1F649A5 CN Xi'an Shengxin Science& Technology Development Co.?Ltd.
+8C1F649A5 CN Xi'an Shengxin Science& Technology Development Co.,Ltd.
 8C1F649E8 DE GHM Messtechnik GmbH
 8C1F641D8 CA Mesomat inc.
 8C1F6490D IT Algodue Elettronica Srl
@@ -45654,7 +45654,7 @@ CC9EEB KR Elentec
 70B3D5F05 DK Motomuto Aps
 70B3D5378 FR synchrotron SOLEIL
 70B3D5637 FR INEO-SENSE
-70B3D5EC8 TR PANASONIC LIFE SOLUTIONS ELEKTR?K SANAY? VE T?CARE
+70B3D5EC8 TR PANASONIC LIFE SOLUTIONS ELEKTRİK SANAYİ VE TİCARET
 70B3D507A RU ZAO ZEO
 70B3D5135 ES DORLET SAU
 70B3D5DFD NL Contiweb
@@ -46101,7 +46101,7 @@ CC9EEB KR Elentec
 8C1F64715 ES INTERNET PROTOCOLO LOGICA SL
 8C1F644F1 NO Abbott Diagnostics Technologies AS
 8C1F64561 ES Deep Detection / ESB01736990
-8C1F64C45 TW Flextroincs International (Taiwain Ltd
+8C1F64C45 TW Flextronics International (Taiwan) Ltd
 8C1F6472D AU Hills Health Solutions
 8C1F6485E IT Apen Group S.p.A. (VAT IT08767740155)
 8C1F640CD DE DEUTA Werke GmbH
@@ -46136,7 +46136,7 @@ CC9EEB KR Elentec
 8C1F64816 NL PalmSens BV
 8C1F645F6 US Forward Edge.AI
 8C1F64A90 SG DSGio Global Pte Ltd
-8C1F64486 CN Longhorn lntelligent Tech Co.,Ltd.
+8C1F64486 CN Longhorn Intelligent Tech Co.,Ltd.
 8C1F648A0 KR H&abyz
 8C1F64BFF US Evolution Ventures LLC
 8C1F64AA6 GB Data Conversion Systems Ltd
@@ -46210,8 +46210,8 @@ CC9EEB KR Elentec
 8C1F64DD2 TW SHIELD-CCTV CO.,LTD.
 8C1F64875 US EPC Power Corporation
 8C1F64FFB CN Taicang T&W Electronics
-8C1F64A5D CN Shenzhen zhushida Technology lnformation Co.,Ltd
-8C1F64231 CN Shenzhen zhushida Technology lnformation Co.,Ltd
+8C1F64A5D CN Shenzhen zhushida Technology Information Co.,Ltd
+8C1F64231 CN Shenzhen zhushida Technology Information Co.,Ltd
 8C1F6420A US Oriux
 8C1F645A1 SE Breas Medical AB
 8C1F6485A TW ENBIK Technology Co., Ltd
@@ -46400,7 +46400,7 @@ CC9EEB KR Elentec
 8C1F64F53 US Beckman Coulter Inc
 8C1F64AE5 JP Ltec Co.,Ltd
 8C1F64E4B SD ALGAZIRA TELECOM SOLUTIONS
-8C1F6498C FR PAN Business & Consulting (ANYOS]
+8C1F6498C FR PAN Business & Consulting (ANYOS)
 8C1F641A0 US Engage Technologies
 8C1F64BC1 RU CominTech, LLC
 8C1F649A1 JP Pacific Software Development Co., Ltd.
@@ -46450,7 +46450,7 @@ CC9EEB KR Elentec
 8C1F64D98 TW Gnewtek photoelectric technology Ltd.
 8C1F6420E IN Alpha Bridge Technologies Private Limited
 8C1F64ECF US Monnit Corporation
-8C1F6462D DK Embeddded Plus Plus
+8C1F6462D DK Embedded Plus Plus
 8C1F649FB IL CI SYSTEMS ISRAEL LTD
 8C1F64A5E JP XTIA Ltd.
 8C1F64FDC US Nuphoton Technologies
@@ -46554,7 +46554,7 @@ CC9EEB KR Elentec
 8C1F646CF IT Italora
 8C1F645AE CN Suzhou Motorcomm Electronic Technology Co., Ltd
 8C1F64707 DE OAS AG
-8C1F64B8D CN Tongye lnnovation Science and Technology (Shenzhen) Co.,Ltd
+8C1F64B8D CN Tongye Innovation Science and Technology (Shenzhen) Co.,Ltd
 8C1F64D0E CA Labforge Inc.
 8C1F64F72 IT Contrader
 8C1F6438D US Wilson Electronics
@@ -48015,7 +48015,7 @@ CC9EEB KR Elentec
 8C1F64224 BR PHB Eletronica Ltda.
 70B3D5556 JP OHASHI ENGINEERING CO.,LTD.
 8C1F648C4 US Hermes Network Inc
-8C1F649A6 BR INSTITUTO DE GESTÃO, REDES TECNOLÓGICAS E NERGIAS
+8C1F649A6 BR INSTITUTO DE GESTÃO, REDES TECNOLÓGICAS E ENERGIAS
 8C1F64A32 CA Nautel LTD
 8C1F645BC DE HEITEC AG
 8C1F64F32 CN Shenzhen INVT Electric Co.,Ltd
@@ -48083,7 +48083,7 @@ CC9EEB KR Elentec
 8C1F64D29 AU Secure Bits
 8C1F6425E US R2Sonic, LLC
 8C1F64CF3 IT ABB S.p.A.
-8C1F64144 CN Langfang ENN lntelligent Technology Co.,Ltd.
+8C1F64144 CN Langfang ENN Intelligent Technology Co.,Ltd.
 8C1F643E8 CN Ruichuangte
 8C1F64DBD IT GIORDANO CONTROLS SPA
 70B3D5FFD US i2Systems
@@ -49304,7 +49304,7 @@ CC9EEB KR Elentec
 8C1F647C7 IT Ascon Tecnologic S.r.l.
 8C1F64232 US Monnit Corporation
 8C1F64292 US Gogo Business Aviation
-8C1F64020 IN Utthunga Techologies Pvt Ltd
+8C1F64020 IN Utthunga Technologies Pvt Ltd
 8C1F647AE DE D-E-K GmbH & Co.KG
 70B3D5389 CA 2KLIC inc.
 8C1F645CD IN MAHINDR & MAHINDRA
@@ -49348,7 +49348,7 @@ CC9EEB KR Elentec
 70B3D50C4 FR TIAMA
 70B3D5C4A FR TIAMA
 70B3D5C75 US Planet Innovation Products Inc.
-8C1F6424C CN Shenzhen Link-All Technolgy Co., Ltd
+8C1F6424C CN Shenzhen Link-All Technology Co., Ltd
 8C1F649CB CN Shanghai Sizhong Information Technology Co., Ltd
 8C1F64C1E SE VA SYD
 8C1F64653 HU P5
@@ -50917,7 +50917,7 @@ CC9EEB KR Elentec
 8C1F64118 DE Automata GmbH & Co. KG
 8C1F6455E KR HANATEKSYSTEM
 8C1F64B3D US RealD, Inc.
-70B3D5E00 TW Jeaway CCTV Security Ltd,.
+70B3D5E00 TW Jeaway CCTV Security Ltd.
 8C1F64B4C GB Picocom Technology Ltd
 8C1F646F4 IT Elsist Srl
 8C1F646B3 GB Feritech Ltd.
@@ -52223,7 +52223,7 @@ B0C5CAF -- Private
 3C39E7F -- Private
 D093956 IL Annapurna labs
 D09395B IN Invendis Technologies India Pvt Ltd
-5C6AEC2 CN Shenzhen Mingyue Technology lnnovation Co.,Ltd
+5C6AEC2 CN Shenzhen Mingyue Technology Innovation Co.,Ltd
 5C6AECB CN Shenzhen Anked vision Electronics Co.Ltd
 5C6AEC1 CN Shanghai Smilembb Technology Co.,LTD
 5C6AECD CA DarkVision Technologies Inc.
@@ -52244,7 +52244,7 @@ C0EAC3B KR SeongHo Information and Communication Corp.
 705A6F4 CN Vaiotik Co., Ltd
 705A6F0 DE Thyracont Vacuum Instruments GmbH
 C4A559E CN SERNET (SUZHOU) TECHNOLOGIES CORPORATION
-C4A5593 CN X-speed lnformation Technology Co.,Ltd
+C4A5593 CN X-speed Information Technology Co.,Ltd
 84B3864 US COBHAM
 0CCC479 US OptConnect
 84B3869 DE Weiss Robotics GmbH & Co. KG
@@ -52264,7 +52264,7 @@ E0382D1 IL Annapurna labs
 F0221D0 VN THANHBINH COMPANY - E111 FACTORY
 D46137C JP MUSASHI ENGINEERING,INC.
 D096865 IL Annapurna labs
-D09686B CN Changsha keruijie lnformation Technology Co.,Ltd
+D09686B CN Changsha keruijie Information Technology Co.,Ltd
 4C74A7D IR ddcpersia
 C49894A IN Neron Informatics Pvt Ltd
 D096868 DE Energiekonzepte Deutschland GmbH
@@ -52365,7 +52365,7 @@ F4700C9 IL Annapurna labs
 7C83345 TW PRO BRAND TECHNOLOGY (TW)
 38A8CDE US OUTFORM
 785EE86 CN Guangdong COROS Sports Technology Co., Ltd
-5848492 CN X-speed lnformation Technology Co.,Ltd
+5848492 CN X-speed Information Technology Co.,Ltd
 6433B52 US Adesso, Inc
 6433B5C RU Geksacon
 44A92C6 CN Ningbo joyson new energy automotive technology Co.,Ltd
@@ -52420,7 +52420,7 @@ E86CC74 CN Koal Software Co., Ltd
 9827824 CN Dspread Technology (Beijing) Inc.
 446FD80 CN Sichuan subao network technology ltd.co.
 446FD85 CN ZHEJIANG SHIP ELECTRONICS & TECHNOLOGY CO., LTD.
-78D4F14 CN BYD Auto lndustry Co.,Ltd
+78D4F14 CN BYD Auto Industry Co.,Ltd
 78D4F17 AR Famar Fueguina S.A.
 446FD8C CN Changzhou Haitu Electronic Technology Co.,Ltd
 78D4F15 CN Huaqin Telecom Technology Co.,Ltd.
@@ -52495,7 +52495,7 @@ D014114 KR powerall
 304950C US Anacove LLC
 3049501 HK ATLI WORLD LIMITED
 D014119 NO Airthings
-F0D7AF3 CN 720?bei jing?Health iTech Co.,Ltd
+F0D7AF3 CN 720 Health (Beijing) iTech Co.,Ltd
 F0D7AFB IT EVCO SPA
 DCE5338 DE JB-Lighting Lichtanlagen GmbH
 F0D7AFC CN Shenzhen Virtual Clusters Information Technology Co.,Ltd.
@@ -52877,7 +52877,7 @@ A411639 GB accesso Technology Group
 8CC8F41 CN Lanhomex Technology(Shen Zhen)Co.,Ltd.
 8CC8F49 US Swift Navigation Inc
 8CC8F40 KR Guardtec,Inc
-8CC8F46 CN SHENZHEN D-light Technolgy Limited
+8CC8F46 CN SHENZHEN D-light Technology Limited
 8CC8F4A DE Trilux Group Management GmbH
 8CC8F43 JP TOHO DENKI IND.CO.,LTD
 50A4D07 CN Shanghai Pujiang Smart Card Systems Co., Ltd.
@@ -53116,7 +53116,7 @@ D076504 -- Private
 D076508 SE Accumulate AB
 C85CE2D CN UNILUMIN GROUP CO., LTD.
 4CEA416 CN Gopod Group Limited
-5CF8384 CN Shanghai Zenchant Electornics Co.,LTD
+5CF8384 CN Shanghai Zenchant Electronics Co.,LTD
 5CF8388 IT Stonex srl
 4CEA415 CN ZICHAN J TECHNOLOGY CO.,LTD
 5CF838A DE Semsotec GmbH
@@ -53564,7 +53564,7 @@ D016F0A IN OPTITERA GLOBAL NETWORKS PRIVATE LIMITED
 D016F09 SE Crystal Alarm AB
 549A11F -- Private
 0055DAF -- Private
-D093950 CN Zhejiang Ruiyi lntelligent Technology Co. Ltd
+D093950 CN Zhejiang Ruiyi Intelligent Technology Co. Ltd
 5C6AEC4 TW GeneTouch Corp.
 5C6AEC5 IL Exaterra Ltd.
 7C45F92 CN Dongguan Boyye Industrial Co., Ltd
@@ -53822,7 +53822,7 @@ F469D59 CN Terminus (Shanghai) Technology Co.,Ltd.
 3049506 US Curb, Inc.
 3049509 CN Shanghai gatang technology CO.,LTD
 F0D7AFE US Wren Associates, LTD
-F0D7AF1 CN Beijing Serviatech lnformation Tech Co.,Ltd
+F0D7AF1 CN Beijing Serviatech Information Tech Co.,Ltd
 F0D7AF0 JP ID Tech Japan Co.,Ltd.
 304950B CN HANGZHOU EV-TECH CO.,LTD
 CCC2617 TW Ability Enterprise Co., Ltd
@@ -53886,7 +53886,7 @@ C4954DC JP SolidGear Corporation
 244E7BD US Church & Dwight Co., Inc.
 04D16E1 CN Launch Tech Co., Ltd.
 04D16E7 CN Envision Energy
-04D16E4 CN ShenZhen Huafu Information technology Co.?Ltd
+04D16E4 CN ShenZhen Huafu Information technology Co.,Ltd
 04D16E8 CN CHENGDU INTERLINK SCIENCE AND TECHNOLOGY CO.,LTD
 4403777 BR Stara S/A Indústria de Implementos Agrícolas
 4011758 CN Beijing Gemotech Intelligent Technology Co., Ltd.
@@ -54336,7 +54336,7 @@ B437D17 ES GE Power Management
 64FB81C US Bridgeport Instruments, LLC
 549A11E CN Beijing HTSmartech Co.,Ltd
 807B856 CN Quickte Technology Co.,Ltd
-80E4DA4 CN Beijing Yuantel Technolgy Co.,Ltd-Shenzhen Branch
+80E4DA4 CN Beijing Yuantel Technology Co.,Ltd-Shenzhen Branch
 80E4DA3 CN Beijing Gaokezhongtian Technology Co Ltd
 64FB812 ES Seven Solutions S.L
 1CCAE3D CA eSight Corporation
@@ -55021,7 +55021,7 @@ F4700C5 CN Shenzhen Lidaxun Digital Technology Co., LTD
 38A8CD3 CN Dongguan Fyrnetics Co., Ltd
 2836131 CN Hi-p (Suzhou) Electronics Co,Ltd
 785EE8B ZA Lantern Engineering (Pty) Ltd
-785EE87 TR MT B?LG? TEKNOLOJ?LER? VE DI? T?C. A.?.
+785EE87 TR MT BİLGİ TEKNOLOJİLERİ VE DIŞ TİC. A.Ş.
 2836133 CA Linear Computing Inc.
 785EE8A CN Yake (Tianjin) Technology Co.,Ltd.
 584849E TW Avadesign Technology Co. Ltd.
@@ -55426,7 +55426,7 @@ C4FFBCC KR KyongBo Electric Co., Ltd.
 282C029 CN Systec Intelligent Building Technology (Tianjin) Co.,Ltd.
 9C431E9 RU CONTINENT Co. Ltd
 9C431E6 DE R-S-I Elektrotechnik GmbH CO KG
-F8B5689 CN Beijing Wanji Techonology Co., Ltd.
+F8B5689 CN Beijing Wanji Technology Co., Ltd.
 282C026 IN Lookman Electroplast Industries Ltd
 282C023 CN Dexin Digital Technology Corp. Ltd.
 F8B5682 CN Shenzhen New-Bund Technology Co., Ltd.
@@ -56155,7 +56155,7 @@ BC31986 RU ntc mekhanotronnika
 C86BBC1 TW WeLink Solutions, Inc.
 BC31988 US Temposonics,LLC
 B0FF72D CN TBB Renewable (Xiamen) Co Ltd
-B0FF729 CN JIUYEE?shenzhen) Medical Technology Co.,Ltd
+B0FF729 CN JIUYEE (Shenzhen) Medical Technology Co.,Ltd
 B0FF727 CA BL Innovare
 90F421E US Velan Studios Inc.
 B0FF72E DE HANNING & KAHL GmbH & Co. KG
@@ -56300,12 +56300,12 @@ C4A10E5 CN O-NET Industrial Technologies (Shenzhen) Limited
 1054D22 CN ComNav Technology Ltd.
 988FE00 NL Valinso B.V.
 988FE09 KR Nawon Machinery
-988FE05 CN KuaiZhu SmartTechnology?Suzhou?CO.,Ltd
+988FE05 CN KuaiZhu SmartTechnology (Suzhou) CO.,Ltd
 0826AE7 CA EVTECH SOLUTIONS LTD. DBA 3D-P
 DC36439 CN Hefei EA Excelsior Information Security Co., Ltd.
 0826AE0 CN Wuhan Tianyu Information Industry Co., Ltd.
 18D7934 NL Remote Engineer B.V.
-18D7936 CN Autel lntelligent Technology Corp.,Ltd
+18D7936 CN Autel Intelligent Technology Corp.,Ltd
 DC36435 CN Hangzhou Chingan Tech Co., Ltd.
 50A0307 CN Shenzhen Hewang Electric Co.,Ltd
 50A030A FI Missing-Link Oy
@@ -56327,7 +56327,7 @@ C8F5D69 CN Shanghai Mo xiang Network Technology CO.,ltd
 1845B35 RU ELPITECH LLC
 F4A4548 CN Shenzhen Cudy Technology Co., Ltd.
 F4700C1 CN Shenzhen Excelland Technology Co., Ltd.
-F4700C7 CN Changde xsound lnnovation technologies co;ltd.
+F4700C7 CN Changde xsound Innovation technologies co;ltd.
 787264E CN Heltec Automation
 7872645 CN CALTTA TECHNOLOGIES CO.,LTD.
 7872641 CN Zhengzhou Reform Intelligent Device Co., Ltd
@@ -56417,7 +56417,7 @@ C8F5D6B ES United Barcode Systems
 E86CC79 CN Hangzhou Lanxum Security Technology Co., Ltd
 E86CC76 KR KLAB
 0411198 CN Shenzhen YIZHENG Technology Co.,Ltd
-245DFCD CN Hunan Honestone lntelligence Technology Co.,Ltd
+245DFCD CN Hunan Honestone Intelligence Technology Co.,Ltd
 041119E TW JULIDA LIMITED
 0411190 US FORT Robotics Inc.
 E86CC75 CN Shenzhen Rongda Computer Co.,Ltd
@@ -56496,7 +56496,7 @@ CCC261A CN Shenzhen Uyesee Technology Co.,Ltd
 94FBA7E CN Skyring Smart Technologies(Shenzhen) Co., Ltd.
 94FBA7A IT ELKRON
 94FBA72 CN Beijing Leja Tech co., Ltd.
-38F7CD0 PL Polska Fabryka Wodomierzy i Ciep?omierzy FILA
+38F7CD0 PL Polska Fabryka Wodomierzy i Ciepłomierzy FILA
 94FBA71 CA Inaxsys Security Systems inc.
 F490CB3 US Ricker Lyman Robotic
 F490CBD AU Simavita (Aust) Pty Ltd
@@ -56768,7 +56768,7 @@ F8B5681 ID PT. Eyro Digital Teknologi
 3873EA2 CN Eyesight(Shanghai)Communication Technology Co.,Ltd.
 3873EA0 US L-3 Communications Mobile-Vision, Inc.
 EC9F0D0 CN Hesai Photonics Technology Co., Ltd
-EC9F0D7 CN Bei jing Lian Shan times Techonology Co.Ltd
+EC9F0D7 CN Bei jing Lian Shan times Technology Co.Ltd
 EC9F0D5 US Paw-Taw-John Services, Inc.
 EC9F0DC US Sarcos Corp
 EC9F0D9 KR FCI
@@ -57125,7 +57125,7 @@ D0A0116 IT OCEM Energy Technology
 D0A0115 CN Shenzhen DOOGEE Hengtong Technology CO.,LTD
 D0A011E IL Annapurna labs
 78E9964 CN Shenzhen Jin Hao Mi Technology Co., LTD
-78E996A CN Shenzhen Farben lnformation Technology CO.,Ltd.
+78E996A CN Shenzhen Farben Information Technology CO.,Ltd.
 78E996B CN CelAudio (Beijing) Technology Inc
 34C8D6A CN Shenzhen Jooan Technology Co., Ltd
 80A579A US ViewSonic Corp
@@ -57171,7 +57171,7 @@ F87A397 CN Shenzhen Electron Technology Co., LTD.
 3446631 IL Chain Reaction Ltd
 3446633 US LA Clippers
 3446636 TW China Motor Corporation
-08DA33B CN Shenzhen Fanxiang lnformation Technology Co.,Ltd
+08DA33B CN Shenzhen Fanxiang Information Technology Co.,Ltd
 08DA33D CN Shanghai ReeLink Global Communication Company LTD
 344663E CN Shenzhen ELECQ Technology Co.,Ltd
 08DA33A CN JAKA Robotics Co., Ltd.
@@ -57477,7 +57477,7 @@ C8F5D63 HK BBPOS Limited
 58C41EE CN Beijing Qiangyun Innovation Technology Co.,Ltd
 68DA732 CN SHENZHEN ALLDOCUBE SCIENCE AND TECHNOLOGY CO., LTD.
 68DA733 US Softronics Ltd
-58C41E1 CN JLZTLink Industry ?Shen Zhen?Co., Ltd.
+58C41E1 CN JLZTLink Industry (Shen Zhen) Co., Ltd.
 C86BBC2 RU Vipaks + Ltd
 58C41E0 CN Guangzhou TeleStar Communication Consulting Service Co., Ltd
 58C41E5 CN Zhejiang Cainiao Supply Chain Management Co.,Ltd
@@ -57523,7 +57523,7 @@ C0EAC32 CN NEXSEC Incorporated
 7C45F93 CN Hangzhou LUXAR Technologies Co., Ltd
 7C45F9B CN IngDan China-chip Electronic Technology(Wuxi) Co.,Ltd.
 8C5DB24 IL CoreTigo
-8C5DB23 CN Yuzhou Zhongnan lnformation Technology Co.,Ltd
+8C5DB23 CN Yuzhou Zhongnan Information Technology Co.,Ltd
 8C5DB27 CZ Cleartex s.r.o.
 C0EAC3C GB Trumeter
 705A6F5 TW Acer Connect
@@ -57545,7 +57545,7 @@ D461377 CN Beijing Shudun Information Technology Co., Ltd
 D461374 CN Beijing TAIXINYUN Technology Co.,Ltd
 F0221DA CN Hangzhou Gold Electronic Equipment Co., Ltd
 4C74A7E JP KYOCERA CORPORATION
-F0221D2 CN Chonel Industry?shanghai?Co., Ltd.
+F0221D2 CN Chonel Industry (Shanghai) Co., Ltd.
 4C74A71 CN Shenzhen Hollyland Technology Co.,Ltd
 4C74A76 CN ABB LV Installation Materials Co., Ltd. Beijing
 4C74A75 US AGILITY ROBOTICS, INC.
@@ -57573,7 +57573,7 @@ C48372A JP VIE STYLE,INC
 5847CA3 CN Fujian Helios Technologies Co., Ltd.
 5847CA9 CN Kingnuo Intelligent Technology (Jiaxing) Co., Ltd.
 E87829B FI Ampner Ltd
-D420005 CN Monolith Electric?Changzhou?Co.,Ltd.
+D420005 CN Monolith Electric (Changzhou) Co.,Ltd.
 5847CAE US AZURE SUMMIT TECHNOLOGY
 D420009 KR WEATHEX CO., LTD.
 1874E24 IN Aggressive Electronics Manufacturing Services Pvt Limited
@@ -57786,7 +57786,7 @@ FCCD2F3 CN Xmitech Technology Co., Limited
 FCCD2F4 BE Genitek Engineering sprl
 FCCD2F1 CN Siren Care(Shanghai) information and technology company
 CC4F5CE CN Beijing Techao Weijia Technology Limited
-CC4F5C3 CN Shanghai Zenchant Electornics Co.,LTD
+CC4F5C3 CN Shanghai Zenchant Electronics Co.,LTD
 CC4F5C9 US Dtrovision
 CC4F5CA MY AZ-TECHNOLOGY SDN BHD
 CC4F5CD CN Beijing Neutron Technology CO.,LTD.
@@ -58489,7 +58489,7 @@ D0A0114 IR SUMICO
 C4CC379 CN Skychers Creations ShenZhen Limited
 C4CC37D GB Netavo Global Data Services Ltd
 C4CC378 CN SmartLicht systems co., ltd
-60A4343 CN Shenzhen lncar Technology Co.,Ltd
+60A4343 CN Shenzhen Incar Technology Co.,Ltd
 60A434C IL Annapurna labs
 C8FFBF7 GB Indra Renewable Technologies
 5C5A4C4 CN YIHUA COMMUNICATIONS(HUIZHOU)CO.,LTD
@@ -58509,7 +58509,7 @@ EC5BCD2 IT Sfera Labs S.r.l.
 08DA337 FR Origalys ElectroChem SAS
 3446638 HK Bluesoo Tech (HongKong) Co.,Limited
 344663B DE Grohe AG
-08DA332 CN Shenzhen Zhenghao lnnovation Techenology Co.,LTD
+08DA332 CN Shenzhen Zhenghao Innovation Techenology Co.,LTD
 F420558 CN Huzhou Luxshare Precision Industry Co.LTD
 48E6C6E KR BEUPSYS
 F42055E CN Shenzhen Keyking Technology Limited
@@ -58648,7 +58648,7 @@ E0233BB CN Shanghai Kanghai Information System CO.,LTD.
 24A10D5 IN Avantel Limited
 24A10D3 TW Rhymebus corporation
 24A10D4 CN Dongguan Taijie Electronics Technology Co.,Ltd
-24A10D8 CN Luxvisions lnnovation TechnologyCorp.Limited
+24A10D8 CN Luxvisions Innovation TechnologyCorp.Limited
 F040AFA DE SIEMENS AG
 E8F6D7B CN GUANGZHOU PANYU JUDA CAR AUDIO EQUIPMENT CO.,LTD
 E8F6D71 JP PRECISION FUKUHARA WORKS,LTD.
