@@ -24455,7 +24455,7 @@ E8A0ED CN Hangzhou Hikvision Digital Technology Co.,Ltd.
 5C345B CN Hangzhou Hikvision Digital Technology Co.,Ltd.
 7CEDC6 US Amazon Technologies Inc.
 4825F3 CN Huawei Device Co., Ltd.
-C04884 TR Sigma Bilisim Sist. Tekn. Elk. Enj. ve San. D??. Tic. Ltd. ?ti.
+C04884 TR Sigma Bilisim Sistemleri Tekn. Elk. Enerji Ve San.Dis.Tic.Ltd.Sti.
 4CBD8F CN Hangzhou Hikvision Digital Technology Co.,Ltd.
 F412DA CN zte corporation
 540295 CN HUAWEI TECHNOLOGIES CO.,LTD
@@ -52143,7 +52143,7 @@ CC9EEB KR Elentec
 8C1F6440F CN Fuzhou Tucsen Photonics Co.,Ltd
 8C1F64B12 CN Hongtai Intelligent Technology
 8C1F64087 NL Benchmark Electronics BV
-8C1F64FAF GB Goodtech Worldwide LTD,,mobitel''
+8C1F64FAF GB Goodtech Worldwide LTD mobitel
 8C1F64DA2 IT Ascon Tecnologic S.r.l.
 8C1F64A93 US eSmart Tech Inc
 8C1F640F8 IT INVENTIS S.r.l.
