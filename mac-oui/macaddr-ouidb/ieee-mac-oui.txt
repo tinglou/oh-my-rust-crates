@@ -10,12 +10,6 @@
 #
 # Entries with unresolved country code:
 #   70B3D575A Standard Backhaul Communications (empty address, no location clue)
-#   A4580F8 AIR LIQUIDE MEDICAL SYSTEMS (empty address, no location clue)
-#   0CEFAFD CJSC «Svyaz Engineering» (empty address, no location clue)
-#   A43BFAD JSC “Component-ASU” (empty address, no location clue)
-#   90C6824 Neone, Inc. (empty address, no location clue)
-#   A43BFA2 Powell Industries (empty address, no location clue)
-#   D461379 Mavenir Systems, Inc. (empty address, no location clue)
 286FB9 CN Nokia Shanghai Bell
 38E2CA US Katun
 E80AB9 US Cisco Systems
@@ -55534,7 +55528,7 @@ A41163B US Moog Music
 A4580F1 US Stone Lock Global
 500B914 CA Sinope technologies
 500B910 US Igor
-A4580F8 -- AIR LIQUIDE MEDICAL SYSTEMS
+A4580F8 FR AIR LIQUIDE MEDICAL SYSTEMS
 A4580F9 IT Ksenia Security srl
 7CCBE22 DE 1000eyes
 7CCBE25 US DTECH Labs
@@ -55697,7 +55691,7 @@ A0BB3E2 DE DirectOut
 9802D85 HK EBI
 0CEFAF7 SE Syntrans
 0CEFAFE US Infinisource
-0CEFAFD -- CJSC «Svyaz Engineering»
+0CEFAFD RU CJSC «Svyaz Engineering»
 F802788 TW EMBUX Technology
 F802786 CN Witium
 A44F29C CN Shenzhen Huadoo Bright Group Limitied
@@ -55754,7 +55748,7 @@ D076505 US Annapurna Labs
 D07650E JP Revox
 A43BFA8 FR Alpwise
 BC34004 IN Dexcel Design
-A43BFAD -- JSC “Component-ASU”
+A43BFAD RU JSC “Component-ASU”
 A43BFA4 AU Maxon Australia
 7419F8D CN Ansjer Electronics
 C85CE29 CN Quthc
@@ -56999,7 +56993,7 @@ B437D18 IN eInfochips
 2C6A6F4 KR TINYCO
 2C6A6F6 US Beep
 2C6A6F3 IT Cloudproject Generation Srl
-90C6824 -- Neone
+90C6824 US Neone
 9802D89 CN Navroom Beijing, China
 9802D8A US HySecurity
 9802D87 ES Ormazabal Protection&Automation
@@ -57072,7 +57066,7 @@ A43BFAE GB The Magstim Company
 BC34001 TW IPLINK Technology
 7C70BCA US Motec
 7C70BC1 CN XD-GE Automation
-A43BFA2 -- Powell Industries
+A43BFA2 US Powell Industries
 D076501 BR DAIKEN AUTOMACAO
 D07650B KR PelKorea
 D07650A NL InventDesign
@@ -58456,7 +58450,7 @@ C898DB3 CN Shenzhen Kedakeda Technology
 10DCB6C HK BBPOS
 78392D1 DE LivEye
 78392DE BR Planeta Informática
-D461379 -- Mavenir Systems
+D461379 US Mavenir Systems
 8C5570D DE EPSa Elektronik & Präzisionsbau Saalfeld
 A0024A1 IT Videndum Media Solutions
 8C5570C US Antronix
