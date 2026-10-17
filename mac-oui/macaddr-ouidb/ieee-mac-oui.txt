@@ -4,7 +4,8 @@
 # MA-M(28 bits): https://standards-oui.ieee.org/oui28/mam.csv
 # MA-S(36 bits): https://standards-oui.ieee.org/oui36/oui36.csv
 # IAB(36 bits): https://standards-oui.ieee.org/iab/iab.csv
-# Updated: 2026-10-16
+# Updated: 2026-10-17T03:14:54Z
+# Count: oui-24 = 40333, oui-28 = 6637, oui-36 = 11809, total = 58779
 # Duplicate prefixes are deduplicated: the LAST occurrence (most recent
 # allocation) is kept. Dropped entries are logged to duplicate-prefix.log.
 #
