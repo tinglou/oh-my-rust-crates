@@ -17519,7 +17519,7 @@ A02D13 TR AirTies Wireless Networks
 C0D682 US Arista Networks
 D80BCB CN Telink Semiconductor (Shanghai)
 9CFCE8 MY Intel
-8468C8 HK TOTOLINK TECHNOLOGY INT‘L
+8468C8 HK TOTOLINK TECHNOLOGY INT'L
 807B3E KR Samsung Electronics
 F8F1E6 KR Samsung Electronics
 88A9B7 US Apple
@@ -20811,7 +20811,7 @@ B4B5AF KR Minsung Electronics
 001DBF US Radiient Technologies
 001DFB JP NETCLEUS Systems
 001D3E JP SAKA TECHNO SCIENCE
-001D40 US Intel – GE Care Innovations
+001D40 US Intel - GE Care Innovations
 001D34 US SYRIS Technology
 001D32 CN Longkay Communication & Technology (Shanghai)
 001D2A CN SHENZHEN BUL-TECH
@@ -26778,7 +26778,7 @@ C0C976 CN Shenzhen TINNO Mobile Technology
 588BF3 TW Zyxel Communications
 5067F0 TW Zyxel Communications
 446EE5 CN HUAWEI TECHNOLOGIES
-C8778B US Mercury Systems – Trusted Mission Solutions
+C8778B US Mercury Systems - Trusted Mission Solutions
 94DF4E CN Wistron InfoComm(Kunshan)
 98EECB CN Wistron Infocomm (Zhongshan)
 683E34 CN MEIZU Technology
@@ -27392,7 +27392,7 @@ BCE63F KR Samsung Electronics
 ACBC32 US Apple
 544E90 US Apple
 881B99 CN SHENZHEN XIN FEI JIA ELECTRONIC
-080A4E US Planet Bingo® — 3rd Rock Gaming®
+080A4E US Planet Bingo® - 3rd Rock Gaming®
 B49D0B ES BQ
 3C8CF8 US TRENDnet
 A87285 US IDT
@@ -27641,7 +27641,7 @@ BC14EF CN ITON Technology
 443C9C DE Pintsch
 10DDF4 CN Maxway Electronics
 080371 FR KRG
-200E95 CH IEC – TC9 WG43
+200E95 CH IEC - TC9 WG43
 0C1262 CN zte
 3CD4D6 US WirelessWERX
 C8F68D JP S.E.TECHNOLOGIES
@@ -34222,7 +34222,7 @@ DC9914 CN HUAWEI TECHNOLOGIES
 B05365 CN China Mobile IOT Company
 308841 CN Sichuan AI-Link Technology
 44EFCF KR UGENE SOLUTION
-0080B6 US Mercury Systems – Trusted Mission Solutions
+0080B6 US Mercury Systems - Trusted Mission Solutions
 08512E FI Orion Diagnostica
 98A404 SE Ericsson
 00CC3F US Universal Electronics
@@ -34363,7 +34363,7 @@ D8E004 US Vodia Networks
 0CCEF6 CN Guizhou Fortuneship Technology
 1806FF CN Acer Computer(Shanghai)
 EC1D8B US Cisco Systems
-D07FC4 CN Ou Wei Technology Co.，Ltd. of Shenzhen City
+D07FC4 CN Ou Wei Technology Co.,Ltd. of Shenzhen City
 48555C CN Wu Qi Technologies
 18F0E4 CN Xiaomi Communications
 380E4D US Cisco Systems
@@ -34583,7 +34583,7 @@ EC4F82 US Calix
 C0028D TW WINSTAR Display
 E89FEC CN CHENGDU KT ELECTRONIC HI-TECH
 802689 SG D-Link International
-503A7D TW AlphaTech PLC Int’l
+503A7D TW AlphaTech PLC Int'l
 F4C4D6 CN Shenzhen Xinfa Electronic
 7C5049 US Apple
 E47DEB CN Shanghai Notion Information Technology
@@ -39863,7 +39863,7 @@ AC401E CN vivo Mobile Communication
 74E6C7 TW LUXSHARE-ICT
 841623 CN zte
 D0F815 CN HUAWEI TECHNOLOGIES
-64D4F0 US NETVUE，
+64D4F0 US NETVUE
 14AEE0 SG ETHERNEXION NETWORKS
 045E0A CN SHENZHEN TRANSCHAN TECHNOLOGY
 A86ACB KR EVAR
@@ -45002,7 +45002,7 @@ CC9EEB KR Elentec
 8C1F64CFA JP YUYAMA MFG
 8C1F64B14 JP Murata Manufacturing
 8C1F64744 KR CHASEO CONNECTOME
-8C1F649A5 CN Xi‘an Shengxin Science& Technology Development
+8C1F649A5 CN Xi'an Shengxin Science& Technology Development
 8C1F649E8 DE GHM Messtechnik
 8C1F641D8 CA Mesomat
 8C1F6490D IT Algodue Elettronica Srl
@@ -49102,7 +49102,7 @@ CC9EEB KR Elentec
 8C1F64C36 KR ODTech
 8C1F647D0 BR Tecsys do Brasil Industrial
 8C1F64595 CZ Inspinia Technology
-8C1F64CB1 CN Xi’an Sunway Communication
+8C1F64CB1 CN Xi'an Sunway Communication
 8C1F6437D GB Season Electronics
 8C1F645ED DE DEUTA Werke
 8C1F641F9 EG TelecomWadi
@@ -49524,7 +49524,7 @@ CC9EEB KR Elentec
 8C1F64AE1 JP YUYAMA MFG
 8C1F64856 BR Garten Automation
 8C1F64549 FR Brad Technology
-8C1F64270 CN Xi‘an Hangguang Satellite and Control Technology
+8C1F64270 CN Xi'an Hangguang Satellite and Control Technology
 8C1F64BC0 DE GS Elektromedizinsiche Geräte G. Stemple
 8C1F64264 SE BR. Voss Ingenjörsfirma
 8C1F64135 IL Yuval Fichman
