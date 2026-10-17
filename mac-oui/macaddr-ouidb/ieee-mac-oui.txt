@@ -727,7 +727,7 @@ F065AE KR Samsung Electronics
 BCD074 US Apple
 0C1EF7 GB Omni-ID
 E85177 CN Qingdao Intelligent&Precise Electronics
-388A21 LT UAB "Teltonika Telematics"
+388A21 LT UAB Teltonika Telematics
 A45FB9 US DreamBig Semiconductor
 000F32 CN Lootom Telcovideo Network (Wuxi)
 18C23C CN Lumi United Technology
@@ -988,7 +988,7 @@ C87B23 US Bose
 C491CF US Luxul
 D89AC1 CA Nokia
 F0B11D CA Nokia
-7CD9F4 LT UAB "Teltonika Telematics"
+7CD9F4 LT UAB Teltonika Telematics
 A4D795 CN Wingtech Mobile Communications
 84AB26 CN Tiinlab
 58356B HK TECNO MOBILE
@@ -1224,7 +1224,7 @@ B4C26A US Garmin International
 78F8B8 GB Rako Controls
 6CE5F7 CN New H3C Technologies
 B8DD71 CN zte
-F4E578 RU LLC Proizvodstvennaya Kompania "TransService"
+F4E578 RU LLC Proizvodstvennaya Kompania TransService
 0854BB CN SHENZHEN CHUANGWEI-RGB ELECTRONICS
 3C9C0F MY Intel
 1C5D80 JP Mitubishi Hitachi Power Systems Industries
@@ -4359,7 +4359,7 @@ F4ACC1 US Cisco Systems
 60391F IN ABB
 E8A4C1 GB Deep Sea Electronics
 D4C766 DE Acentic
-A02EF3 TW United Integrated Services Co., Led
+A02EF3 TW United Integrated Services
 A09805 CN OpenVox Communication
 00271F TW MIPRO Electronics
 88A5BD US QPCOM
@@ -4629,7 +4629,7 @@ A09805 CN OpenVox Communication
 001F54 CA Lorex Technology
 001F4B US Lineage Power
 001F40 US Speakercraft
-001EFC RU JSC "MASSA-K"
+001EFC RU JSC MASSA-K
 001F06 US Integrated Dispatch Solutions
 001EFA RU PROTEI
 001EFB GB Trio Motion Technology
@@ -4637,7 +4637,7 @@ A09805 CN OpenVox Communication
 001F1B TW RoyalTek Company
 001F0D US L3 Communications - Telemetry West
 001F2E SG Triangle Research Int'l
-001ECB RU "RPC "Energoautomatika"
+001ECB RU RPC Energoautomatika
 001EBA NO High Density Devices
 001E9F US Visioneering Systems
 001E9B JP San-Eisha
@@ -8469,7 +8469,7 @@ AC86A3 US Apple
 E42150 CN Shanghai Chint low voltage electrical technology
 D404E6 US Broadcom
 28EBA6 RU Nex-T
-C0B3C8 RU LLC "NTC Rotek"
+C0B3C8 RU LLC NTC Rotek
 CC4D74 CN Fujian Newland Payment Technology
 A031EB DE Semikron Elektronik
 F8D758 CH Veratron
@@ -8522,7 +8522,7 @@ F44D5C TW Zyxel Communications
 78071C GB Green Energy Options
 1C8BEF CN Beijing Xiaomi Electronics
 28E297 CN Shanghai InfoTM Microelectronics
-58F85C RU LLC Proizvodstvennaya Kompania "TransService"
+58F85C RU LLC Proizvodstvennaya Kompania TransService
 304449 DE PLATH Signal Products
 ECC3B0 CN zte
 BCBD84 CN zte
@@ -10172,7 +10172,7 @@ A438CC JP Nintendo
 5065F3 US Hewlett Packard
 3C9509 TW Liteon Technology
 30FD38 US Google
-64CB5D LV SIA "TeleSet"
+64CB5D LV SIA TeleSet
 5821E9 US TWPI
 F0E3DC RU Tecon MT
 A8DA01 CN Shenzhen NUOLIJIA Digital Technology
@@ -11833,7 +11833,7 @@ FC626E CN Beijing MDC Telecom
 94C962 CH Teseq
 DC2A14 CN Shanghai Longjing Technology
 808B5C CN Shenzhen Runhuicheng Technology
-C05E6F LT V. Stonkaus firma "Kodinis Raktas"
+C05E6F LT V. Stonkaus firma Kodinis Raktas
 6886E7 US Orbotix
 D819CE KR Telesquare
 1C9179 GB Integrated System Technologies
@@ -12256,7 +12256,7 @@ CCD811 TW Aiconn Technology
 3C2F3A JP SFORZATO
 18922C US Virtual Instruments
 28061E CN NINGBO GLOBAL USEFUL ELECTRIC
-A0DE05 RU JSC "Irbis-T"
+A0DE05 RU JSC Irbis-T
 0817F4 US IBM
 74CE56 TW Packet Force Technology Limited Company
 ECBBAE BR Digivoice Tecnologia em Eletronica
@@ -15618,7 +15618,7 @@ C8E713 CN Bouffalo Lab (Nanjing)
 1C8E2A US Apple
 587607 US IEEE Registration Authority
 2419A5 CN New H3C Technologies
-6CAFAB LT UAB "Teltonika Telematics"
+6CAFAB LT UAB Teltonika Telematics
 5483BB JP Honda Motor
 A81378 CA Nokia
 1C8EE6 CN VTECH TELECOMMUNICATIONS
@@ -17318,7 +17318,7 @@ B8D309 US Cox Communications
 9454CE CN GUANGDONG OPPO MOBILE TELECOMMUNICATIONS
 388ABE CN GUANGDONG OPPO MOBILE TELECOMMUNICATIONS
 047E23 CN China Mobile IOT Company
-14CCB3 RU AO "GK NATEKS"
+14CCB3 RU AO GK NATEKS
 001C7B TW Castlenet Technology
 5484DC CN zte
 38549B CN zte
@@ -17830,7 +17830,7 @@ B8186F JP ORIENTAL MOTOR
 CCF735 US Amazon Technologies
 C4F839 FR Actia Automotive
 C84F86 GB Sophos
-6429ED RU AO "PKK Milandr"
+6429ED RU AO PKK Milandr
 F82F6A HK ITEL MOBILE
 C0D834 IL xvtec
 443C88 MA FICOSA MAROC INTERNATIONAL
@@ -17869,7 +17869,7 @@ B0E7DE VN Homa Technologies JSC
 8CCF8F US ITC Systems
 4C962D SE Fresh
 484A30 GB George Robotics
-4861A3 RU Concern "Axion" JSC
+4861A3 RU Concern Axion JSC
 4CE5AE CN Tianjin Beebox Intelligent Technology
 F4C7C8 US Kelvin
 304A26 CN Shenzhen Trolink Technology
@@ -20256,7 +20256,7 @@ FCAF6A SE Qulsar
 081735 US Cisco Systems
 CCBE71 NL OptiLogix
 0C469D US MS Sedco
-00B033 RU OAO "Izhevskiy radiozavod"
+00B033 RU OAO Izhevskiy radiozavod
 08B7EC US Wireless Seismic
 18AF9F DE DIGITRONIC Automationsanlagen
 E46C21 DE messMa
@@ -20532,7 +20532,7 @@ B4B5AF KR Minsung Electronics
 002588 US Genie Industries
 002580 ES Equipson
 00256D US Broadband Forum
-00256C RU "Azimut" Production Association JSC
+00256C RU Azimut Production Association JSC
 002563 US Luxtera
 002593 HU DatNet Informatikai
 00258E US The Weather Channel
@@ -21237,7 +21237,7 @@ B4B5AF KR Minsung Electronics
 00130C JP HF System
 001379 TW PONDER INFORMATION INDUSTRIES
 001374 US Atheros Communications
-001369 JP Honda Electron Co., LED
+001369 JP Honda Electron
 001342 US Vision Research
 00133B HK Speed Dragon Multimedia
 001301 ES IronGate
@@ -24152,7 +24152,7 @@ C8EA71 VG Espressif
 F0B715 CN Huawei Device
 2CF06A CN Huawei Device
 A8D601 CN Huawei Device
-BCF9F2 RU CJSC "STC "TEKO"
+BCF9F2 RU CJSC STC TEKO
 00E1F8 US BK Technologies.com
 B456F3 SE Westermo Network Technologies
 BCA9D2 CN Quectel Wireless Solutions
@@ -24914,7 +24914,7 @@ F82551 JP Seiko Epson
 7453A8 NL ACL Airshop
 147EA1 BR Britania Eletrônicos
 E81656 CN Hangzhou BroadLink Technology
-149E5D RU JSC "IB Reform"
+149E5D RU JSC IB Reform
 BC4760 KR Samsung Electronics
 2C4DDE HK TECNO MOBILE
 303F7B CN Shenzhen YOUHUA Technology
@@ -25093,7 +25093,7 @@ C44D84 US Cisco Systems
 102CEF CH EMU Electronic
 C0D063 CH EM Microelectronic
 7C10C9 TW ASUSTek COMPUTER
-38FF13 RU Joint Stock Company "Research Instinite "Masshtab"
+38FF13 RU Joint Stock Company Research Instinite Masshtab
 D0DBB7 AU Casa Systems
 205383 CN HUAWEI TECHNOLOGIES
 B8857B CN HUAWEI TECHNOLOGIES
@@ -26891,7 +26891,7 @@ C83870 KR Samsung Electronics
 DC4D23 IL MRV Comunications
 0023B3 SE Lyyn
 405EE1 CN Shenzhen H&T Intelligent Control
-002578 RU JSC "Concern "Sozvezdie"
+002578 RU JSC Concern Sozvezdie
 085BDA IL CliniCare
 1CC035 JP PLANEX COMMUNICATIONS
 583277 US Reliance Communications
@@ -28524,7 +28524,7 @@ A07332 GB Cashmaster International
 0024C8 US Broadband Solutions Group
 0024C5 GB Meridian Audio
 0024E5 US Seer Technology
-002501 RU JSC "Supertel"
+002501 RU JSC Supertel
 002435 KR WIDE
 002431 CN Uni-v
 002432 TW Neostar Technology
@@ -28717,7 +28717,7 @@ A07332 GB Cashmaster International
 001F77 FR HEOL DESIGN
 001F76 US AirLogic Systems
 001F73 TW Teraview Technology
-001F62 RU JSC "Stilsoft"
+001F62 RU JSC Stilsoft
 001F67 JP Hitachi
 001F61 CN Talent Communication Networks
 001F56 KR DIGITAL FORECAST
@@ -29574,7 +29574,7 @@ A07332 GB Cashmaster International
 000BF4 -- Private
 000BFA AR EXEMYS SRL
 000BFB US D-NET International
-000BCB ES Fagor Automation , S. Coop
+000BCB ES Fagor Automation, S. Coop
 000BC8 US AirFlow Networks
 000BCE SE Free2move
 000BCF US AGFA NDT
@@ -32464,7 +32464,7 @@ F8C4AE CN GUANGDONG OPPO MOBILE TELECOMMUNICATIONS
 C4A816 US eero
 34F043 KR Samsung Electronics
 4C66A6 KR Samsung Electronics
-4845CF RU LLC Proizvodstvennaya Kompania "TransService"
+4845CF RU LLC Proizvodstvennaya Kompania TransService
 8C02CD CN FUJIAN STAR-NET COMMUNICATION
 54F8F0 US Tesla
 74546B CN hangzhou zhiyi communication
@@ -32668,7 +32668,7 @@ BCAD90 US Kymeta Purchasing
 3C998C JP Houwa System Design
 5C7545 KR Wayties
 380FAD CN HUAWEI TECHNOLOGIES
-B4E54C RU LLC "Elektra"
+B4E54C RU LLC Elektra
 DCC2C9 JP CANON
 4829D6 CN GUANGDONG OPPO MOBILE TELECOMMUNICATIONS
 E462C4 US Cisco Systems
@@ -32822,7 +32822,7 @@ F87D76 US Apple
 2C7600 US Apple
 7042D3 CN Ruijie Networks
 18C3F4 US IEEE Registration Authority
-34DF20 CN Shenzhen Comstar .Technology
+34DF20 CN Shenzhen Comstar Technology
 E4A634 US Universal Electronics
 2C8D37 US Virtium
 40FDF3 TW AMPAK Technology
@@ -32982,7 +32982,7 @@ F8E57E US Cisco Systems
 943469 US Silicon Laboratories
 E0BB0C RU Synertau
 80015C CA Synaptics
-CCEB18 RU OOO "TSS"
+CCEB18 RU OOO TSS
 AC77B9 CN Nanjing Yufei Intelligent Control Technology
 A85BB7 US Apple
 3462B4 MY Renesas Electronics (Penang)
@@ -36243,7 +36243,7 @@ B89674 DE AllDSP
 3055ED CN Trex Network
 94DF58 KR IJ Electron
 48D54C US Jeda Networks
-1CBBA8 RU OJSC "Ufimskiy Zavod "Promsvyaz"
+1CBBA8 RU OJSC Ufimskiy Zavod Promsvyaz
 70D6B6 US Metrum Technologies
 C0A0DE FI Multi Touch
 8C0CA3 US Amper
@@ -36906,7 +36906,7 @@ E80B13 TW Akib Systems Taiwan
 001EF1 FR Servimat
 001EF4 US L-3 Communications Display Systems
 001F0E JP Japan Kyastem
-001F0B RU Federal State Unitary Enterprise Industrial Union"Electropribor"
+001F0B RU Federal State Unitary Enterprise Industrial UnionElectropribor
 001F57 TH Phonik Innovation
 001F59 DK Kronback Tracers
 001F4E US ConMed Linvatec
@@ -37214,7 +37214,7 @@ E80B13 TW Akib Systems Taiwan
 001743 IT Deck Srl
 00173D US Neology
 001740 CA Bluberi Gaming Technologies
-001732 RU Science-Technical Center "RISSA"
+001732 RU Science-Technical Center RISSA
 00173A US Cloudastructure
 001770 TR Arti Industrial Electronics
 00176D JP CORE
@@ -37321,7 +37321,7 @@ E80B13 TW Akib Systems Taiwan
 0014D3 ES SEPSA
 0014D8 FR bio-logic SA
 0014DA GB Huntleigh Healthcare
-0014D5 CN Datang Telecom Technology CO. , LCD,Optical Communication Br
+0014D5 CN Datang Telecom Technology CO., LCD,Optical Communication Br
 001485 TW Giga-Byte
 001483 US eXS
 00149C FR HF Company
@@ -40574,7 +40574,7 @@ CC9EEB KR Elentec
 0050C2F0B US Treehaven Technologies
 0050C2F09 US Wheatstone
 0050C2EDB BE BELIK
-0050C2EDA RU Joint Stock Company "Svyaz Inginiring M"
+0050C2EDA RU Joint Stock Company Svyaz Inginiring M
 0050C2ED9 AU Plasmatronics
 0050C2EBE BR Global Tecnologia
 0050C2ECF TW TAIWAN HIPLUS
@@ -42149,7 +42149,7 @@ CC9EEB KR Elentec
 0050C29B2 US Mesa Labs
 0050C2A60 DE Arrow Central Europe GmbH - Division Spoerle
 40D855024 US Electrical Geodesics
-0050C2F9D RU JSC "Kaluga Teletypes Manufacturing Plant"
+0050C2F9D RU JSC Kaluga Teletypes Manufacturing Plant
 0050C249D US Critical Link
 0050C2760 JP AR'S
 0050C2485 DE Phytec Messtechnik
@@ -42395,7 +42395,7 @@ CC9EEB KR Elentec
 0050C2DBC IN Nantes Systems Private
 0050C2D97 DE ERS electronic
 0050C2D6D BR Pro-Digital Industria Eletronica
-0050C2D6A JP A&T Corporation, Electrics Group , LAS R&D Unit
+0050C2D6A JP A&T Corporation, Electrics Group, LAS R&D Unit
 0050C2D69 MY GHL Systems Bhd
 0050C2D65 US TX Technology
 0050C2D61 DE system2
@@ -43559,7 +43559,7 @@ CC9EEB KR Elentec
 0050C28B6 RU Shadrinskiy Telefonny Zavod
 0050C2887 AU Inventis Technology Pty
 0050C2889 IL ACS Motion Control
-0050C2885 RU OOO "NTK "IMOS"
+0050C2885 RU OOO NTK IMOS
 0050C2884 DK IP Thinking
 0050C2876 AT Privatquelle Gruber
 0050C2874 IL Arcos Technologies
@@ -44244,7 +44244,7 @@ CC9EEB KR Elentec
 0050C2DCC GB Instrumentel
 0050C2DC5 CH Saia-Burgess Controls
 0050C2DB6 RU PROSOFT-SYSTEMS
-0050C2DB4 RU ZAO NPC "Kompjuternie Technologii"
+0050C2DB4 RU ZAO NPC Kompjuternie Technologii
 0050C2DD4 JP SYSTECH
 0050C2DC2 JP TESSERA TECHNOLOGY
 0050C2DDB FR LUCEO
@@ -44414,7 +44414,7 @@ CC9EEB KR Elentec
 0050C2A74 GB DSP DESIGN
 0050C2A69 US Advanced Integrated Systems
 0050C2A63 ZA EMS Industries
-0050C2A5C RU JSC "Component-ASU"
+0050C2A5C RU JSC Component-ASU
 0050C2A71 GB Purite
 0050C2A77 DE Keith & Koep
 0050C2A40 US Mosberger Consulting
@@ -45137,7 +45137,7 @@ CC9EEB KR Elentec
 8C1F644CD TW Guan Show Technologe
 8C1F64F3F US Industrial Laser Machines
 8C1F6406D US Monnit
-8C1F64EAA RU "KB "Modul"
+8C1F64EAA RU KB Modul
 8C1F6415E US Dynomotion
 8C1F64C40 DE Sciospec Scientific Instruments
 8C1F64C27 US Lift Ventures
@@ -45171,7 +45171,7 @@ CC9EEB KR Elentec
 8C1F64F41 MX AUTOMATIZACION Y CONECTIVIDAD SA DE CV
 8C1F647F1 SG AEM Singapore
 8C1F6442B US Gamber Johnson
-8C1F6421C RU LLC "EMS-Expert"
+8C1F6421C RU LLC EMS-Expert
 8C1F64726 IT DAVE SRL
 8C1F64460 CA Solace Systems
 70B3D5E27 US Woodside Electronics
@@ -45212,10 +45212,10 @@ CC9EEB KR Elentec
 70B3D570D US OMNISENSING PHOTONICS
 70B3D5A9F US Master Meter
 70B3D5B70 CA Torion Plasma
-70B3D5746 UA "Smart Systems"
+70B3D5746 UA Smart Systems
 70B3D5DA0 CN Jiangsu Etern Compamy
 70B3D5212 US Semiconsoft
-70B3D50FD RU JSC "Ural Factories"
+70B3D50FD RU JSC Ural Factories
 70B3D51AE DE EcoG
 70B3D5F26 CN XJ ELECTRIC
 70B3D563D NL Topic Embedded Products
@@ -45325,7 +45325,7 @@ CC9EEB KR Elentec
 70B3D5C99 GB Remote Diagnostic Technologies
 70B3D51CF IT Dalcnet srl
 70B3D5B96 US Oculii
-70B3D5D9F RU "Digital Solutions" JSC
+70B3D5D9F RU Digital Solutions JSC
 70B3D552F US R.C. Systems
 70B3D5980 CN Beijing Yourong Runda Rechnology Development
 70B3D5EBF CL AUTOMATICA Y REGULACION
@@ -45343,7 +45343,7 @@ CC9EEB KR Elentec
 70B3D5EF1 US Nanotok
 70B3D51D6 MA MacGray Services
 70B3D5C10 DK Scanvaegt Systems
-70B3D586F RU LLC "NTC ACTOR"
+70B3D586F RU LLC NTC ACTOR
 70B3D5E0A US Acouva
 70B3D5F91 GB Solid State Disks
 70B3D5D30 CN Leica Microsystems Ltd. Shanghai
@@ -45392,7 +45392,7 @@ CC9EEB KR Elentec
 70B3D5155 JP Sanwa New Tec
 70B3D5A0F JP OSAKI DATATECH
 70B3D556F HR Radikal
-70B3D5F3E RU ООО "РОНЕКС"
+70B3D5F3E RU ООО РОНЕКС
 70B3D5FCE GB FX TECHNOLOGY
 70B3D559A DE Wagner Group
 70B3D5C7A KR ENTEC Electric & Electronic
@@ -45733,7 +45733,7 @@ CC9EEB KR Elentec
 70B3D5F70 US Honeywell
 70B3D59D2 IL ACS MOTION CONTROL
 70B3D555A GB Sontay
-70B3D56C5 RU CJSC «Russian telecom equipment company» (CJSC RTEC)
+70B3D56C5 RU CJSC Russian telecom equipment company (CJSC RTEC)
 70B3D5696 PT Open Grow
 70B3D502D IT NEXTtec srl
 70B3D578C CA Survalent Technology
@@ -45985,7 +45985,7 @@ CC9EEB KR Elentec
 001BC5069 US Datasat Digital Entertainment
 001BC5064 FI Enkora Oy
 001BC5067 IT Embit srl
-001BC5061 RU Scientific-Technical Center "Epsilon" Limited company
+001BC5061 RU Scientific-Technical Center Epsilon Limited company
 001BC5058 DE optiMEAS
 001BC5057 FR EREE Electronique
 001BC5055 FR LUMIPLAN TRANSPORT
@@ -46616,7 +46616,7 @@ CC9EEB KR Elentec
 8C1F64801 CN Zhejiang Laolan Information Technology
 8C1F64204 KR castcore
 8C1F6429F RU NAGTECH
-8C1F64947 RU LLC "TC "Vympel"
+8C1F64947 RU LLC TC Vympel
 8C1F64C03 KR Abiman Engineering
 8C1F64438 PL Integer.pl
 8C1F64CF1 US ROBOfiber
@@ -46752,7 +46752,7 @@ CC9EEB KR Elentec
 70B3D5801 TW Glory Technology Service
 70B3D53D6 IT Ariston Thermo
 70B3D5F28 TW Yi An Electronics
-70B3D5047 RU OOO "ORION-R"
+70B3D5047 RU OOO ORION-R
 70B3D5639 ES DORLET SAU
 70B3D5130 IT MG
 70B3D53FC CN TangRen C&S
@@ -46781,7 +46781,7 @@ CC9EEB KR Elentec
 70B3D52B5 IN Dosepack India
 70B3D5281 KR ITG
 70B3D55BB CA Olympus NDT Canada
-70B3D562C RU OOO "NTC Rotek"
+70B3D562C RU OOO NTC Rotek
 70B3D5310 US Conserv Solutions
 70B3D503E TW Guan Show Technologe
 70B3D5C44 DE Franz Kessler
@@ -46789,7 +46789,7 @@ CC9EEB KR Elentec
 70B3D5F97 GB Typhon Treatment Systems
 70B3D5FA9 US CorDes
 70B3D58BC CH GSI GeoSolutions International
-70B3D5606 RU OOO Research and Production Center "Computer Technologies"
+70B3D5606 RU OOO Research and Production Center Computer Technologies
 70B3D55EB CZ Loma Systems
 70B3D5321 TW Yite technology
 70B3D5EB8 US Emporia Renewable Energy
@@ -46891,7 +46891,7 @@ CC9EEB KR Elentec
 70B3D53DD DE Kniggendorf + Kögler Security
 70B3D5590 US 812th AITS
 70B3D591C NO Alere Technologies
-70B3D5107 RU OOO "Alyans"
+70B3D5107 RU OOO Alyans
 70B3D55A7 IT ABB
 70B3D51C0 US W. H. Leary
 70B3D5CE4 FR WAVES SYSTEM
@@ -47081,7 +47081,7 @@ CC9EEB KR Elentec
 70B3D5D3C IT HRT
 70B3D52E2 FR Spark Lasers
 70B3D5888 GB Zetechtics
-70B3D5129 RU OOO "Microlink-Svyaz"
+70B3D5129 RU OOO Microlink-Svyaz
 70B3D538B IN Lookman Electroplast Industries
 70B3D580B US Fischer Block
 70B3D5175 SG Akribis Systems
@@ -47216,7 +47216,7 @@ CC9EEB KR Elentec
 70B3D538C KR MiraeSignal
 70B3D513E BR Stara S/A Indústria de Implementos Agrícolas
 70B3D5325 NL BlueMark Innovations
-70B3D568D RU "Meta-chrom"
+70B3D568D RU Meta-chrom
 70B3D5840 KR xm
 70B3D594F GB MART NETWORK SOLUTIONS
 70B3D5A96 DE Östling Marking Systems
@@ -47239,7 +47239,7 @@ CC9EEB KR Elentec
 70B3D57E2 CA Depro Électronique
 70B3D53C5 ES P4Q ELECTRONICS
 70B3D5F08 GB Szabo Software & Engineering UK
-70B3D51A8 RU STC "Rainbow"
+70B3D51A8 RU STC Rainbow
 70B3D5070 FR Lumiplan Duhamel
 70B3D57ED NL The Things Network Foundation
 70B3D58D8 VN VNG
@@ -47332,7 +47332,7 @@ CC9EEB KR Elentec
 70B3D59BD SE Signal Processing Devices Sweden
 70B3D5421 KR North Star Bestech
 70B3D56E0 IT ABB SPA - DMPC
-70B3D5811 RU CJSC «INTERSET»
+70B3D5811 RU CJSC INTERSET
 70B3D56DA US Enovative Networks
 70B3D546F DE serva transport systems
 70B3D5600 DE Stellwerk
@@ -48284,7 +48284,7 @@ CC9EEB KR Elentec
 70B3D541F IT Orion
 70B3D57CA CN Hunan Shengyun Photoelectric Technology
 70B3D5F44 IT Magneti Marelli S.p.A. Electronics
-70B3D5B84 RU OOO Research and Production Center "Computer Technologies"
+70B3D5B84 RU OOO Research and Production Center Computer Technologies
 70B3D5320 KR CYNIX Systems
 70B3D542B CN Guangzhou Haoxiang Computer Technology
 70B3D5830 US Nordson
@@ -48545,7 +48545,7 @@ CC9EEB KR Elentec
 70B3D5D8E IT Axatel SrL
 70B3D5F0C DE ModulaTeam
 70B3D5E59 IT Fracarro srl
-70B3D5F25 RU JSC “Scientific Industrial Enterprise "Rubin"
+70B3D5F25 RU JSC Scientific Industrial Enterprise Rubin
 70B3D59DC CN Shanghai Daorech Industry Developmnet
 70B3D5BF6 CH comtac
 70B3D5AA3 IN LINEAGE POWER
@@ -48701,7 +48701,7 @@ CC9EEB KR Elentec
 70B3D55BE AU CASWA
 70B3D513C CA Detec Systems
 70B3D57F8 SI Solvera Lynx
-70B3D54C4 RU OOO Research and Production Center "Computer Technologies"
+70B3D54C4 RU OOO Research and Production Center Computer Technologies
 70B3D5E45 US Momentum Data Systems
 70B3D5EB7 US Skreens
 70B3D5892 CH ABB
@@ -49538,7 +49538,7 @@ CC9EEB KR Elentec
 70B3D59D8 TW JOLANYEE Technology
 70B3D5ACE ES FARHO DOMOTICA SL
 70B3D51F6 CN LinkAV Technology
-70B3D5076 UA Private Enterprise "Scientific and Production Private Enterprise"Sparing-Vist Center""
+70B3D5076 UA Private Enterprise Scientific and Production Private EnterpriseSparing-Vist Center
 70B3D51BC HU Flextronics International
 70B3D50E2 GB JESE
 70B3D57F6 GB IDZ
@@ -49568,7 +49568,7 @@ CC9EEB KR Elentec
 70B3D55A4 DE MB connect line GmbH Fernwartungssysteme
 70B3D5792 PL IMMOLAS
 70B3D5CA6 CH AXING
-70B3D56C0 RU LLC "NTZ "Mekhanotronika"
+70B3D56C0 RU LLC NTZ Mekhanotronika
 70B3D5E62 KR Eon
 70B3D5A79 AT NOREYA Technology
 70B3D598D GB Motohaus Powersports
@@ -49693,7 +49693,7 @@ CC9EEB KR Elentec
 70B3D5B41 AU T&M Media
 70B3D5282 KR SAMBO HITECH
 70B3D5074 NL Orlaco Products
-70B3D50F9 RU OOO Research and Production Center "Computer Technologies"
+70B3D50F9 RU OOO Research and Production Center Computer Technologies
 70B3D59A4 CH Nordmann International
 70B3D58F4 IT ACQUA-SYSTEMS srls
 70B3D5CA5 SG PTS Technologies
@@ -49712,7 +49712,7 @@ CC9EEB KR Elentec
 70B3D5F53 JP HighTechSystem
 70B3D512D JP S.E.I
 70B3D5CA2 NL De Haardt
-70B3D5843 RU OOO Research and Production Center "Computer Technologies"
+70B3D5843 RU OOO Research and Production Center Computer Technologies
 70B3D574B US Code Blue
 70B3D5B9F TR Yuksek Kapasite Radyolink Sistemleri San. ve Tic
 70B3D526A ES Talleres de Escoriaza SA
@@ -49723,12 +49723,12 @@ CC9EEB KR Elentec
 70B3D59AF CN Shanghai Brellet Telecommunication Technology
 70B3D506A CN Guangdong Centnet Technology
 70B3D5F20 ES Ibercomp SA
-70B3D5CB9 RU JSC «SATIS-TL-94»
+70B3D5CB9 RU JSC SATIS-TL-94
 70B3D5045 SE Navaero Avionics
 70B3D5DD4 IT ResIOT UBLSOFTWARE SRL
 70B3D5834 IT NCE Network Consulting Engineering srl
 70B3D5B5E US Dynics
-70B3D5F3A RU OOO Research and Production Center "Computer Technologies"
+70B3D5F3A RU OOO Research and Production Center Computer Technologies
 70B3D5B5A US GTI Technologies
 70B3D5C69 MY AZ-TECHNOLOGY
 70B3D5662 RU Icon Industrial Engineering
@@ -49945,7 +49945,7 @@ CC9EEB KR Elentec
 70B3D57FD DE SYS TEC electronic
 70B3D598E SE Autocom Diagnostic Partner
 70B3D503C US Ultimate Software
-70B3D591F RU JSC "InformInvestGroup"
+70B3D591F RU JSC InformInvestGroup
 70B3D5999 US LOGICUBE
 70B3D5153 US Schneider Electric Motion USA
 70B3D5D22 AU DEK Technologies
@@ -50353,7 +50353,7 @@ CC9EEB KR Elentec
 001BC5056 US ThinKom Solutions
 001BC504D JP eiraku electric
 001BC5048 SG XPossible Technologies
-001BC5044 RU ZAO "RADIUS Avtomatika"
+001BC5044 RU ZAO RADIUS Avtomatika
 001BC5043 US Coincident
 001BC503A PL MindMade
 001BC502E IT BETTINI SRL
@@ -50953,7 +50953,7 @@ CC9EEB KR Elentec
 8C1F64542 BR Landis+Gyr Equipamentos de Medição
 8C1F642C8 BR BRS Sistemas Eletrônicos
 8C1F64D4A FI Caproc
-8C1F64D3C RU "KIB Energo"
+8C1F64D3C RU KIB Energo
 8C1F641E3 NL WBNet
 8C1F642A5 TW Nonet
 8C1F647A6 FR OTMetric
@@ -51105,7 +51105,7 @@ CC9EEB KR Elentec
 70B3D5899 US Viotec USA
 70B3D5306 RU LEMZ-T
 70B3D58C0 NL SenseNL
-70B3D5262 RU OOO Research and Production Center "Computer Technologies"
+70B3D5262 RU OOO Research and Production Center Computer Technologies
 70B3D53F8 US The Fire Horn
 70B3D5034 US Digital Systems Engineering
 70B3D5BB1 FR Lumiplan Duhamel
@@ -51509,7 +51509,7 @@ CC9EEB KR Elentec
 70B3D5D66 CA Ascendent Technology Group
 70B3D5691 US PEEK TRAFFIC
 70B3D5718 US PEEK TRAFFIC
-70B3D5615 RU JSC "OTZVUK"
+70B3D5615 RU JSC OTZVUK
 70B3D5A4A CN Beijing Arrow SEED Technology
 70B3D5B59 JP FutureTechnologyLaboratories
 70B3D53A7 KR Varikorea
@@ -51734,7 +51734,7 @@ CC9EEB KR Elentec
 70B3D53E1 US Barnstormer Softworks
 70B3D5FD3 LT AKIS technologies
 70B3D5FA1 US BBI Engineering
-70B3D5819 RU «Intellect module»
+70B3D5819 RU Intellect module
 70B3D5052 KR Sudo Premium Engineering
 70B3D551D IT Tecnint HTE SRL
 70B3D5F61 TW Power Diagnostic Service
@@ -51996,7 +51996,7 @@ CC9EEB KR Elentec
 8C1F6457E CN Guoqing (shangdong) Information Technology
 8C1F64C75 NO Abbott Diagnostics Technologies
 8C1F64415 US OnAsset Intelligence
-8C1F64C19 RU OOO "Mig Trading"
+8C1F64C19 RU OOO Mig Trading
 8C1F647C4 DE MB connect line
 8C1F6468E JP Oriental Electronics
 8C1F64C22 US Pulcro.io
@@ -52143,7 +52143,7 @@ CC9EEB KR Elentec
 8C1F6440F CN Fuzhou Tucsen Photonics
 8C1F64B12 CN Hongtai Intelligent Technology
 8C1F64087 NL Benchmark Electronics
-8C1F64FAF GB Goodtech Worldwide LTD ,,mobitel''
+8C1F64FAF GB Goodtech Worldwide LTD,,mobitel''
 8C1F64DA2 IT Ascon Tecnologic
 8C1F64A93 US eSmart Tech
 8C1F640F8 IT INVENTIS
@@ -52578,7 +52578,7 @@ C4954D8 CN Xinjiang Golden Calf Energy IOT Technology
 80E4DA0 US Wheatstone
 506255E TW SHINSOFT
 C4954D0 TW BA International Electronics
-C4954D7 RU LLC "TechnoEnergo"
+C4954D7 RU LLC TechnoEnergo
 6431391 US Livongo Health
 4403776 CN SHEN ZHEN HUAWANG TECHNOLOGY
 4403771 US Atari
@@ -52667,7 +52667,7 @@ E05A9F6 PL Fibrain
 E44CC7C TW EPS Bio
 4CBC98E US Wonder Workshop
 4CBC981 RU JSC NIC
-E05A9F9 US Gemalto "Document Readers"
+E05A9F9 US Gemalto Document Readers
 D8860B5 FR CAMTRACE
 38B19EB GB System Q
 D8860B7 DE Grünbeck Wasseraufbereitung
@@ -52722,7 +52722,7 @@ A028336 CN Xiamen Caimore Communication Technology
 8489EC4 IL Vayyar Imaging
 0055DAE HK Victorsure
 8489EC1 US Research Electronics International
-3009F93 RU OOO "Microlink-Svyaz"
+3009F93 RU OOO Microlink-Svyaz
 3009F9D US Technology for Humankind
 9CF6DDB CN Guangzhou LANGO Electronics Technology
 C08359A CN SHANGHAI CHARMHOPE INFORMATION TECHNOLOGY
@@ -52784,7 +52784,7 @@ DCE533B HK Tintel Hongkong
 1C21D1E TW p2-plus
 34298FC DE Albert Handtmann Maschinenfabrik
 9C431ED HK HK ELEPHONE Communication Tech
-282C025 RU LLC "MICROTEH"
+282C025 RU LLC MICROTEH
 282C02A HK Tokin
 C4FFBC9 AU GSM Innovations
 9C431E0 CN Antailiye Technology
@@ -52857,7 +52857,7 @@ F023B9C CN Shenzhen Lachesis Mhealth
 60D7E38 US HindlePower
 60D7E3E KR HuBDIC
 60D7E3D US Quantronix
-98AAFC4 RU RPE "RADICO"
+98AAFC4 RU RPE RADICO
 98AAFC3 CN Nexus Electrical(Jiaxing)
 98AAFC8 CN Beijing Tiandi-Marco Electro-Hydraulic Control System Company
 98AAFC6 HK Mekotronics
@@ -53745,7 +53745,7 @@ C8F5D65 JP Pinmicro
 2CD141D US Square
 88C9B31 TW Cervoz Technology
 1CA0EF0 CN Tangshan Liulin Automation Equipment
-1CA0EFC RU LLC "Gagar.In"
+1CA0EFC RU LLC Gagar.In
 1CA0EF8 CN Zillnk
 20CE2A1 CN Shanghai Digicube Info&Tech
 20CE2A8 US Intelligraphics
@@ -54170,7 +54170,7 @@ F802787 IT BETTINI SRL
 A411638 CN Dspread Technology (Beijing)
 A411633 GB Pax
 1CA0D35 CN Dynamic Connect (Suzhou) Hi-Tech Electronic
-1CA0D36 AR Intertecno SRL "NISUTA"
+1CA0D36 AR Intertecno SRL NISUTA
 40F385E KR BBB
 1CA0D34 RU NPO TELECOM JSC
 1CA0D33 FR SAVELEC
@@ -54381,7 +54381,7 @@ BC66418 CN Shenzhen Yaguang communication
 E4956E7 KR NationalchipKorea
 E4956E3 CN Shanghai DGE
 74E14A3 DE emz-Hanauer GmbH & Co. KGaA
-74E14A4 RU open joint stock company "YUG-SISTEMA plus"
+74E14A4 RU open joint stock company YUG-SISTEMA plus
 E4956EE BR Tacom Projetos Bilhetagem Inteligente
 BC66412 PL Process-Electronic
 58FCDBE US Applied Device Technologies
@@ -54450,7 +54450,7 @@ C898DBD US Quilt Systems
 28F8C69 KR secuever
 E8FF1E2 CN Minami Medical Technology (Guangdong)
 E8FF1EC IT Fracarro Radioindustrie Srl
-E8FF1E3 KZ LLP "NIC "FORS"
+E8FF1E3 KZ LLP NIC FORS
 8CA682D BE EFit partners
 8CA6822 US Lion Energy
 D0A011D HK REMOWIRELESS COMMUNICATION INTERNATIONAL
@@ -55049,7 +55049,7 @@ F02A2B5 US Agile Sports Technologies, dba Hudl
 F02A2B4 US Onclave Networks
 F02A2BA FI Navigil
 A85B368 CN ShangHai SnowLake Technology
-A85B36B RU "Lampyris Plant"
+A85B36B RU Lampyris Plant
 7813054 CN Jiangxi Winsky Intelligence Technology
 E878290 TW Tanz Security Technology
 E878293 US Electronic Controlled Systems
@@ -55227,7 +55227,7 @@ C4954DE JP Canare Electric
 6431398 CN Shenzhen Huanyin Electronics
 506255A CN CCTV Manufacturer
 5062558 CN Roda industrial development
-F8B568E RU ZAO "RADIUS Avtomatika"
+F8B568E RU ZAO RADIUS Avtomatika
 4403775 GB Norden Communication UK
 04D16E9 CN FUZHOU ZHUOYI ELECTRONIC
 04D16E2 IT s.d.i
@@ -55297,7 +55297,7 @@ FCD2B62 DE Soma
 34E1D11 SG SAMA NextGen PTE
 D47C44D CN Huaqin Telecom Technology
 4CBC988 CN Shenzhen Shanling Digital Technology Development
-E44CC73 RU JSC "Svyaz Inginiring M"
+E44CC73 RU JSC Svyaz Inginiring M
 4CBC984 KR Nemon
 E05A9FE CN ShenZhen Arts Changhua Intelligent Technology
 E44CC74 CN Beijing Zhongchuangwei Nanjing Quantum Communication Technology
@@ -55423,7 +55423,7 @@ C4FFBCC KR KyongBo Electric
 9C431E3 LU Advanced Logic Technology (ALT) sa
 282C027 RU Telecom and Microelectonic Industries
 282C029 CN Systec Intelligent Building Technology (Tianjin)
-9C431E9 RU "CONTINENT"
+9C431E9 RU CONTINENT
 9C431E6 DE R-S-I Elektrotechnik
 F8B5689 CN Beijing Wanji Techonology
 282C026 IN Lookman Electroplast Industries
@@ -55691,7 +55691,7 @@ A0BB3E2 DE DirectOut
 9802D85 HK EBI
 0CEFAF7 SE Syntrans
 0CEFAFE US Infinisource
-0CEFAFD RU CJSC «Svyaz Engineering»
+0CEFAFD RU CJSC Svyaz Engineering
 F802788 TW EMBUX Technology
 F802786 CN Witium
 A44F29C CN Shenzhen Huadoo Bright Group Limitied
@@ -55748,7 +55748,7 @@ D076505 US Annapurna Labs
 D07650E JP Revox
 A43BFA8 FR Alpwise
 BC34004 IN Dexcel Design
-A43BFAD RU JSC “Component-ASU”
+A43BFAD RU JSC Component-ASU
 A43BFA4 AU Maxon Australia
 7419F8D CN Ansjer Electronics
 C85CE29 CN Quthc
@@ -56796,7 +56796,7 @@ CC22374 CN SHANGHAI CARGOA M.&E.EQUIPMENT
 28F5377 CN Shenzhen Modern Cowboy Technology
 28F5373 JP PRIMETECH ENGINEERING
 34008A9 CN Keruyun Technoligies(Beijing) Corporation
-34008A2 RU RPE "Monitor"
+34008A2 RU RPE Monitor
 34008AC CN Shenzhen Eternal Idea Tech
 34008A4 SE Fotonic i Norden
 28F537B DE LogiM GmbH Software und Entwicklung
@@ -57888,7 +57888,7 @@ A0224ED TW Digifocus Technology
 A0224EB US All Inspire Health
 A0224E9 US Delta Tau Data Systems
 8C147DC BE Reynaers Aluminium
-A0224E2 RU Closed Joint-Stock Company "NORSI-TRANS"
+A0224E2 RU Closed Joint-Stock Company NORSI-TRANS
 643139D CN ZHEJIANG MOORGEN INTELLIGENT TECHNOLOGY
 6431390 CN SHENZHEN EMEET INTELLIGENT TECHNOLOGY
 C4954D5 NL Marble Automation
@@ -57920,7 +57920,7 @@ C4954D5 NL Marble Automation
 980637E CN Shanghai Jinnian information technology
 2085937 TW Great Lite International
 2415104 IL Annapurna labs
-44D5F2E RU Joint-Stock Company Research and Development Center "ELVEES"
+44D5F2E RU Joint-Stock Company Research and Development Center ELVEES
 44D5F27 CN Shenzhen Qiutian Technology
 44D5F2C BR neocontrol soluções em automação
 44D5F29 CN Auctus Technologies
@@ -57994,7 +57994,7 @@ D425CCC PL POSNET Polska
 D425CC2 US MusicLens
 D425CC8 US DOLBY LABORATORIES
 D425CC7 US BlueCats US
-9C69B4D RU "Intellect module"
+9C69B4D RU Intellect module
 6891D04 TW G-TECH Instruments
 4C917AE IL Annapurna labs
 6CDFFB2 TW Sercomm
@@ -58296,7 +58296,7 @@ E0B6F51 JP START TODAY
 CC1BE0E CN Cassia Networks
 800A800 CN Golana Technology (Shenzhen)
 CC1BE0A AU Matter Labs
-0055DA6 RU OOO "DEKATRON"
+0055DA6 RU OOO DEKATRON
 0055DA9 CN Quantum Communication Technology Co., Ltd.,Anhui
 CC1BE01 CN Beijing Daotongtianxia
 A03E6BB DE KoCoS Messtechnik
@@ -58373,7 +58373,7 @@ A44F29D US HALLIBURTON
 3C39E77 DE Sensor to Image
 D022127 BR Cliptech Industria e Comercio
 D022125 CN Shanghai Routech
-D022129 LT UAB "SALDA"
+D022129 LT UAB SALDA
 D02212B NL Schleifenbauer Holding
 E81863E US Acopian Technical Company
 1007237 JP nanoTech
