@@ -11,23 +11,23 @@ members = [
     "hypervectorscan-rs/hypervectorscan",
     "hypervectorscan-rs/hypervectorscan-sys",
     "hypervectorscan-rs/hyperscan-src",
-    "hypervectorscan-rs/vectorscan-src", "mac-oui/ouidb-builder",
+    "hypervectorscan-rs/vectorscan-src", 
 ]
 
 # Exclude sample projects from workspace
 exclude = ["samples", "erfs"]
 
 [workspace.package]
-version = "0.1.16"
+version = "0.1.17"
 authors = ["Ting Lou <ting.lou@gmail.com>"]
 license = "Apache-2.0"
 edition = "2024"
 repository = "https://github.com/tinglou/oh-my-rust-crates"
 
 [workspace.dependencies]
-backerror-macros = { path = "backerror-rs/backerror-macros", version = "0.1.16" }
+backerror-macros = { path = "backerror-rs/backerror-macros", version = "0.1.17" }
 
-hypervectorscan-sys = { path = "hypervectorscan-rs/hypervectorscan-sys", version = "0.1.16" }
+hypervectorscan-sys = { path = "hypervectorscan-rs/hypervectorscan-sys", version = "0.1.17" }
 hyperscan-src = { path = "hypervectorscan-rs/hyperscan-src", version = "5.4.2-2" }
 vectorscan-src = { path = "hypervectorscan-rs/vectorscan-src", version = "5.4.13" }
 
