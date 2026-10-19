@@ -6,6 +6,7 @@ members = [
     "backerror-rs/backerror-macros",
     "init-log4rs",
     "mac-oui/macaddr-ouidb",
+    "mac-oui/macaddr-ouidb-support", 
     "conan2-rs",
 
     "hypervectorscan-rs/hypervectorscan",
@@ -18,16 +19,17 @@ members = [
 exclude = ["samples", "erfs"]
 
 [workspace.package]
-version = "0.1.17"
+version = "0.1.18"
 authors = ["Ting Lou <ting.lou@gmail.com>"]
 license = "Apache-2.0"
 edition = "2024"
 repository = "https://github.com/tinglou/oh-my-rust-crates"
 
 [workspace.dependencies]
-backerror-macros = { path = "backerror-rs/backerror-macros", version = "0.1.17" }
+backerror-macros = { path = "backerror-rs/backerror-macros", version = "0.1.18" }
+macaddr-ouidb-support = { path = "mac-oui/macaddr-ouidb-support", version = "0.1.18" }
 
-hypervectorscan-sys = { path = "hypervectorscan-rs/hypervectorscan-sys", version = "0.1.17" }
+hypervectorscan-sys = { path = "hypervectorscan-rs/hypervectorscan-sys", version = "0.1.18" }
 hyperscan-src = { path = "hypervectorscan-rs/hyperscan-src", version = "5.4.2-2" }
 vectorscan-src = { path = "hypervectorscan-rs/vectorscan-src", version = "5.4.13" }
 

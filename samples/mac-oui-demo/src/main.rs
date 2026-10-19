@@ -4,12 +4,14 @@
 //! - MAC address parsing and validation
 //! - Address type detection (unicast/multicast/broadcast/etc.)
 //! - OUI lookup (24/28/36-bit)
+//! - OuiEntry API (oui_entry / prefix_hex)
+//! - Full-database iteration (iter / for_each)
 //! - Virtual NIC detection
 //! - Serde serialization
 //! - pnet interop
 //! - Batch processing
 
-use macaddr_ouidb::{MacAddress, OUI_DB, OuiDb};
+use macaddr_ouidb::{MacAddress, OuiDb, OUI_DB};
 use pnet_base::MacAddr;
 use serde::{Deserialize, Serialize};
 
@@ -28,6 +30,8 @@ fn main() {
 
     demo_basic_operations();
     demo_oui_lookup();
+    demo_entry_api();
+    demo_iterate();
     demo_virtual_detection();
     demo_special_addresses();
     demo_serde();
@@ -83,10 +87,14 @@ fn demo_oui_lookup() {
     for (desc, mac_str) in test_cases {
         let mac = mac_str.parse::<MacAddress>().unwrap();
         match OUI_DB.lookup_mac(mac) {
-            Some(org) => {
-                let (name, region) = org;
-                println!("  {:25} {} ({})", desc, name, region);
-                println!("    MAC: {}", mac);
+            Some(entry) => {
+                println!(
+                    "  {:25} {} ({})",
+                    desc,
+                    entry.name(),
+                    entry.country_or_region_code()
+                );
+                println!("    MAC: {}, prefix: {}", mac, entry.prefix_hex());
             }
             None => println!("  {:25} Not found in database", desc),
         }
@@ -94,9 +102,67 @@ fn demo_oui_lookup() {
     println!();
 }
 
+fn demo_entry_api() {
+    println!("┌───────────────────────────────────────────────────────────┐");
+    println!("│ 3. OuiEntry API (oui_entry / prefix_hex)                 │");
+    println!("└───────────────────────────────────────────────────────────┘");
+
+    println!("  Database updated: {}", OUI_DB.updated);
+
+    let samples = [
+        ("Xerox (24-bit)", "00:00:01:00:00:00"),
+        ("28-bit sample", "00:03:FF:00:00:00"),
+        ("36-bit sample", "00:03:93:FF:FF:FF"),
+    ];
+    for (desc, mac_str) in samples {
+        let mac = mac_str.parse::<MacAddress>().unwrap();
+        match mac.oui_entry() {
+            Some(entry) => println!(
+                "  {:18} {} -> {} ({})  prefix={}",
+                desc,
+                mac,
+                entry.name(),
+                entry.country_or_region_code(),
+                entry.prefix_hex()
+            ),
+            None => println!("  {:18} {} -> None", desc, mac),
+        }
+    }
+    println!();
+}
+
+fn demo_iterate() {
+    println!("┌───────────────────────────────────────────────────────────┐");
+    println!("│ 4. OuiDb::iter / OuiDb::for_each                         │");
+    println!("└───────────────────────────────────────────────────────────┘");
+
+    let total = OUI_DB.iter().count();
+    println!("  Total entries via iter(): {}", total);
+
+    let (mut c24, mut c28, mut c36) = (0usize, 0usize, 0usize);
+    OUI_DB.for_each(|e| match e.prefix_hex().len() {
+        6 => c24 += 1,
+        7 => c28 += 1,
+        9 => c36 += 1,
+        _ => {}
+    });
+    println!(
+        "  By prefix width via for_each(): 24-bit={}, 28-bit={}, 36-bit={}",
+        c24, c28, c36
+    );
+
+    let xerox: Vec<String> = OUI_DB
+        .iter()
+        .filter(|e| e.name().contains("XEROX"))
+        .map(|e| e.prefix_hex())
+        .collect();
+    println!("  XEROX prefixes ({}): {:?}", xerox.len(), xerox);
+    println!();
+}
+
 fn demo_virtual_detection() {
     println!("┌───────────────────────────────────────────────────────────┐");
-    println!("│ 3. Virtual NIC Detection                                 │");
+    println!("│ 5. Virtual NIC Detection                                 │");
     println!("└───────────────────────────────────────────────────────────┘");
 
     let vms = vec![
@@ -109,7 +175,9 @@ fn demo_virtual_detection() {
 
     for (desc, mac_str) in vms {
         let mac = mac_str.parse::<MacAddress>().unwrap();
-        if let Some((name, region)) = OUI_DB.lookup_mac(mac) {
+        if let Some(entry) = OUI_DB.lookup_mac(mac) {
+            let name = entry.name();
+            let region = entry.country_or_region_code();
             let is_virtual = OuiDb::is_virtual_nic(name);
             let icon = if is_virtual { "🖥️ " } else { "💻 " };
             println!("  {}{:20} {} ({})", icon, desc, name, region);
@@ -121,7 +189,7 @@ fn demo_virtual_detection() {
 
 fn demo_special_addresses() {
     println!("┌───────────────────────────────────────────────────────────┐");
-    println!("│ 4. Special MAC Addresses                                 │");
+    println!("│ 6. Special MAC Addresses                                 │");
     println!("└───────────────────────────────────────────────────────────┘");
 
     let zero = MacAddress::zero();
@@ -133,33 +201,57 @@ fn demo_special_addresses() {
 
     println!("  Zero Address:");
     println!("    MAC: {}", zero);
-    println!("    is_zero: {}, is_broadcast: {}", zero.is_zero(), zero.is_broadcast());
+    println!(
+        "    is_zero: {}, is_broadcast: {}",
+        zero.is_zero(),
+        zero.is_broadcast()
+    );
 
     println!("\n  Broadcast Address:");
     println!("    MAC: {}", broadcast);
-    println!("    is_broadcast: {}, is_multicast: {}", broadcast.is_broadcast(), broadcast.is_multicast());
+    println!(
+        "    is_broadcast: {}, is_multicast: {}",
+        broadcast.is_broadcast(),
+        broadcast.is_multicast()
+    );
 
     println!("\n  Unicast Address:");
     println!("    MAC: {}", unicast);
-    println!("    is_unicast: {}, is_multicast: {}", unicast.is_unicast(), unicast.is_multicast());
+    println!(
+        "    is_unicast: {}, is_multicast: {}",
+        unicast.is_unicast(),
+        unicast.is_multicast()
+    );
 
     println!("\n  Multicast Address:");
     println!("    MAC: {}", multicast);
-    println!("    is_multicast: {}, is_unicast: {}", multicast.is_multicast(), multicast.is_unicast());
+    println!(
+        "    is_multicast: {}, is_unicast: {}",
+        multicast.is_multicast(),
+        multicast.is_unicast()
+    );
 
     println!("\n  Local Address (LAA):");
     println!("    MAC: {}", local);
-    println!("    is_local: {}, is_universal: {}", local.is_local(), local.is_universal());
+    println!(
+        "    is_local: {}, is_universal: {}",
+        local.is_local(),
+        local.is_universal()
+    );
 
     println!("\n  Universal Address (UAA):");
     println!("    MAC: {}", universal);
-    println!("    is_universal: {}, is_local: {}", universal.is_universal(), universal.is_local());
+    println!(
+        "    is_universal: {}, is_local: {}",
+        universal.is_universal(),
+        universal.is_local()
+    );
     println!();
 }
 
 fn demo_serde() {
     println!("┌───────────────────────────────────────────────────────────┐");
-    println!("│ 5. Serde Serialization                                   │");
+    println!("│ 7. Serde Serialization                                   │");
     println!("└───────────────────────────────────────────────────────────┘");
 
     let devices = vec![
@@ -197,14 +289,20 @@ fn demo_serde() {
 
 fn demo_pnet_interop() {
     println!("┌───────────────────────────────────────────────────────────┐");
-    println!("│ 6. pnet Interop                                          │");
+    println!("│ 8. pnet Interop                                          │");
     println!("└───────────────────────────────────────────────────────────┘");
 
     let pnet_mac = MacAddr::new(0x00, 0x11, 0x22, 0x33, 0x44, 0x55);
     println!("  Original pnet MacAddr:");
-    println!("    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
-        pnet_mac.octets()[0], pnet_mac.octets()[1], pnet_mac.octets()[2],
-        pnet_mac.octets()[3], pnet_mac.octets()[4], pnet_mac.octets()[5]);
+    println!(
+        "    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+        pnet_mac.octets()[0],
+        pnet_mac.octets()[1],
+        pnet_mac.octets()[2],
+        pnet_mac.octets()[3],
+        pnet_mac.octets()[4],
+        pnet_mac.octets()[5]
+    );
 
     // Convert to macaddr-ouidb
     let mac: MacAddress = pnet_mac.into();
@@ -215,15 +313,21 @@ fn demo_pnet_interop() {
     let octets: [u8; 6] = mac.octets().try_into().unwrap();
     let pnet_back = MacAddr::from(octets);
     println!("\n  Converted back to MacAddr:");
-    println!("    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
-        pnet_back.octets()[0], pnet_back.octets()[1], pnet_back.octets()[2],
-        pnet_back.octets()[3], pnet_back.octets()[4], pnet_back.octets()[5]);
+    println!(
+        "    {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+        pnet_back.octets()[0],
+        pnet_back.octets()[1],
+        pnet_back.octets()[2],
+        pnet_back.octets()[3],
+        pnet_back.octets()[4],
+        pnet_back.octets()[5]
+    );
     println!();
 }
 
 fn demo_batch_processing() {
     println!("┌───────────────────────────────────────────────────────────┐");
-    println!("│ 7. Batch Processing                                      │");
+    println!("│ 9. Batch Processing                                      │");
     println!("└───────────────────────────────────────────────────────────┘");
 
     let mac_range: Vec<&str> = (0..5)
@@ -238,15 +342,24 @@ fn demo_batch_processing() {
     for mac_str in mac_range {
         if let Ok(mac) = mac_str.parse::<MacAddress>() {
             stats.total += 1;
-            
-            if mac.is_unicast() { stats.unicast += 1; }
-            if mac.is_multicast() { stats.multicast += 1; }
-            if mac.is_local() { stats.local += 1; }
-            if mac.is_universal() { stats.universal += 1; }
 
-            if let Some((name, region)) = OUI_DB.lookup_mac(mac) {
+            if mac.is_unicast() {
+                stats.unicast += 1;
+            }
+            if mac.is_multicast() {
+                stats.multicast += 1;
+            }
+            if mac.is_local() {
+                stats.local += 1;
+            }
+            if mac.is_universal() {
+                stats.universal += 1;
+            }
+
+            if let Some(entry) = OUI_DB.lookup_mac(mac) {
                 stats.with_oui += 1;
-                println!("    OUI: {} ({})", name, region);
+                let name = entry.name();
+                println!("    OUI: {} ({})", name, entry.country_or_region_code());
                 if OuiDb::is_virtual_nic(name) {
                     stats.is_virtual += 1;
                 }

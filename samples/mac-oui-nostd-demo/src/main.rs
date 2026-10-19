@@ -6,11 +6,12 @@
 //! - Optional serde support (works in no_std)
 //! - pnet interop (works in no_std)
 //! - OUI lookup (requires std feature in macaddr-ouidb)
+//! - OuiEntry API (oui_entry / prefix_hex) and iter / for_each
 //!
 //! Note: This binary itself uses std for console output,
 //! but demonstrates macaddr-ouidb's no_std compatibility.
 
-use macaddr_ouidb::{MacAddress, OUI_DB, OuiDb};
+use macaddr_ouidb::{MacAddress, OuiDb, OUI_DB};
 use pnet_base::MacAddr;
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +23,9 @@ struct Device {
 
 fn main() {
     println!("=== mac-oui-nostd-demo ===");
-    println!("macaddr-ouidb built with: default-features = false, features = [\"serde\", \"pnet\"]\n");
+    println!(
+        "macaddr-ouidb built with: default-features = false, features = [\"serde\", \"pnet\"]\n"
+    );
 
     // Demo 1: Basic MAC address operations (no_std compatible)
     println!("1. Basic MAC Address Operations (no_std compatible)");
@@ -40,7 +43,11 @@ fn main() {
     // Demo 2: Parse MAC from string (no_std compatible)
     println!("2. Parse MAC from String (no_std compatible)");
     println!("   -----------------------------------------------");
-    let mac_addresses = ["00:11:22:33:44:55", "AA-BB-CC-DD-EE-FF", "52:54:00:12:34:56"];
+    let mac_addresses = [
+        "00:11:22:33:44:55",
+        "AA-BB-CC-DD-EE-FF",
+        "52:54:00:12:34:56",
+    ];
     for mac_str in &mac_addresses {
         match mac_str.parse::<MacAddress>() {
             Ok(mac) => println!("   {} -> {}", mac_str, mac),
@@ -60,9 +67,15 @@ fn main() {
     for (mac_str, _expected) in &oui_test_cases {
         match mac_str.parse::<MacAddress>() {
             Ok(mac) => match OUI_DB.lookup_mac(mac) {
-                Some((name, _region)) => {
-                    println!("   {} -> {}", mac_str, name);
-                    if OuiDb::is_virtual_nic(name) {
+                Some(entry) => {
+                    println!(
+                        "   {} -> {} ({})  prefix={}",
+                        mac_str,
+                        entry.name(),
+                        entry.country_or_region_code(),
+                        entry.prefix_hex()
+                    );
+                    if OuiDb::is_virtual_nic(entry.name()) {
                         println!("      ⚠️  Virtual NIC detected");
                     }
                 }
@@ -73,8 +86,32 @@ fn main() {
     }
     println!();
 
-    // Demo 4: Serde Serialization (no_std compatible with serde feature)
-    println!("4. Serde Serialization (no_std + serde feature)");
+    // Demo 4: New entry/iterator API (no_std + alloc)
+    println!("4. OuiEntry / iter / for_each API (no_std + alloc)");
+    println!("   -----------------------------------------------");
+    let entry_mac = MacAddress::new([0x00, 0x00, 0x0C, 0x00, 0x00, 0x00]);
+    match entry_mac.oui_entry() {
+        Some(entry) => println!(
+            "   oui_entry(): {} ({})  prefix={}",
+            entry.name(),
+            entry.country_or_region_code(),
+            entry.prefix_hex()
+        ),
+        None => println!("   oui_entry(): None"),
+    }
+    let total = OUI_DB.iter().count();
+    let mut virtual_count = 0usize;
+    OUI_DB.for_each(|e| {
+        if OuiDb::is_virtual_nic(e.name()) {
+            virtual_count += 1;
+        }
+    });
+    println!("   iter() total entries: {}", total);
+    println!("   for_each() virtual-NIC entries: {}", virtual_count);
+    println!();
+
+    // Demo 5: Serde Serialization (no_std compatible with serde feature)
+    println!("5. Serde Serialization (no_std + serde feature)");
     println!("   -----------------------------------------------");
     let device = Device {
         mac: MacAddress::new([0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]),
@@ -97,24 +134,36 @@ fn main() {
     }
     println!();
 
-    // Demo 5: pnet Interop (no_std compatible)
-    println!("5. pnet Interop (no_std + pnet feature)");
+    // Demo 6: pnet Interop (no_std compatible)
+    println!("6. pnet Interop (no_std + pnet feature)");
     println!("   -----------------------------------------------");
     let pnet_mac = MacAddr::new(0x00, 0x11, 0x22, 0x33, 0x44, 0x55);
-    println!("   pnet MacAddr: {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
-        pnet_mac.octets()[0], pnet_mac.octets()[1], pnet_mac.octets()[2],
-        pnet_mac.octets()[3], pnet_mac.octets()[4], pnet_mac.octets()[5]);
-    
+    println!(
+        "   pnet MacAddr: {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+        pnet_mac.octets()[0],
+        pnet_mac.octets()[1],
+        pnet_mac.octets()[2],
+        pnet_mac.octets()[3],
+        pnet_mac.octets()[4],
+        pnet_mac.octets()[5]
+    );
+
     // Convert pnet -> macaddr-ouidb
     let mac_from_pnet: MacAddress = pnet_mac.into();
     println!("   Converted to MacAddress: {}", mac_from_pnet);
-    
+
     // Convert back
     let octets: [u8; 6] = mac_from_pnet.octets().try_into().unwrap();
     let pnet_mac_back = MacAddr::from(octets);
-    println!("   Converted back: {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
-        pnet_mac_back.octets()[0], pnet_mac_back.octets()[1], pnet_mac_back.octets()[2],
-        pnet_mac_back.octets()[3], pnet_mac_back.octets()[4], pnet_mac_back.octets()[5]);
+    println!(
+        "   Converted back: {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+        pnet_mac_back.octets()[0],
+        pnet_mac_back.octets()[1],
+        pnet_mac_back.octets()[2],
+        pnet_mac_back.octets()[3],
+        pnet_mac_back.octets()[4],
+        pnet_mac_back.octets()[5]
+    );
     println!();
 
     println!("=== Demo Complete ===");

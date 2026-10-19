@@ -5,7 +5,7 @@ use core::str::FromStr;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 
-use crate::OuiDb;
+use crate::{OuiDb, OuiEntry};
 
 /// The number of bytes in an ethernet (MAC) address.
 pub const ETHER_ADDR_LEN: usize = 6;
@@ -88,17 +88,17 @@ impl MacAddress {
 
     /// Return true if the MacAddr is a virtual NIC
     pub fn is_virtual_nic(&self) -> bool {
-        self.oui_and_region()
-            .map_or(false, |(name, _)| OuiDb::is_virtual_nic(name))
+        self.oui_entry()
+            .is_some_and(|e| OuiDb::is_virtual_nic(e.name))
     }
 
     /// Return OUI (Organizationally Unique Identifier) name only
     pub fn oui(&self) -> Option<&'static str> {
-        self.oui_and_region().map(|(name, _)| name)
+        self.oui_entry().map(|e| e.name)
     }
 
-    /// Return OUI (name, region)
-    pub fn oui_and_region(&self) -> Option<(&'static str, &'static str)> {
+    /// Return OUI lookup entry
+    pub fn oui_entry(&self) -> Option<OuiEntry<'static>> {
         crate::OUI_DB.lookup_mac(*self)
     }
 
@@ -225,7 +225,7 @@ impl MacAddress {
                 return Err(ParseMacError::InvalidLength);
             }
             match u8::from_str_radix(split, 16) {
-                Ok(b) if split.len() != 0 => parts[i] = b,
+                Ok(b) if !split.is_empty() => parts[i] = b,
                 _ => return Err(ParseMacError::InvalidDigit),
             }
             i += 1;

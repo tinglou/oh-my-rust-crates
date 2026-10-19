@@ -57,7 +57,7 @@ fn test_oui_lookup_24bit() {
     let mac: MacAddress = "00:00:01:00:00:00".parse().unwrap();
     let org = OUI_DB.lookup_mac(mac);
     assert!(
-        matches!(org, Some((name, "US")) if name.starts_with("XEROX")),
+        matches!(&org, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("XEROX")),
         "Expected XEROX (US), got {:?}",
         org
     );
@@ -66,7 +66,7 @@ fn test_oui_lookup_24bit() {
     let mac: MacAddress = "00:00:0C:00:00:00".parse().unwrap();
     let org = OUI_DB.lookup_mac(mac);
     assert!(
-        matches!(org, Some((name, "US")) if name.starts_with("Cisco Systems")),
+        matches!(&org, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("Cisco Systems")),
         "Expected Cisco Systems (US), got {:?}",
         org
     );
@@ -75,7 +75,7 @@ fn test_oui_lookup_24bit() {
     let mac: MacAddress = "00:03:FF:00:00:00".parse().unwrap();
     let org = OUI_DB.lookup_mac(mac);
     assert!(
-        matches!(org, Some((name, "US")) if name.starts_with("Microsoft")),
+        matches!(&org, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("Microsoft")),
         "Expected Microsoft (US), got {:?}",
         org
     );
@@ -84,7 +84,7 @@ fn test_oui_lookup_24bit() {
     let mac: MacAddress = "00:03:93:FF:FF:FF".parse().unwrap();
     let org = OUI_DB.lookup_mac(mac);
     assert!(
-        matches!(org, Some((name, "US")) if name.starts_with("Apple")),
+        matches!(&org, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("Apple")),
         "Expected Apple (US), got {:?}",
         org
     );
@@ -152,7 +152,8 @@ fn test_oui_lookup_36bit() {
     );
 
     // 不同的第 4 字节应该能匹配到不同结果
-    if org != org2 {
+    let same = org.as_ref().map(|e| e.name()) == org2.as_ref().map(|e| e.name());
+    if !same {
         println!("Different 36-bit entries return different organizations:");
         println!("  00:16:E3:00:00:00 -> {:?}", org);
         println!("  00:16:E3:80:00:00 -> {:?}", org2);
@@ -166,12 +167,12 @@ fn test_oui_lookup_not_found() {
     // FF:FF:FF 不是有效的 OUI 前缀
     let mac: MacAddress = "FF:FF:FF:00:00:00".parse().unwrap();
     let org = OUI_DB.lookup_mac(mac);
-    assert_eq!(org, None, "Expected None for unallocated OUI FF:FF:FF");
+    assert!(org.is_none(), "Expected None for unallocated OUI FF:FF:FF");
 
     // 某些未分配的地址段
     let mac2: MacAddress = "FE:FF:FF:00:00:00".parse().unwrap();
     let org2 = OUI_DB.lookup_mac(mac2);
-    assert_eq!(org2, None, "Expected None for unallocated OUI FE:FF:FF");
+    assert!(org2.is_none(), "Expected None for unallocated OUI FE:FF:FF");
 
     println!("Correctly returns None for unallocated OUI addresses");
 }
@@ -251,7 +252,7 @@ fn test_oui_lookup_batch() {
         let mac: MacAddress = mac_str.parse().unwrap();
         let org = OUI_DB.lookup_mac(mac);
         assert!(
-            matches!(org, Some((name, _)) if name.starts_with(expected_org)),
+            matches!(&org, Some(e) if e.name().starts_with(expected_org)),
             "Failed for MAC: {} (expected prefix '{}', got {:?})",
             mac_str,
             expected_org,
@@ -297,7 +298,7 @@ fn test_oui_all_types_coverage() {
     let mac_24: MacAddress = "00:00:01:00:00:00".parse().unwrap();
     let org_24 = OUI_DB.lookup_mac(mac_24);
     assert!(
-        matches!(org_24, Some((name, "US")) if name.starts_with("XEROX")),
+        matches!(&org_24, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("XEROX")),
         "24-bit OUI lookup failed: {:?}",
         org_24
     );
@@ -318,7 +319,7 @@ fn test_oui_all_types_coverage() {
     // === 未分配 OUI ===
     let mac_none: MacAddress = "FF:FF:FF:00:00:00".parse().unwrap();
     let org_none = OUI_DB.lookup_mac(mac_none);
-    assert_eq!(org_none, None, "Should return None for unallocated OUI");
+    assert!(org_none.is_none(), "Should return None for unallocated OUI");
     println!("✓ Unallocated OUI: {} -> {:?}", mac_none, org_none);
 
     println!("\n✅ All OUI types (24/28/36-bit and unallocated) are properly handled!");
@@ -449,4 +450,23 @@ fn test_mac_address_continuous_hex_invalid() {
 
     let result: Result<MacAddress, _> = "001A2BH3C4D5E".parse();
     assert!(result.is_err());
+}
+
+#[test]
+fn test_iter_print_xerox_entries() {
+    let mut count = 0usize;
+    println!("XEROX entries:");
+    for entry in OUI_DB.iter() {
+        if entry.name().contains("XEROX") {
+            count += 1;
+            println!(
+                "  {}  {} ({})",
+                entry.prefix_hex(),
+                entry.name(),
+                entry.country_or_region_code()
+            );
+        }
+    }
+    println!("Total XEROX entries: {count}");
+    assert!(count > 0, "expected at least one XEROX entry");
 }

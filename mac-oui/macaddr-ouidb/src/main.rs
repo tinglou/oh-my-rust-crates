@@ -78,9 +78,14 @@ fn main() {
 
     // OUI 查询
     match OUI_DB.lookup_mac(mac) {
-        Some((name, region)) => {
-            println!("Organization: {} ({})", name, region);
-            if OuiDb::is_virtual_nic(name) {
+        Some(entry) => {
+            println!(
+                "Organization: {} ({})",
+                entry.name(),
+                entry.country_or_region_code()
+            );
+            println!("OUI prefix:   {}", entry.prefix_hex());
+            if OuiDb::is_virtual_nic(entry.name()) {
                 println!("  ⚠️  This is a virtual NIC");
             }
         }

@@ -37,9 +37,10 @@ match mac.oui() {
     None => println!("未找到 OUI 信息"),
 }
 
-// 同时查询厂商名称与地区
-if let Some((name, region)) = mac.oui_and_region() {
-    println!("厂商: {} ({})", name, region);
+// 查询完整 OUI 条目（名称、地区、前缀）
+if let Some(entry) = mac.oui_entry() {
+    println!("厂商: {} ({})", entry.name(), entry.country_or_region_code());
+    println!("OUI 前缀: {}", entry.prefix_hex());
 }
 
 // 判断是否为虚拟网卡
@@ -100,7 +101,7 @@ assert!(!mac.is_zero());
 let octets = mac.octets();           // [u8; 6]
 let value = mac.to_u64();            // u64
 let oui = mac.oui();                 // Option<&'static str> （仅名称）
-let pair = mac.oui_and_region();     // Option<(&'static str, &'static str)>  （名称、地区）
+let entry = mac.oui_entry();         // Option<OuiEntry<'static>> （条目）
 let is_virtual = mac.is_virtual_nic(); // bool
 ```
 

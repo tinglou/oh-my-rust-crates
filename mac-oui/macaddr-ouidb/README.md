@@ -37,9 +37,10 @@ match mac.oui() {
     None => println!("OUI information not found"),
 }
 
-// Lookup manufacturer name together with its region
-if let Some((name, region)) = mac.oui_and_region() {
-    println!("Manufacturer: {} ({})", name, region);
+// Lookup the full OUI entry (name, region, prefix)
+if let Some(entry) = mac.oui_entry() {
+    println!("Manufacturer: {} ({})", entry.name(), entry.country_or_region_code());
+    println!("OUI prefix: {}", entry.prefix_hex());
 }
 
 // Check if virtual NIC
@@ -100,7 +101,7 @@ assert!(!mac.is_zero());
 let octets = mac.octets();           // [u8; 6]
 let value = mac.to_u64();            // u64
 let oui = mac.oui();                 // Option<&'static str>  (name only)
-let pair = mac.oui_and_region();     // Option<(&'static str, &'static str)>  (name, region)
+let entry = mac.oui_entry();         // Option<OuiEntry<'static>>  (entry)
 let is_virtual = mac.is_virtual_nic(); // bool
 ```
 
