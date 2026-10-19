@@ -22,27 +22,30 @@ pub struct OuiEntry {
     pub bit_len: usize,
 }
 
-/// 解析 `PREFIX CC ORG` 格式文件（ieee-mac-oui.txt / ieee-mac-oui-fullname.txt / custom-mac-oui.txt）
+/// 解析 `PREFIX CC ORG` 格式文件（ieee-mac-oui.txt / ieee-mac-oui-fullname.txt /
+/// ieee-mac-oui-address.txt / custom-mac-oui.txt）
 ///
 /// 文件不存在时返回空列表。
 ///
 /// - `PREFIX`：6/7/9 字符 hex 前缀（24/28/36 位）
 /// - `CC`：2 字节国家码
-/// - `ORG`：组织名称（可能含空格）
+/// - `ORG`：组织名称（可能含空格）；可能带有以 `|` 分隔的地址后缀
+/// - `keep_address`：为 `true` 时保留 `ORG` 中 `|` 之后的地址部分，
+///   为 `false` 时在第一个 `|` 处截断并丢弃其后内容
 ///
 /// 返回的 [`OuiEntry::org_name`] 已拼接为 `CC + ORG`，
 /// 后续 `names` blob 中每条目即为 cc(2 字节) + name，与 `oui.rs` 的解码逻辑对应。
-pub fn parse_oui_file(path: &Path) -> Vec<OuiEntry> {
+pub fn parse_oui_file(path: &Path, keep_address: bool) -> Vec<OuiEntry> {
     if !path.exists() {
         return Vec::new();
     }
     let file =
         fs::File::open(path).unwrap_or_else(|e| panic!("Failed to open {}: {e}", path.display()));
-    parse_oui_reader(BufReader::new(file))
+    parse_oui_reader(BufReader::new(file), keep_address)
 }
 
 /// 从任意 [`BufRead`] 源解析 OUI 条目（便于测试）
-pub fn parse_oui_reader<R: BufRead>(reader: R) -> Vec<OuiEntry> {
+pub fn parse_oui_reader<R: BufRead>(reader: R, keep_address: bool) -> Vec<OuiEntry> {
     let mut entries = Vec::new();
 
     for line in reader.lines() {
@@ -54,7 +57,7 @@ pub fn parse_oui_reader<R: BufRead>(reader: R) -> Vec<OuiEntry> {
             continue;
         }
 
-        // 格式：PREFIX CC ORG
+        // 格式：PREFIX CC ORG[|ADDRESS]
         let mut parts = line.splitn(3, ' ');
         let prefix_str = parts.next().unwrap().trim();
         let cc = parts.next().unwrap_or("").trim();
@@ -72,6 +75,13 @@ pub fn parse_oui_reader<R: BufRead>(reader: R) -> Vec<OuiEntry> {
                     prefix_str
                 );
             }
+        };
+
+        // `ORG` 可能带有以 `|` 分隔的地址后缀；按 `keep_address` 保留或截断
+        let org_name = if keep_address {
+            org_name
+        } else {
+            org_name.split_once('|').map_or(org_name, |(name, _)| name)
         };
 
         // 拼接新 name：CC + ORG
@@ -92,6 +102,10 @@ pub fn parse_updated_reader<R: BufRead>(reader: R, src: &str) -> String {
     for line in reader.lines() {
         let line = line.expect("Failed to read line");
         let line = line.trim();
+        // 允许头部注释块中出现空行
+        if line.is_empty() {
+            continue;
+        }
         if !line.starts_with('#') {
             break; // 注释头结束
         }
@@ -136,7 +150,7 @@ mod tests {
 0001A2B US Odd Length
 0001A2BCD US 36-bit Org
 ";
-        let entries = parse_oui_reader(Cursor::new(data));
+        let entries = parse_oui_reader(Cursor::new(data), false);
         assert_eq!(entries.len(), 4);
 
         assert_eq!(entries[0].prefix_str, "000001");
@@ -154,10 +168,41 @@ mod tests {
     }
 
     #[test]
+    fn parse_address_suffix_is_kept_or_dropped() {
+        let data = "000001 US Some Company|1 Main St, Springfield US 12345\n";
+
+        // keep_address = true: the `|`-separated suffix is retained
+        let kept = parse_oui_reader(Cursor::new(data), true);
+        assert_eq!(
+            kept[0].org_name,
+            "USSome Company|1 Main St, Springfield US 12345"
+        );
+
+        // keep_address = false: everything from the first `|` on is dropped
+        let dropped = parse_oui_reader(Cursor::new(data), false);
+        assert_eq!(dropped[0].org_name, "USSome Company");
+
+        // A line without an address is unchanged either way
+        let plain = "000002 US Plain Org\n";
+        assert_eq!(
+            parse_oui_reader(Cursor::new(data), false)[0].org_name,
+            "USSome Company"
+        );
+        assert_eq!(
+            parse_oui_reader(Cursor::new(plain), false)[0].org_name,
+            "USPlain Org"
+        );
+        assert_eq!(
+            parse_oui_reader(Cursor::new(plain), true)[0].org_name,
+            "USPlain Org"
+        );
+    }
+
+    #[test]
     #[should_panic(expected = "Invalid prefix length")]
     fn parse_invalid_prefix_length_panics() {
         let data = "0000 US Too Short\n";
-        parse_oui_reader(Cursor::new(data));
+        parse_oui_reader(Cursor::new(data), false);
     }
 
     #[test]

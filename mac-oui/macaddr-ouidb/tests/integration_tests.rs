@@ -1,35 +1,35 @@
-//! macaddr-oui 集成测试
+//! macaddr-oui integration tests
 
-use macaddr_ouidb::{MacAddress, OUI_DB, OuiDb};
+use macaddr_ouidb::{MacAddress, OuiDb, oui_db};
 
 #[test]
 fn test_mac_address_parsing() {
-    // 测试冒号分隔格式
+    // Test the colon-separated format
     let mac1: MacAddress = "00:55:DA:0A:BB:CC".parse().unwrap();
     assert_eq!(mac1.octets(), [0x00, 0x55, 0xDA, 0x0A, 0xBB, 0xCC]);
 
-    // 测试横线分隔格式
+    // Test the dash-separated format
     let mac2: MacAddress = "00-55-DA-0A-BB-CC".parse().unwrap();
     assert_eq!(mac2.octets(), [0x00, 0x55, 0xDA, 0x0A, 0xBB, 0xCC]);
 
-    // 测试大小写不敏感
+    // Test case-insensitivity
     let mac3: MacAddress = "00:55:da:0a:bb:cc".parse().unwrap();
     assert_eq!(mac3.octets(), [0x00, 0x55, 0xDA, 0x0A, 0xBB, 0xCC]);
 }
 
 #[test]
 fn test_mac_address_special_addresses() {
-    // 零地址
+    // Zero address
     let zero = MacAddress::zero();
     assert!(zero.is_zero());
     assert!(!zero.is_broadcast());
 
-    // 广播地址
+    // Broadcast address
     let broadcast = MacAddress::broadcast();
     assert!(!broadcast.is_zero());
     assert!(broadcast.is_broadcast());
 
-    // 单播/组播
+    // Unicast/multicast
     let unicast: MacAddress = "00:11:22:33:44:55".parse().unwrap();
     assert!(unicast.is_unicast());
     assert!(!unicast.is_multicast());
@@ -38,7 +38,7 @@ fn test_mac_address_special_addresses() {
     assert!(!multicast.is_unicast());
     assert!(multicast.is_multicast());
 
-    // 全球管理/本地管理
+    // Universally/locally administered
     let universal: MacAddress = "00:11:22:33:44:55".parse().unwrap();
     assert!(universal.is_universal());
     assert!(!universal.is_local());
@@ -50,12 +50,13 @@ fn test_mac_address_special_addresses() {
 
 #[test]
 fn test_oui_lookup_24bit() {
-    // 测试 24 位 OUI 查询（标准 OUI，前 3 字节）
-    // 格式：XX:XX:XX:YY:YY:YY，只使用前 3 字节查找
+    let db = oui_db();
+    // Test 24-bit OUI lookup (standard OUI, first 3 bytes)
+    // Format: XX:XX:XX:YY:YY:YY, only the first 3 bytes are used for lookup
 
     // Xerox (00:00:00)
     let mac: MacAddress = "00:00:01:00:00:00".parse().unwrap();
-    let org = OUI_DB.lookup_mac(mac);
+    let org = db.lookup_mac(mac);
     assert!(
         matches!(&org, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("XEROX")),
         "Expected XEROX (US), got {:?}",
@@ -64,7 +65,7 @@ fn test_oui_lookup_24bit() {
 
     // Cisco Systems (00:00:0C)
     let mac: MacAddress = "00:00:0C:00:00:00".parse().unwrap();
-    let org = OUI_DB.lookup_mac(mac);
+    let org = db.lookup_mac(mac);
     assert!(
         matches!(&org, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("Cisco Systems")),
         "Expected Cisco Systems (US), got {:?}",
@@ -73,7 +74,7 @@ fn test_oui_lookup_24bit() {
 
     // Microsoft (00:03:FF)
     let mac: MacAddress = "00:03:FF:00:00:00".parse().unwrap();
-    let org = OUI_DB.lookup_mac(mac);
+    let org = db.lookup_mac(mac);
     assert!(
         matches!(&org, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("Microsoft")),
         "Expected Microsoft (US), got {:?}",
@@ -82,7 +83,7 @@ fn test_oui_lookup_24bit() {
 
     // Apple (00:03:93)
     let mac: MacAddress = "00:03:93:FF:FF:FF".parse().unwrap();
-    let org = OUI_DB.lookup_mac(mac);
+    let org = db.lookup_mac(mac);
     assert!(
         matches!(&org, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("Apple")),
         "Expected Apple (US), got {:?}",
@@ -92,25 +93,26 @@ fn test_oui_lookup_24bit() {
 
 #[test]
 fn test_oui_lookup_28bit() {
-    // 测试 28 位 OUI 查询（MA-M，前 3 字节 + 第 4 字节高 4 位）
-    // 格式：XX:XX:DA:0X:YY:YY，第 4 字节只有高 4 位有效（0x00-0xF0）
+    let db = oui_db();
+    // Test 28-bit OUI lookup (MA-M, first 3 bytes + high nibble of byte 4)
+    // Format: XX:XX:DA:0X:YY:YY, only the high 4 bits of byte 4 are significant (0x00-0xF0)
 
-    // 00:55:DA 前缀下的 28 位条目
+    // 28-bit entries under the 00:55:DA prefix
     let mac: MacAddress = "00:55:DA:0A:BB:CC".parse().unwrap();
-    let org = OUI_DB.lookup_mac(mac);
+    let org = db.lookup_mac(mac);
     assert!(
         org.is_some(),
         "28-bit OUI lookup failed for 00:55:DA:0A:BB:CC"
     );
     println!("28-bit OUI: 00:55:DA:0A:BB:CC -> {:?}", org.unwrap());
 
-    // 同一 24 位前缀下，不同 28 位子条目应该匹配不同组织
+    // Under the same 24-bit prefix, different 28-bit sub-entries should match different organizations
     let mac1: MacAddress = "00:55:DA:00:00:00".parse().unwrap();
     let mac2: MacAddress = "00:55:DA:10:00:00".parse().unwrap();
-    let org1 = OUI_DB.lookup_mac(mac1);
-    let org2 = OUI_DB.lookup_mac(mac2);
+    let org1 = db.lookup_mac(mac1);
+    let org2 = db.lookup_mac(mac2);
 
-    // 都应该有结果（可能相同也可能不同）
+    // Both should yield a result (which may or may not be the same)
     assert!(
         org1.is_some(),
         "28-bit OUI lookup failed for 00:55:DA:00:00:00"
@@ -120,38 +122,39 @@ fn test_oui_lookup_28bit() {
         "28-bit OUI lookup failed for 00:55:DA:10:00:00"
     );
 
-    // 验证 28 位子表确实被使用（不是简单的 24 位匹配）
-    // 如果第 4 字节不在子表范围内，应该回退到 24 位或返回 None
+    // Verify that the 28-bit subtable is actually used (not a plain 24-bit match)
+    // If byte 4 is outside the subtable range, it should fall back to the 24-bit entry or return None
     let mac_fallback: MacAddress = "00:55:DA:F0:00:00".parse().unwrap();
-    let org_fallback = OUI_DB.lookup_mac(mac_fallback);
-    // 这个可能匹配 24 位条目或 28 位条目
+    let org_fallback = db.lookup_mac(mac_fallback);
+    // This may match a 24-bit entry or a 28-bit entry
     assert!(org_fallback.is_some() || org_fallback.is_none());
 }
 
 #[test]
 fn test_oui_lookup_36bit() {
-    // 测试 36 位 OUI 查询（MA-S，前 4 字节 + 第 5 字节高 4 位）
-    // 格式：XX:XX:XX:XX:0X:YY，第 5 字节只有高 4 位有效（0x00-0xF0）
+    let db = oui_db();
+    // Test 36-bit OUI lookup (MA-S, first 4 bytes + high nibble of byte 5)
+    // Format: XX:XX:XX:XX:0X:YY, only the high 4 bits of byte 5 are significant (0x00-0xF0)
 
-    // 00:16:E3 前缀下的 36 位条目
+    // 36-bit entries under the 00:16:E3 prefix
     let mac: MacAddress = "00:16:E3:00:00:00".parse().unwrap();
-    let org = OUI_DB.lookup_mac(mac);
+    let org = db.lookup_mac(mac);
     assert!(
         org.is_some(),
         "36-bit OUI lookup failed for 00:16:E3:00:00:00"
     );
     println!("36-bit OUI: 00:16:E3:00:00:00 -> {:?}", org);
 
-    // 验证 36 位子表被使用
-    // 00:16:E3 是 24 位前缀，但它的某些第 4 字节有 36 位子表
+    // Verify that the 36-bit subtable is used
+    // 00:16:E3 is a 24-bit prefix, but some of its byte-4 values have 36-bit subtables
     let mac2: MacAddress = "00:16:E3:80:00:00".parse().unwrap();
-    let org2 = OUI_DB.lookup_mac(mac2);
+    let org2 = db.lookup_mac(mac2);
     assert!(
         org2.is_some(),
         "36-bit OUI lookup failed for 00:16:E3:80:00:00"
     );
 
-    // 不同的第 4 字节应该能匹配到不同结果
+    // Different byte-4 values should be able to match different results
     let same = org.as_ref().map(|e| e.name()) == org2.as_ref().map(|e| e.name());
     if !same {
         println!("Different 36-bit entries return different organizations:");
@@ -162,16 +165,17 @@ fn test_oui_lookup_36bit() {
 
 #[test]
 fn test_oui_lookup_not_found() {
-    // 测试未分配的 OUI（不在数据库中）
+    let db = oui_db();
+    // Test unallocated OUIs (not present in the database)
 
-    // FF:FF:FF 不是有效的 OUI 前缀
+    // FF:FF:FF is not a valid OUI prefix
     let mac: MacAddress = "FF:FF:FF:00:00:00".parse().unwrap();
-    let org = OUI_DB.lookup_mac(mac);
+    let org = db.lookup_mac(mac);
     assert!(org.is_none(), "Expected None for unallocated OUI FF:FF:FF");
 
-    // 某些未分配的地址段
+    // Some other unallocated address ranges
     let mac2: MacAddress = "FE:FF:FF:00:00:00".parse().unwrap();
-    let org2 = OUI_DB.lookup_mac(mac2);
+    let org2 = db.lookup_mac(mac2);
     assert!(org2.is_none(), "Expected None for unallocated OUI FE:FF:FF");
 
     println!("Correctly returns None for unallocated OUI addresses");
@@ -179,14 +183,14 @@ fn test_oui_lookup_not_found() {
 
 #[test]
 fn test_virtual_nic_detection() {
-    // 测试虚拟网卡识别
+    // Test virtual NIC detection
     assert!(OuiDb::is_virtual_nic("QEMU virtual NIC"));
     assert!(OuiDb::is_virtual_nic("Bochs virtual NIC"));
     assert!(OuiDb::is_virtual_nic("PearPC virtual NIC"));
     assert!(OuiDb::is_virtual_nic("Cooperative Linux virtual NIC"));
     assert!(OuiDb::is_virtual_nic("Oracle VirtualBox virtual NIC"));
 
-    // 测试非虚拟网卡
+    // Test non-virtual NICs
     assert!(!OuiDb::is_virtual_nic("Cisco Systems"));
     assert!(!OuiDb::is_virtual_nic("Intel"));
     assert!(!OuiDb::is_virtual_nic("Unknown"));
@@ -210,7 +214,7 @@ fn test_mac_address_from_slice() {
     let mac = MacAddress::from_slice(&bytes);
     assert_eq!(mac, Ok(MacAddress::from(bytes)));
 
-    // 错误长度
+    // Wrong length
     let wrong_bytes = [0x12, 0x34, 0x56];
     let mac = MacAddress::from_slice(&wrong_bytes);
     assert!(mac.is_err());
@@ -233,7 +237,8 @@ fn test_mac_address_debug() {
 
 #[test]
 fn test_oui_lookup_batch() {
-    // 批量测试一些已知的 OUI（用 starts_with 兼容精简名和 fullname 两种模式）
+    let db = oui_db();
+    // Batch-test some known OUIs (use starts_with to work with both the trimmed and the fullname datasets)
     let test_cases = vec![
         ("00:00:00:00:00:00", "XEROX"),
         ("00:00:01:00:00:00", "XEROX"),
@@ -250,7 +255,7 @@ fn test_oui_lookup_batch() {
 
     for (mac_str, expected_org) in test_cases {
         let mac: MacAddress = mac_str.parse().unwrap();
-        let org = OUI_DB.lookup_mac(mac);
+        let org = db.lookup_mac(mac);
         assert!(
             matches!(&org, Some(e) if e.name().starts_with(expected_org)),
             "Failed for MAC: {} (expected prefix '{}', got {:?})",
@@ -263,10 +268,11 @@ fn test_oui_lookup_batch() {
 
 #[test]
 fn test_oui_database_coverage() {
-    // 测试数据库覆盖范围
-    // 通过查询一些已知地址来验证数据库完整性
+    let db = oui_db();
+    // Test the database's coverage
+    // Verify database completeness by querying some known addresses
 
-    // 测试一些随机地址，确保数据库工作正常
+    // Test some random addresses to make sure the database works
     let test_addresses = vec![
         "00:00:00:00:00:00",
         "00:00:0C:00:00:00",
@@ -277,12 +283,12 @@ fn test_oui_database_coverage() {
     let mut found_count = 0;
     for addr in test_addresses {
         let mac: MacAddress = addr.parse().unwrap();
-        if OUI_DB.lookup_mac(mac).is_some() {
+        if db.lookup_mac(mac).is_some() {
             found_count += 1;
         }
     }
 
-    // 至少应该能找到大部分
+    // Should find at least most of them
     assert!(
         found_count >= 3,
         "Expected to find at least 3 OUI entries, found {}",
@@ -292,11 +298,12 @@ fn test_oui_database_coverage() {
 
 #[test]
 fn test_oui_all_types_coverage() {
-    // 综合测试：验证 24/28/36 位和未分配 OUI 都能正确处理
+    let db = oui_db();
+    // Comprehensive test: verify that 24/28/36-bit and unallocated OUIs are all handled correctly
 
-    // === 24 位 OUI (MA-L) ===
+    // === 24-bit OUI (MA-L) ===
     let mac_24: MacAddress = "00:00:01:00:00:00".parse().unwrap();
-    let org_24 = OUI_DB.lookup_mac(mac_24);
+    let org_24 = db.lookup_mac(mac_24);
     assert!(
         matches!(&org_24, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("XEROX")),
         "24-bit OUI lookup failed: {:?}",
@@ -304,21 +311,21 @@ fn test_oui_all_types_coverage() {
     );
     println!("✓ 24-bit OUI: {} -> {:?}", mac_24, org_24);
 
-    // === 28 位 OUI (MA-M) ===
+    // === 28-bit OUI (MA-M) ===
     let mac_28: MacAddress = "00:55:DA:00:00:00".parse().unwrap();
-    let org_28 = OUI_DB.lookup_mac(mac_28);
+    let org_28 = db.lookup_mac(mac_28);
     assert!(org_28.is_some(), "28-bit OUI lookup failed");
     println!("✓ 28-bit OUI: {} -> {:?}", mac_28, org_28);
 
-    // === 36 位 OUI (MA-S) ===
+    // === 36-bit OUI (MA-S) ===
     let mac_36: MacAddress = "00:16:E3:00:00:00".parse().unwrap();
-    let org_36 = OUI_DB.lookup_mac(mac_36);
+    let org_36 = db.lookup_mac(mac_36);
     assert!(org_36.is_some(), "36-bit OUI lookup failed");
     println!("✓ 36-bit OUI: {} -> {:?}", mac_36, org_36);
 
-    // === 未分配 OUI ===
+    // === Unallocated OUI ===
     let mac_none: MacAddress = "FF:FF:FF:00:00:00".parse().unwrap();
-    let org_none = OUI_DB.lookup_mac(mac_none);
+    let org_none = db.lookup_mac(mac_none);
     assert!(org_none.is_none(), "Should return None for unallocated OUI");
     println!("✓ Unallocated OUI: {} -> {:?}", mac_none, org_none);
 
@@ -344,28 +351,28 @@ fn test_mac_address_default() {
 
 #[test]
 fn test_mac_address_cisco_ios_format() {
-    // 测试 Cisco IOS 格式：XXXX.XXXX.XXXX
+    // Test the Cisco IOS format: XXXX.XXXX.XXXX
     let mac1: MacAddress = "001A.2B3C.4D5E".parse().unwrap();
     assert_eq!(mac1.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
 
-    // 测试全零地址
+    // Test all-zero address
     let mac2: MacAddress = "0000.0000.0000".parse().unwrap();
     assert_eq!(mac2.octets(), [0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
     assert!(mac2.is_zero());
 
-    // 测试广播地址
+    // Test broadcast address
     let mac3: MacAddress = "FFFF.FFFF.FFFF".parse().unwrap();
     assert_eq!(mac3.octets(), [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
     assert!(mac3.is_broadcast());
 
-    // 测试大小写不敏感
+    // Test case-insensitivity
     let mac4: MacAddress = "001a.2b3c.4d5e".parse().unwrap();
     assert_eq!(mac4.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
 
     let mac5: MacAddress = "001a.2B3c.4d5E".parse().unwrap();
     assert_eq!(mac5.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
 
-    // 测试与其他格式的一致性
+    // Test consistency with other formats
     let mac_colon: MacAddress = "00:1A:2B:3C:4D:5E".parse().unwrap();
     let mac_dash: MacAddress = "00-1A-2B-3C-4D-5E".parse().unwrap();
     let mac_cisco: MacAddress = "001A.2B3C.4D5E".parse().unwrap();
@@ -375,56 +382,56 @@ fn test_mac_address_cisco_ios_format() {
 
 #[test]
 fn test_mac_address_cisco_ios_format_invalid() {
-    // 测试无效长度
+    // Test invalid length
     let result: Result<MacAddress, _> = "001A.2B3C.4D5".parse();
     assert!(result.is_err());
 
     let result: Result<MacAddress, _> = "001A.2B3C.4D5E6".parse();
     assert!(result.is_err());
 
-    // 测试错误的分隔符位置
+    // Test an invalid separator position
     let result: Result<MacAddress, _> = "001.2B3C.4D5E".parse();
     assert!(result.is_err());
 
     let result: Result<MacAddress, _> = "001A2B3C.4D5E".parse();
     assert!(result.is_err());
 
-    // 测试无效十六进制字符
+    // Test invalid hex characters
     let result: Result<MacAddress, _> = "001G.2B3C.4D5E".parse();
     assert!(result.is_err());
 
     let result: Result<MacAddress, _> = "001A.2B3H.4D5E".parse();
     assert!(result.is_err());
 
-    // 测试错误的分隔符
+    // Test an invalid separator
     let result: Result<MacAddress, _> = "001A,2B3C,4D5E".parse();
     assert!(result.is_err());
 }
 
 #[test]
 fn test_mac_address_continuous_hex() {
-    // 测试无分隔符连续 hex 格式：12 个十六进制字符
+    // Test the no-separator continuous hex format: 12 hex characters
     let mac1: MacAddress = "001A2B3C4D5E".parse().unwrap();
     assert_eq!(mac1.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
 
-    // 测试全零地址
+    // Test all-zero address
     let mac2: MacAddress = "000000000000".parse().unwrap();
     assert_eq!(mac2.octets(), [0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
     assert!(mac2.is_zero());
 
-    // 测试广播地址
+    // Test broadcast address
     let mac3: MacAddress = "FFFFFFFFFFFF".parse().unwrap();
     assert_eq!(mac3.octets(), [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]);
     assert!(mac3.is_broadcast());
 
-    // 测试大小写不敏感
+    // Test case-insensitivity
     let mac4: MacAddress = "001a2b3c4d5e".parse().unwrap();
     assert_eq!(mac4.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
 
     let mac5: MacAddress = "001A2b3C4d5E".parse().unwrap();
     assert_eq!(mac5.octets(), [0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
 
-    // 测试与其他格式的一致性
+    // Test consistency with other formats
     let mac_colon: MacAddress = "00:1A:2B:3C:4D:5E".parse().unwrap();
     let mac_dash: MacAddress = "00-1A-2B-3C-4D-5E".parse().unwrap();
     let mac_cisco: MacAddress = "001A.2B3C.4D5E".parse().unwrap();
@@ -436,15 +443,15 @@ fn test_mac_address_continuous_hex() {
 
 #[test]
 fn test_mac_address_continuous_hex_invalid() {
-    // 测试无效长度（太短）
+    // Test invalid length (too short)
     let result: Result<MacAddress, _> = "001A2B3C4D5".parse();
     assert!(result.is_err());
 
-    // 测试无效长度（太长）
+    // Test invalid length (too long)
     let result: Result<MacAddress, _> = "001A2B3C4D5E6".parse();
     assert!(result.is_err());
 
-    // 测试无效十六进制字符
+    // Test invalid hex characters
     let result: Result<MacAddress, _> = "001G2B3C4D5E".parse();
     assert!(result.is_err());
 
@@ -454,9 +461,10 @@ fn test_mac_address_continuous_hex_invalid() {
 
 #[test]
 fn test_iter_print_xerox_entries() {
+    let db = oui_db();
     let mut count = 0usize;
     println!("XEROX entries:");
-    for entry in OUI_DB.iter() {
+    for entry in db.iter() {
         if entry.name().contains("XEROX") {
             count += 1;
             println!(

@@ -1,12 +1,12 @@
-//! MAC 地址 OUI 查询命令行工具
+//! MAC address OUI lookup command-line tool
 //!
-//! 用法：macaddr-oui <MAC 地址>
+//! Usage: `macaddr-oui <MAC address>`
 //!
-//! 示例：
+//! Examples:
 //!   macaddr-oui 00:55:DA:0A:BB:CC
 //!   macaddr-oui 00-55-DA-0A-BB-CC
 
-use macaddr_ouidb::{MacAddress, OUI_DB, OuiDb};
+use macaddr_ouidb::{MacAddress, OuiDb, oui_db};
 use std::env;
 use std::process;
 
@@ -28,7 +28,7 @@ fn main() {
 
     let mac_str = &args[1];
 
-    // 解析 MAC 地址
+    // Parse the MAC address
     let mac: MacAddress = match mac_str.parse() {
         Ok(mac) => mac,
         Err(e) => {
@@ -38,7 +38,7 @@ fn main() {
         }
     };
 
-    // 输出 MAC 地址信息
+    // Print MAC address information
     println!("MAC Address: {}", mac);
     println!("Formatted:   {}", mac);
     println!(
@@ -52,7 +52,7 @@ fn main() {
     );
     println!();
 
-    // 地址类型
+    // Address type
     println!("Address Type:");
     println!(
         "  Unicast:     {}",
@@ -76,8 +76,9 @@ fn main() {
     );
     println!();
 
-    // OUI 查询
-    match OUI_DB.lookup_mac(mac) {
+    // OUI lookup
+    let db = oui_db();
+    match db.lookup_mac(mac) {
         Some(entry) => {
             println!(
                 "Organization: {} ({})",
@@ -85,6 +86,13 @@ fn main() {
                 entry.country_or_region_code()
             );
             println!("OUI prefix:   {}", entry.prefix_hex());
+            #[cfg(feature = "address")]
+            {
+                let address = entry.address();
+                if !address.is_empty() {
+                    println!("Address:     {address}");
+                }
+            }
             if OuiDb::is_virtual_nic(entry.name()) {
                 println!("  ⚠️  This is a virtual NIC");
             }

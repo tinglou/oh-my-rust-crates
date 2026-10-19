@@ -11,6 +11,7 @@ High-performance MAC address OUI (Organizationally Unique Identifier) lookup lib
 - ⚡ **Fast Lookup**: O(log n) time complexity, supports 24/28/36-bit OUI
 - 🔍 **Comprehensive Coverage**: Contains 40,000+ OUI-24 entries, 6,600+ OUI-28 (MA-M) entries, 11,000+ OUI-36 (MA-S/IAB) entries
 - 🌍 **Region Info**: Each entry carries an ISO 3166-1 alpha-2 country code alongside the organization name
+- 🏢 **Registered Address (optional)**: With the `address` feature each entry also exposes the registered organization address via `OuiEntry::address()`
 - 🎯 **Virtual NIC Detection**: Built-in common virtualization platform NIC recognition (VMware, QEMU, VirtualBox, OpenStack, etc.)
 - 📦 **Flexible Integration**: Supports `serde` serialization, optional `pnet` interoperability
 - 🔒 **no_std Support**: Works in `no_std` environments (optional features for std)
@@ -25,7 +26,7 @@ High-performance MAC address OUI (Organizationally Unique Identifier) lookup lib
 ### Basic Usage
 
 ```rust
-use macaddr_ouidb::MacAddress;
+use macaddr_ouidb::{MacAddress, oui_db};
 use std::str::FromStr;
 
 // Create a MAC address
@@ -38,19 +39,39 @@ match mac.oui() {
 }
 
 // Lookup the full OUI entry (name, region, prefix)
-if let Some(entry) = mac.oui_entry() {
+let db = oui_db();
+if let Some(entry) = db.lookup_mac(mac) {
     println!("Manufacturer: {} ({})", entry.name(), entry.country_or_region_code());
     println!("OUI prefix: {}", entry.prefix_hex());
 }
 
 // Check if virtual NIC
 if mac.is_virtual_nic() {
-    println!("This is a virtual NIC: {}", mac.oui().unwrap_or("Unknown"));
+    println!("This is a virtual NIC: {}", mac.oui().unwrap_or_else(|| "Unknown".to_owned()));
 }
 
 // Check address type
 println!("Unicast: {}", mac.is_unicast());
 println!("Universal: {}", mac.is_universal());
+```
+
+### Registered Address (optional)
+
+With the `address` feature the bundled dataset additionally stores each
+organization's registered address. `OuiEntry::address()` / `OuiEntryOwned::address()`
+return it; the organization `name()` stays address-free. Entries without an address
+(e.g. custom entries, or a runtime database loaded from a file without addresses)
+return `""`:
+
+```rust,ignore
+use macaddr_ouidb::oui_db;
+
+let db = oui_db();
+let mac = "00:00:01:00:00:00".parse().unwrap();
+if let Some(entry) = db.lookup_mac(mac) {
+    println!("Organization: {}", entry.name());
+    println!("Address:      {}", entry.address());
+}
 ```
 
 ### Serde Support
@@ -68,6 +89,47 @@ struct Device {
 }
 ```
 
+### Global Database & Runtime Loading
+
+The global accessor `oui_db()` defaults to the compile-time bundled database
+(`OUI_DB_BUNDLED`). With the `std` feature you can load a database from data files at
+runtime (`OuiDbOwned`) and install it process-wide. `set_oui_db` may be called multiple
+times; the latest installation takes effect. The global is backed by an `arc-swap`, so
+concurrently held handles (`OuiDbRef`) keep the database they came from alive, and
+replaced instances are reclaimed automatically once the last reference is dropped
+(no leak). `reset_oui_db` restores the bundled database:
+
+```rust,no_run
+use macaddr_ouidb::{set_oui_db, reset_oui_db, oui_db, OuiDb, OuiDbOwned, OUI_DB_BUNDLED};
+
+// Load and install a runtime database (merged from two files).
+// `custom-mac-oui.txt` entries are merged over `ieee-mac-oui.txt`.
+// The ieee file must carry a `# Updated:` header line.
+let owned = OuiDbOwned::from_files("custom-mac-oui.txt", "ieee-mac-oui.txt").unwrap();
+set_oui_db(owned.into());
+
+// All lookups now route to the installed database.
+assert!(matches!(&*oui_db(), OuiDb::Owned(_)));
+
+// Can be replaced again, e.g. on a hot reload; the latest one wins.
+set_oui_db(OuiDb::Bundled(OUI_DB_BUNDLED));
+assert!(matches!(&*oui_db(), OuiDb::Bundled(_)));
+
+// Reset back to the bundled database.
+reset_oui_db();
+assert!(matches!(&*oui_db(), OuiDb::Bundled(_)));
+```
+
+Borrowed lookups (`lookup` / `lookup_mac`) return an `OuiEntry<'_>`, which is valid
+only while the database is borrowed — the zero-copy choice for immediate use. When
+an entry must outlive the handle (stored in a struct, returned from a function, or
+used after `set_oui_db` swaps the database), use the owned-returning
+`lookup_owned` / `lookup_mac_owned`, or `MacAddress::oui_entry()`: they return an
+`OuiEntryOwned` that owns its data source and supports `Clone`, `Debug` and `Display`.
+
+Without the `std` feature, only the bundled database is available and
+`set_oui_db` / `OuiDbOwned` are not compiled.
+
 ## API Documentation
 
 ### `MacAddress`
@@ -75,7 +137,7 @@ struct Device {
 Ethernet MAC address type (6 bytes).
 
 ```rust
-use macaddr_ouidb::MacAddress;
+use macaddr_ouidb::{MacAddress, oui_db};
 use std::str::FromStr;
 
 // Constructors
@@ -100,8 +162,11 @@ assert!(!mac.is_zero());
 // Methods
 let octets = mac.octets();           // [u8; 6]
 let value = mac.to_u64();            // u64
-let oui = mac.oui();                 // Option<&'static str>  (name only)
-let entry = mac.oui_entry();         // Option<OuiEntry<'static>>  (entry)
+let oui = mac.oui();                 // Option<String>  (name only)
+let db = oui_db();
+let entry = db.lookup_mac(mac);        // Option<OuiEntry<'_>>   (borrowed entry)
+let entry = db.lookup_mac_owned(mac);  // Option<OuiEntryOwned>  (owned entry)
+let entry = mac.oui_entry();           // Option<OuiEntryOwned>  (owned entry)
 let is_virtual = mac.is_virtual_nic(); // bool
 ```
 
@@ -148,6 +213,7 @@ Data is automatically generated at compile time via `build.rs`, ensuring:
 | `serde`    | Enable serde serialization                          | Yes     |
 | `pnet`     | Enable pnet interoperability                        | Yes     |
 | `fullname` | Use the full (untrimmed) organization names dataset | No      |
+| `address`  | Include registered organization addresses           | No      |
 
 ## no_std Support
 
@@ -155,7 +221,7 @@ This crate supports `no_std` environments. To use it in a `no_std` environment, 
 
 ```toml
 [dependencies]
-macaddr-ouidb = { version = "0.1", default-features = false }
+macaddr-ouidb = { version = "0.2", default-features = false }
 ```
 
 ## CLI Tool
@@ -177,6 +243,9 @@ Address Type:
 
 Organization: Shinko Technos (JP)
 ```
+
+With the `address` feature an additional `Address:` line is printed when the
+organization has a registered address.
 
 ## Performance
 

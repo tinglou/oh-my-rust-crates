@@ -67,13 +67,19 @@ impl OuiDataBuilder {
     /// - custom 优先；与 ieee 出现相同 `(bit_len, prefix)` 时返回错误（不允许静默覆盖）
     /// - 同时从 ieee 文件头注释解析 `# Updated:` 时间戳到 [`OuiDataBuilder::updated`]
     /// - ieee 文件内部的重复前缀已由 ouidb-builder 在生成时去重，此处不再处理
-    pub fn build(&mut self, custom_path: &Path, ieee_path: &Path) -> Result<(), String> {
+    /// - `keep_address` 透传给 [`parse_oui_file`]：为 `true` 时保留 `ORG` 中 `|` 之后的地址
+    pub fn build(
+        &mut self,
+        custom_path: &Path,
+        ieee_path: &Path,
+        keep_address: bool,
+    ) -> Result<(), String> {
         let custom_name = file_name(custom_path);
         let ieee_name = file_name(ieee_path);
 
         let entries = Self::merge_entries(
-            parse_oui_file(custom_path),
-            parse_oui_file(ieee_path),
+            parse_oui_file(custom_path, keep_address),
+            parse_oui_file(ieee_path, keep_address),
             &custom_name,
             &ieee_name,
         )?;

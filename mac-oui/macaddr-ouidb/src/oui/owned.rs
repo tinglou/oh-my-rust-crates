@@ -1,0 +1,571 @@
+//! Runtime-loaded OUI database (manages its own memory)
+//!
+//! Loaded from data files (`custom-mac-oui.txt` + `ieee-mac-oui.txt`). The
+//! parsing/merging semantics are identical to `build.rs` (reusing
+//! `macaddr-ouidb-support`), but the data lives in `Vec` / `String` rather than
+//! compile-time embedded slices.
+//!
+//! The 28/36-bit subtables do not allocate per table: their prefix/loc data is
+//! collected into contiguous memory pools and the subtables only keep
+//! `(offset, len)` descriptors (equivalent to a reference into the pool). This
+//! turns ~17k heap allocations into a constant number and improves locality.
+
+use std::path::Path;
+
+use macaddr_ouidb_support::{OuiDataBuilder, SubtableRef};
+
+use super::{
+    EntrySource, OuiBackend, OuiEntry, OuiIter, OuiIterInner, OuiLoc, OuiTableIter, lookup_impl,
+};
+use crate::MacAddress;
+
+/// Subtable descriptor: points to a contiguous range inside a memory pool
+/// (equivalent to `&[T]` plus a length).
+///
+/// A `u16` length covers the protocol maximum, and by construction
+/// `prefix_len == loc_len`:
+/// - MA-M (28-bit): the in-table key is the high 4 bits of the 4th byte → at most 16 entries per table
+/// - MA-S (36-bit): the in-table key is the 4th byte plus the high 4 bits of the 5th byte (12 bits) → at most 4096 entries per table
+///
+/// With the fields reordered the whole struct is 12 bytes (align 4), rather than
+/// 16 bytes for 4 × `u32`.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct SubtableDesc {
+    prefix_start: u32,
+    loc_start: u32,
+    prefix_len: u16,
+    loc_len: u16,
+}
+
+/// # Organizationally Unique Identifiers (OUI) database (runtime-loaded)
+///
+/// Structurally isomorphic to [`OuiDbBundled`](super::OuiDbBundled), but manages
+/// its own memory. Lookup/iteration behavior matches the bundled database.
+///
+/// # Memory layout
+///
+/// Columnar storage + memory pools: all data is reduced to a **constant number
+/// (10) of heap allocations**, instead of one allocation per subtable (which
+/// would be ~17k allocations). 28/36-bit subtables do not own their data; they
+/// only hold `(offset, len)` descriptors pointing into their respective pools:
+///
+/// ```text
+/// OuiDbOwned (struct on the stack)
+/// ├─ updated: String ────────────────────── "# Updated: ..." timestamp
+/// ├─ names: String (1 allocation)           blob of all unique names concatenated in order
+/// │    ┌──────────────────────────────────────────────────────┐
+/// │    │ "US XEROX CORPORATION" "DE Cisco Systems, Inc" ...  │
+/// │    └──────────────────────────────────────────────────────┘
+/// │         ▲ offset/length (encoded in the low 31 bits of OuiLoc)
+/// │
+/// ├─ oui_24_prefix: Vec<[u8; 3]> (1 allocation)   MA-L main table (prefix column, sorted, binary search)
+/// ├─ oui_24_loc:     Vec<u32>     (1 allocation)   MA-L main table (loc column, parallel to prefix)
+/// │    ┌─────────┬─────────┬─────┬─────────┐
+/// │    │ prefix0 │ prefix1 │ ... │ prefixN │   ← binary search hits index i
+/// │    ├─────────┼─────────┼─────┼─────────┤
+/// │    │  loc0   │  loc1   │ ... │  locN   │   ← loc[i]: bit31=0 → names
+/// │    └────┬────┴────┬────┴─────┴────┬────┘           bit31=1 → subtable descriptor index
+/// │         │        │               │
+/// │         ▼        ▼               ▼
+/// │    names blob              oui_28 / oui_36 descriptors
+/// │
+/// ├─ oui_28: Vec<SubtableDesc> (1 allocation)      MA-M subtable descriptor table (441 entries)
+/// │    ┌──────────────────────────────────────────────────┐
+/// │    │ { prefix_start, loc_start, prefix_len, loc_len }   │  ← 12 bytes each
+/// │    └──┬───────────────────┬────────────────────────────┘
+/// │       │ prefix range       │ loc range (each in its own pool)
+/// │       ▼                   ▼
+/// ├─ prefix_pool_28: Vec<u8>  (1 allocation)      MA-M per-table prefix keys concatenated (u8, key in high 4 bits)
+/// │    ┌────┬────┬────┬─ ─ ─┬────┐
+/// │    │ p0 │ p1 │ p2│ ...  │p6K │   ← pool[prefix_start .. +prefix_len]
+/// │    └────┴────┴────┴─ ─ ─┴────┘
+/// ├─ loc_pool_28: Vec<u32>    (1 allocation)      MA-M per-table loc concatenated (same length as prefixes)
+/// │    ┌──────┬──────┬─ ─ ─┬──────┐
+/// │    │ loc0 │ loc1│ ... │loc6K │   ← pool[loc_start .. +loc_len]
+/// │    └──┬───┴──────┴─ ─ ─┴──────┘
+/// │
+/// ├─ oui_36: Vec<SubtableDesc> (1 allocation)      MA-S subtable descriptor table (5 entries)
+/// │    └──┬───────────────────┬────────────────────────────┐
+/// │       │ prefix range       │ loc range (each in its own pool)
+/// │       ▼                   ▼
+/// ├─ prefix_pool_36: Vec<u16> (1 allocation)      MA-S per-table prefix keys concatenated (u16, key in high 12 bits)
+/// │    ┌─────┬─────┬─ ─ ─┬─────┐
+/// │    │ p0  │ p1 │ ... │p12K │   ← pool[prefix_start .. +prefix_len]
+/// │    └─────┴─────┴─ ─ ─┴─────┘
+/// └─ loc_pool_36: Vec<u32>    (1 allocation)      MA-S per-table loc concatenated (same length as prefixes)
+///      ┌──────┬──────┬─ ─ ─┬──────┐
+///      │ loc0 │ loc1│ ... │loc12K│   ← pool[loc_start .. +loc_len]
+///      └──┬───┴──────┴─ ─ ─┴──────┘
+///         └─▶ names blob (bit31=0); registrar entries inside subtables also point to oui_28/36 descriptors
+/// ```
+///
+/// Compared with [`OuiDbBundled`](super::OuiDbBundled) (`&'static` slices
+/// generated by `build.rs`):
+/// - Isomorphic layout: the same columnar structure and `OuiLoc` encoding, so the lookup/iteration paths are identical
+/// - The only difference is the storage medium: `Vec`/`String` own their memory (heap), while slices are compile-time embedded (binary `.rodata`)
+/// - The lifetime of a returned [`OuiEntry<'_>`] follows `&self`; it is immutable for the duration of the borrow (all internals read via `&self`)
+#[derive(Clone, Debug)]
+pub struct OuiDbOwned {
+    /// Data source update time (from the `# Updated:` header comment in the ieee data file)
+    pub updated: alloc::string::String,
+
+    pub(crate) names: alloc::string::String,
+
+    /// MA-L (24-bit prefix)
+    pub(crate) oui_24_prefix: alloc::vec::Vec<[u8; 3]>,
+    pub(crate) oui_24_loc: alloc::vec::Vec<OuiLoc>,
+
+    /// MA-M (28-bit prefix) subtable descriptors + prefix/loc memory pools
+    pub(crate) oui_28: alloc::vec::Vec<SubtableDesc>,
+    pub(crate) prefix_pool_28: alloc::vec::Vec<u8>,
+    pub(crate) loc_pool_28: alloc::vec::Vec<OuiLoc>,
+
+    /// MA-S (36-bit prefix) subtable descriptors + prefix/loc memory pools
+    pub(crate) oui_36: alloc::vec::Vec<SubtableDesc>,
+    pub(crate) prefix_pool_36: alloc::vec::Vec<u16>,
+    pub(crate) loc_pool_36: alloc::vec::Vec<OuiLoc>,
+}
+
+/// Error returned by [`OuiDbOwned::from_files`]
+#[derive(Debug, thiserror::Error)]
+pub enum OuiDbOwnedError {
+    /// The ieee data file is missing or cannot be opened
+    #[error("failed to open {path}: {source}")]
+    Open {
+        path: alloc::string::String,
+        source: std::io::Error,
+    },
+
+    /// The ieee data file header is missing the `# Updated:` comment line
+    #[error("missing '# Updated:' comment in {0}")]
+    MissingUpdated(alloc::string::String),
+
+    /// custom and ieee contain the same prefix (custom wins; silent override is not allowed)
+    #[error("{0}")]
+    Conflict(alloc::string::String),
+}
+
+impl OuiDbOwned {
+    /// Loads from the `custom` / `ieee` data files.
+    ///
+    /// The merging semantics are identical to `build.rs`:
+    /// - A missing custom file is treated as empty; a missing ieee file returns [`OuiDbOwnedError::Open`]
+    /// - custom wins; a duplicate `(bit_len, prefix)` versus ieee returns
+    ///   [`OuiDbOwnedError::Conflict`] (silent override is not allowed)
+    /// - A missing `# Updated:` comment in the ieee header returns [`OuiDbOwnedError::MissingUpdated`]
+    /// - An invalid data-line format (prefix length other than 6/7/9 hex chars) panics (matching `build.rs` behavior)
+    pub fn from_files(
+        custom: impl AsRef<Path>,
+        ieee: impl AsRef<Path>,
+    ) -> Result<Self, OuiDbOwnedError> {
+        let custom = custom.as_ref();
+        let ieee = ieee.as_ref();
+
+        // Pre-check ieee: it must exist and contain the `# Updated:` header
+        // (the corresponding path inside `support` would panic otherwise)
+        if !ieee.exists() {
+            return Err(OuiDbOwnedError::Open {
+                path: ieee.display().to_string(),
+                source: std::io::Error::new(std::io::ErrorKind::NotFound, "file not found"),
+            });
+        }
+        Self::check_updated_header(ieee)?;
+
+        let mut builder = OuiDataBuilder::new();
+        builder
+            .build(custom, ieee, cfg!(feature = "address"))
+            .map_err(OuiDbOwnedError::Conflict)?;
+        Ok(Self::from_builder(builder))
+    }
+
+    /// Pre-checks the file header: scans only the leading consecutive `#`
+    /// comment lines and requires `# Updated:` to be found.
+    fn check_updated_header(path: &Path) -> Result<(), OuiDbOwnedError> {
+        use std::io::BufRead;
+
+        let file = std::fs::File::open(path).map_err(|source| OuiDbOwnedError::Open {
+            path: path.display().to_string(),
+            source,
+        })?;
+        for line in std::io::BufReader::new(file).lines() {
+            let line = line.map_err(|source| OuiDbOwnedError::Open {
+                path: path.display().to_string(),
+                source,
+            })?;
+            let line = line.trim();
+            // Blank lines are allowed within the leading comment block
+            if line.is_empty() {
+                continue;
+            }
+            if !line.starts_with('#') {
+                break;
+            }
+            if line.strip_prefix("# Updated:").is_some() {
+                return Ok(());
+            }
+        }
+        Err(OuiDbOwnedError::MissingUpdated(path.display().to_string()))
+    }
+
+    /// Builds the columnar layout from the intermediate data structure
+    /// (same logic as `build.rs::generate_code`).
+    fn from_builder(builder: OuiDataBuilder) -> Self {
+        // names blob: all unique names concatenated in order (`CC + ORG`)
+        let names = builder.names.join("");
+
+        // Offset of each name within the blob
+        let mut name_offsets: alloc::vec::Vec<usize> =
+            alloc::vec::Vec::with_capacity(builder.names.len());
+        let mut current_offset = 0usize;
+        for name in &builder.names {
+            name_offsets.push(current_offset);
+            current_offset += name.len();
+        }
+
+        let encode = |name_idx: usize| -> OuiLoc {
+            let offset = name_offsets[name_idx];
+            let name = &builder.names[name_idx];
+            let length = name.len();
+            assert!(offset <= 0x3F_FFFF, "Offset too large: {offset}");
+            assert!(length <= 0x1FF, "Length too large: {length}");
+            ((offset as OuiLoc) << 9) | (length as OuiLoc)
+        };
+        let encode_subtable = |subtable_type: u32, subtable_idx: usize| -> OuiLoc {
+            assert!(subtable_type <= 1, "Invalid subtable type");
+            assert!(subtable_idx <= 0x3FFF_FFFF, "Subtable index too large");
+            (1 << 31) | (subtable_type << 30) | (subtable_idx as OuiLoc)
+        };
+
+        // 24-bit main table: the BTreeMap order is the sorted prefix order
+        // (a single array, so there is no fragmentation issue)
+        let mut oui_24_prefix = alloc::vec::Vec::with_capacity(builder.oui24_map.len());
+        let mut oui_24_loc = alloc::vec::Vec::with_capacity(builder.oui24_map.len());
+        for (prefix, (name_idx, subtable)) in &builder.oui24_map {
+            oui_24_prefix.push(*prefix);
+            let loc = match subtable {
+                Some(SubtableRef::Oui28(idx)) => encode_subtable(0, *idx),
+                Some(SubtableRef::Oui36(idx)) => encode_subtable(1, *idx),
+                None => encode(*name_idx),
+            };
+            oui_24_loc.push(loc);
+        }
+
+        // 28/36-bit subtables: prefix and loc go into their own contiguous
+        // memory pools; each subtable only records a range descriptor
+        let mut prefix_pool_28: alloc::vec::Vec<u8> = alloc::vec::Vec::new();
+        let mut loc_pool_28: alloc::vec::Vec<OuiLoc> = alloc::vec::Vec::new();
+        let mut prefix_pool_36: alloc::vec::Vec<u16> = alloc::vec::Vec::new();
+        let mut loc_pool_36: alloc::vec::Vec<OuiLoc> = alloc::vec::Vec::new();
+
+        let mut oui_28 = alloc::vec::Vec::with_capacity(builder.oui28_tables.len());
+        for table in &builder.oui28_tables {
+            let prefix_start = prefix_pool_28.len() as u32;
+            prefix_pool_28.extend(table.iter().map(|e| e.prefix));
+            let loc_start = loc_pool_28.len() as u32;
+            loc_pool_28.extend(table.iter().map(|e| encode(e.name_idx)));
+            let len = u16::try_from(table.len()).expect("subtable too large for u16");
+            oui_28.push(SubtableDesc {
+                prefix_start,
+                loc_start,
+                prefix_len: len,
+                loc_len: len,
+            });
+        }
+
+        let mut oui_36 = alloc::vec::Vec::with_capacity(builder.oui36_tables.len());
+        for table in &builder.oui36_tables {
+            let prefix_start = prefix_pool_36.len() as u32;
+            prefix_pool_36.extend(table.iter().map(|e| e.prefix));
+            let loc_start = loc_pool_36.len() as u32;
+            loc_pool_36.extend(table.iter().map(|e| encode(e.name_idx)));
+            let len = u16::try_from(table.len()).expect("subtable too large for u16");
+            oui_36.push(SubtableDesc {
+                prefix_start,
+                loc_start,
+                prefix_len: len,
+                loc_len: len,
+            });
+        }
+
+        OuiDbOwned {
+            updated: builder.updated,
+            names,
+            oui_24_prefix,
+            oui_24_loc,
+            oui_28,
+            prefix_pool_28,
+            loc_pool_28,
+            oui_36,
+            prefix_pool_36,
+            loc_pool_36,
+        }
+    }
+
+    /// Looks up the organization entry for a given MAC address byte array.
+    ///
+    /// Supports 24-bit, 28-bit, and 36-bit OUI queries.
+    pub fn lookup(&self, mac: [u8; 6]) -> Option<OuiEntry<'_>> {
+        lookup_impl(self, mac)
+    }
+
+    /// Looks up the organization name (OUI vendor information) for a given MAC address.
+    pub fn lookup_mac(&self, mac: MacAddress) -> Option<OuiEntry<'_>> {
+        self.lookup(mac.octets())
+    }
+
+    /// Returns an iterator over every [`OuiEntry`] in the database.
+    pub fn iter(&self) -> OuiIter<'_> {
+        OuiIter {
+            inner: OuiIterInner::Owned(OuiTableIter::new(self)),
+        }
+    }
+
+    /// Calls the handler `f` for every [`OuiEntry`] in the database.
+    pub fn for_each<'a, F>(&'a self, mut f: F)
+    where
+        F: FnMut(OuiEntry<'a>),
+    {
+        for entry in self.iter() {
+            f(entry);
+        }
+    }
+
+    /// Data source update time (from the `# Updated:` header comment in the ieee data file)
+    pub fn updated(&self) -> &str {
+        &self.updated
+    }
+
+    /// Returns the total size in bytes of the data referenced by this database.
+    pub fn data_size_bytes(&self) -> usize {
+        use core::mem::size_of_val;
+
+        let mut total = self.names.len();
+        total += size_of_val(&self.oui_24_prefix[..]);
+        total += size_of_val(&self.oui_24_loc[..]);
+        total += size_of_val(&self.oui_28[..]);
+        total += size_of_val(&self.prefix_pool_28[..]);
+        total += size_of_val(&self.loc_pool_28[..]);
+        total += size_of_val(&self.oui_36[..]);
+        total += size_of_val(&self.prefix_pool_36[..]);
+        total += size_of_val(&self.loc_pool_36[..]);
+        total
+    }
+}
+
+impl super::sealed::Sealed for OuiDbOwned {}
+
+impl OuiBackend for OuiDbOwned {
+    fn names(&self) -> &str {
+        &self.names
+    }
+
+    fn oui_24_prefix(&self) -> &[[u8; 3]] {
+        &self.oui_24_prefix
+    }
+
+    fn oui_24_loc(&self) -> &[OuiLoc] {
+        &self.oui_24_loc
+    }
+
+    fn sub28(&self, i: usize) -> (&[u8], &[OuiLoc]) {
+        let d = &self.oui_28[i];
+        let prefix = &self.prefix_pool_28[d.prefix_start as usize..][..d.prefix_len as usize];
+        let loc = &self.loc_pool_28[d.loc_start as usize..][..d.loc_len as usize];
+        (prefix, loc)
+    }
+
+    fn sub36(&self, i: usize) -> (&[u16], &[OuiLoc]) {
+        let d = &self.oui_36[i];
+        let prefix = &self.prefix_pool_36[d.prefix_start as usize..][..d.prefix_len as usize];
+        let loc = &self.loc_pool_36[d.loc_start as usize..][..d.loc_len as usize];
+        (prefix, loc)
+    }
+
+    fn entry_source(&self) -> EntrySource<'_> {
+        EntrySource::OwnedBorrowed(self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::OUI_DB_BUNDLED;
+
+    const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
+
+    fn temp_path(name: &str) -> std::path::PathBuf {
+        let mut p = std::env::temp_dir();
+        p.push(format!(
+            "macaddr-ouidb-owned-test-{}-{name}",
+            std::process::id()
+        ));
+        p
+    }
+
+    #[test]
+    fn from_files_matches_bundled_database() {
+        let custom = format!("{MANIFEST_DIR}/custom-mac-oui.txt");
+        let ieee = if cfg!(feature = "address") {
+            format!("{MANIFEST_DIR}/ieee-mac-oui-address.txt")
+        } else {
+            format!("{MANIFEST_DIR}/ieee-mac-oui.txt")
+        };
+
+        let owned = OuiDbOwned::from_files(&custom, &ieee).expect("load owned db");
+
+        // Updated timestamp matches
+        assert_eq!(owned.updated(), OUI_DB_BUNDLED.updated());
+
+        // Full iteration result matches the bundled database
+        let mut count = 0usize;
+        for (o, b) in owned.iter().zip(OUI_DB_BUNDLED.iter()) {
+            assert_eq!(o.prefix_hex(), b.prefix_hex());
+            assert_eq!(o.name(), b.name());
+            assert_eq!(o.country_or_region_code(), b.country_or_region_code());
+            #[cfg(feature = "address")]
+            assert_eq!(o.address(), b.address());
+            count += 1;
+        }
+        assert_eq!(count, OUI_DB_BUNDLED.iter().count());
+
+        // Sampled lookups match (24/28/36-bit + custom entries)
+        let samples: [[u8; 6]; 6] = [
+            [0x00, 0x00, 0x01, 0x00, 0x00, 0x00], // XEROX (24)
+            [0x00, 0x00, 0x0C, 0x00, 0x00, 0x00], // Cisco (24)
+            [0x00, 0x55, 0xDA, 0x0A, 0x00, 0x00], // 28-bit
+            [0x00, 0x16, 0xE3, 0x00, 0x00, 0x00], // 36-bit
+            [0x52, 0x54, 0x00, 0x00, 0x00, 0x00], // QEMU (custom)
+            [0xFA, 0x16, 0x3E, 0x00, 0x00, 0x00], // OpenStack (custom)
+        ];
+        for mac in samples {
+            let o = owned.lookup(mac);
+            let b = OUI_DB_BUNDLED.lookup(mac);
+            assert_eq!(
+                o.as_ref().map(|e| e.prefix_hex()),
+                b.as_ref().map(|e| e.prefix_hex()),
+                "mismatch for {mac:?}"
+            );
+            assert_eq!(
+                o.as_ref().map(|e| e.name()),
+                b.as_ref().map(|e| e.name()),
+                "name mismatch for {mac:?}"
+            );
+        }
+
+        // Memory footprint is of the same order (pooled layout holds the same amount of data as the &'static slices)
+        let os = owned.data_size_bytes();
+        let bs = OUI_DB_BUNDLED.data_size_bytes();
+        assert!(
+            os > bs * 9 / 10 && os < bs * 11 / 10,
+            "size mismatch: owned={os} bundled={bs}"
+        );
+
+        // Pooling: subtables are stored as descriptors + shared pools (structural check)
+        assert!(owned.oui_28.len() > 400);
+        assert!(!owned.oui_36.is_empty());
+        assert_eq!(
+            owned.prefix_pool_28.len(),
+            owned
+                .oui_28
+                .iter()
+                .map(|d| d.prefix_len as usize)
+                .sum::<usize>()
+        );
+        assert_eq!(
+            owned.loc_pool_28.len(),
+            owned
+                .oui_28
+                .iter()
+                .map(|d| d.loc_len as usize)
+                .sum::<usize>()
+        );
+        assert_eq!(
+            owned.prefix_pool_36.len(),
+            owned
+                .oui_36
+                .iter()
+                .map(|d| d.prefix_len as usize)
+                .sum::<usize>()
+        );
+        assert_eq!(
+            owned.loc_pool_36.len(),
+            owned
+                .oui_36
+                .iter()
+                .map(|d| d.loc_len as usize)
+                .sum::<usize>()
+        );
+    }
+
+    #[test]
+    fn missing_ieee_file_errors() {
+        let err = OuiDbOwned::from_files("no-such-custom.txt", "no-such-ieee.txt")
+            .expect_err("ieee missing should error");
+        assert!(matches!(err, OuiDbOwnedError::Open { .. }));
+    }
+
+    #[test]
+    fn missing_updated_header_errors() {
+        let ieee = temp_path("no-updated.txt");
+        std::fs::write(&ieee, "000001 US Some Company\n").unwrap();
+
+        let err = OuiDbOwned::from_files("no-such-custom.txt", &ieee)
+            .expect_err("missing # Updated: should error");
+        assert!(matches!(err, OuiDbOwnedError::MissingUpdated(_)));
+
+        std::fs::remove_file(&ieee).ok();
+    }
+
+    #[test]
+    fn conflicting_prefix_errors() {
+        let custom = temp_path("conflict-custom.txt");
+        let ieee = temp_path("conflict-ieee.txt");
+        std::fs::write(&custom, "000001 US Custom Company\n").unwrap();
+        std::fs::write(
+            &ieee,
+            "# Updated: 2026-01-01T00:00:00Z\n000001 US Ieee Company\n",
+        )
+        .unwrap();
+
+        let err =
+            OuiDbOwned::from_files(&custom, &ieee).expect_err("duplicate prefix should error");
+        assert!(matches!(err, OuiDbOwnedError::Conflict(_)));
+        let msg = err.to_string();
+        assert!(msg.contains("000001"), "error should mention prefix: {msg}");
+
+        std::fs::remove_file(&custom).ok();
+        std::fs::remove_file(&ieee).ok();
+    }
+
+    #[test]
+    fn missing_custom_file_is_empty_merge() {
+        // A missing custom file is treated as empty (same as build.rs); only ieee is loaded
+        let ieee = format!("{MANIFEST_DIR}/ieee-mac-oui.txt");
+        let owned = OuiDbOwned::from_files("no-such-custom.txt", &ieee).expect("custom optional");
+        let entry = owned
+            .lookup([0x00, 0x00, 0x01, 0x00, 0x00, 0x00])
+            .expect("XEROX entry");
+        assert!(entry.name().starts_with("XEROX"));
+    }
+
+    #[test]
+    fn custom_entries_visible_in_owned() {
+        let custom = format!("{MANIFEST_DIR}/custom-mac-oui.txt");
+        let ieee = temp_path("tiny-ieee.txt");
+        // A minimal ieee file containing a single ieee entry
+        std::fs::write(
+            &ieee,
+            "# Updated: 2026-01-01T00:00:00Z\n00000C US Cisco Systems\n",
+        )
+        .unwrap();
+
+        let owned = OuiDbOwned::from_files(&custom, &ieee).expect("load");
+        // Both the custom entry (QEMU) and the ieee entry (Cisco) are visible
+        assert!(owned.lookup([0x52, 0x54, 0x00, 0, 0, 0]).is_some());
+        assert!(owned.lookup([0x00, 0x00, 0x0C, 0, 0, 0]).is_some());
+        // A prefix that does not exist in custom
+        assert!(owned.lookup([0xFF, 0xFF, 0xFE, 0, 0, 0]).is_none());
+
+        std::fs::remove_file(&ieee).ok();
+    }
+}

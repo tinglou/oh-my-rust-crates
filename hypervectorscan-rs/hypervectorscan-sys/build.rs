@@ -103,7 +103,9 @@ fn autobuild() -> anyhow::Result<()> {
         println!("cargo:warning=autobuild: system library detected, using system build");
         return system_build();
     }
-    println!("cargo:warning=autobuild: falling back to vendored build (bundled source cmake compile)");
+    println!(
+        "cargo:warning=autobuild: falling back to vendored build (bundled source cmake compile)"
+    );
     vendored_build()
 }
 
@@ -172,7 +174,11 @@ fn system_build() -> anyhow::Result<()> {
     let lib = pkg_config::Config::new()
         .statik(true)
         .probe(package)
-        .map_err(|_| anyhow::anyhow!("pkg-config: {package} not found, please install the corresponding dev package"))?;
+        .map_err(|_| {
+            anyhow::anyhow!(
+                "pkg-config: {package} not found, please install the corresponding dev package"
+            )
+        })?;
 
     let include_paths: Vec<&Path> = lib.include_paths.iter().map(|p| p.as_path()).collect();
     generate_bindings(&include_paths, "wrapper.h")?;

@@ -6,12 +6,12 @@
 //! - Optional serde support (works in no_std)
 //! - pnet interop (works in no_std)
 //! - OUI lookup (requires std feature in macaddr-ouidb)
-//! - OuiEntry API (oui_entry / prefix_hex) and iter / for_each
+//! - OUI entry lookup (lookup_mac / prefix_hex) and iter / for_each
 //!
 //! Note: This binary itself uses std for console output,
 //! but demonstrates macaddr-ouidb's no_std compatibility.
 
-use macaddr_ouidb::{MacAddress, OuiDb, OUI_DB};
+use macaddr_ouidb::{MacAddress, OuiDb, oui_db};
 use pnet_base::MacAddr;
 use serde::{Deserialize, Serialize};
 
@@ -64,9 +64,10 @@ fn main() {
         ("52:54:00:12:34:56", "QEMU virtual NIC"),
         ("00:55:DA:0A:BB:CC", "Unknown"),
     ];
+    let db = oui_db();
     for (mac_str, _expected) in &oui_test_cases {
         match mac_str.parse::<MacAddress>() {
-            Ok(mac) => match OUI_DB.lookup_mac(mac) {
+            Ok(mac) => match db.lookup_mac(mac) {
                 Some(entry) => {
                     println!(
                         "   {} -> {} ({})  prefix={}",
@@ -90,18 +91,18 @@ fn main() {
     println!("4. OuiEntry / iter / for_each API (no_std + alloc)");
     println!("   -----------------------------------------------");
     let entry_mac = MacAddress::new([0x00, 0x00, 0x0C, 0x00, 0x00, 0x00]);
-    match entry_mac.oui_entry() {
+    match db.lookup_mac(entry_mac) {
         Some(entry) => println!(
-            "   oui_entry(): {} ({})  prefix={}",
+            "   lookup_mac(): {} ({})  prefix={}",
             entry.name(),
             entry.country_or_region_code(),
             entry.prefix_hex()
         ),
-        None => println!("   oui_entry(): None"),
+        None => println!("   lookup_mac(): None"),
     }
-    let total = OUI_DB.iter().count();
+    let total = db.iter().count();
     let mut virtual_count = 0usize;
-    OUI_DB.for_each(|e| {
+    db.for_each(|e| {
         if OuiDb::is_virtual_nic(e.name()) {
             virtual_count += 1;
         }

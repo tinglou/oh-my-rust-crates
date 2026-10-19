@@ -4,14 +4,14 @@
 //! - MAC address parsing and validation
 //! - Address type detection (unicast/multicast/broadcast/etc.)
 //! - OUI lookup (24/28/36-bit)
-//! - OuiEntry API (oui_entry / prefix_hex)
+//! - OUI entry lookup (lookup_mac / prefix_hex)
 //! - Full-database iteration (iter / for_each)
 //! - Virtual NIC detection
 //! - Serde serialization
 //! - pnet interop
 //! - Batch processing
 
-use macaddr_ouidb::{MacAddress, OuiDb, OUI_DB};
+use macaddr_ouidb::{MacAddress, OuiDb, oui_db};
 use pnet_base::MacAddr;
 use serde::{Deserialize, Serialize};
 
@@ -70,6 +70,7 @@ fn demo_basic_operations() {
 }
 
 fn demo_oui_lookup() {
+    let db = oui_db();
     println!("┌───────────────────────────────────────────────────────────┐");
     println!("│ 2. OUI Lookup (24/28/36-bit)                             │");
     println!("└───────────────────────────────────────────────────────────┘");
@@ -86,7 +87,7 @@ fn demo_oui_lookup() {
 
     for (desc, mac_str) in test_cases {
         let mac = mac_str.parse::<MacAddress>().unwrap();
-        match OUI_DB.lookup_mac(mac) {
+        match db.lookup_mac(mac) {
             Some(entry) => {
                 println!(
                     "  {:25} {} ({})",
@@ -103,11 +104,12 @@ fn demo_oui_lookup() {
 }
 
 fn demo_entry_api() {
+    let db = oui_db();
     println!("┌───────────────────────────────────────────────────────────┐");
-    println!("│ 3. OuiEntry API (oui_entry / prefix_hex)                 │");
+    println!("│ 3. OUI entry lookup (lookup_mac / prefix_hex)            │");
     println!("└───────────────────────────────────────────────────────────┘");
 
-    println!("  Database updated: {}", OUI_DB.updated);
+    println!("  Database updated: {}", db.updated);
 
     let samples = [
         ("Xerox (24-bit)", "00:00:01:00:00:00"),
@@ -116,7 +118,7 @@ fn demo_entry_api() {
     ];
     for (desc, mac_str) in samples {
         let mac = mac_str.parse::<MacAddress>().unwrap();
-        match mac.oui_entry() {
+        match db.lookup_mac(mac) {
             Some(entry) => println!(
                 "  {:18} {} -> {} ({})  prefix={}",
                 desc,
@@ -132,15 +134,16 @@ fn demo_entry_api() {
 }
 
 fn demo_iterate() {
+    let db = oui_db();
     println!("┌───────────────────────────────────────────────────────────┐");
     println!("│ 4. OuiDb::iter / OuiDb::for_each                         │");
     println!("└───────────────────────────────────────────────────────────┘");
 
-    let total = OUI_DB.iter().count();
+    let total = db.iter().count();
     println!("  Total entries via iter(): {}", total);
 
     let (mut c24, mut c28, mut c36) = (0usize, 0usize, 0usize);
-    OUI_DB.for_each(|e| match e.prefix_hex().len() {
+    db.for_each(|e| match e.prefix_hex().len() {
         6 => c24 += 1,
         7 => c28 += 1,
         9 => c36 += 1,
@@ -151,7 +154,7 @@ fn demo_iterate() {
         c24, c28, c36
     );
 
-    let xerox: Vec<String> = OUI_DB
+    let xerox: Vec<String> = db
         .iter()
         .filter(|e| e.name().contains("XEROX"))
         .map(|e| e.prefix_hex())
@@ -161,6 +164,7 @@ fn demo_iterate() {
 }
 
 fn demo_virtual_detection() {
+    let db = oui_db();
     println!("┌───────────────────────────────────────────────────────────┐");
     println!("│ 5. Virtual NIC Detection                                 │");
     println!("└───────────────────────────────────────────────────────────┘");
@@ -175,7 +179,7 @@ fn demo_virtual_detection() {
 
     for (desc, mac_str) in vms {
         let mac = mac_str.parse::<MacAddress>().unwrap();
-        if let Some(entry) = OUI_DB.lookup_mac(mac) {
+        if let Some(entry) = db.lookup_mac(mac) {
             let name = entry.name();
             let region = entry.country_or_region_code();
             let is_virtual = OuiDb::is_virtual_nic(name);
@@ -326,6 +330,7 @@ fn demo_pnet_interop() {
 }
 
 fn demo_batch_processing() {
+    let db = oui_db();
     println!("┌───────────────────────────────────────────────────────────┐");
     println!("│ 9. Batch Processing                                      │");
     println!("└───────────────────────────────────────────────────────────┘");
@@ -356,7 +361,7 @@ fn demo_batch_processing() {
                 stats.universal += 1;
             }
 
-            if let Some(entry) = OUI_DB.lookup_mac(mac) {
+            if let Some(entry) = db.lookup_mac(mac) {
                 stats.with_oui += 1;
                 let name = entry.name();
                 println!("    OUI: {} ({})", name, entry.country_or_region_code());

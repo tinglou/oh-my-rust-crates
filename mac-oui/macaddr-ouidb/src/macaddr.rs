@@ -1,3 +1,4 @@
+use alloc::string::String;
 use core::fmt;
 use core::ops::Sub;
 use core::str::FromStr;
@@ -5,7 +6,7 @@ use core::str::FromStr;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 
-use crate::{OuiDb, OuiEntry};
+use crate::OuiDb;
 
 /// The number of bytes in an ethernet (MAC) address.
 pub const ETHER_ADDR_LEN: usize = 6;
@@ -86,20 +87,38 @@ impl MacAddress {
         *self == Self::broadcast()
     }
 
+    /// Look up the OUI entry for this address.
+    ///
+    /// The returned [`OuiEntryOwned`](crate::OuiEntryOwned) owns its data source,
+    /// so it remains valid after the global database handle is dropped (or the
+    /// database itself is replaced).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use macaddr_ouidb::*;
+    /// let mac = MacAddress::new([0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E]);
+    /// if let Some(entry) = mac.oui_entry() {
+    ///     println!("{entry}");
+    /// }
+    /// ```
+    pub fn oui_entry(&self) -> Option<crate::OuiEntryOwned> {
+        crate::oui_db().lookup_mac_owned(*self)
+    }
+
     /// Return true if the MacAddr is a virtual NIC
     pub fn is_virtual_nic(&self) -> bool {
         self.oui_entry()
-            .is_some_and(|e| OuiDb::is_virtual_nic(e.name))
+            .is_some_and(|e| OuiDb::is_virtual_nic(e.name()))
     }
 
     /// Return OUI (Organizationally Unique Identifier) name only
-    pub fn oui(&self) -> Option<&'static str> {
-        self.oui_entry().map(|e| e.name)
-    }
-
-    /// Return OUI lookup entry
-    pub fn oui_entry(&self) -> Option<OuiEntry<'static>> {
-        crate::OUI_DB.lookup_mac(*self)
+    ///
+    /// The name is copied out of the current global database (which may be a
+    /// runtime-loaded [`OuiDbOwned`](crate::OuiDbOwned)), so the returned
+    /// `String` stays valid independently of the database's lifetime.
+    pub fn oui(&self) -> Option<String> {
+        self.oui_entry().map(|e| String::from(e.name()))
     }
 
     pub fn octets(&self) -> [u8; 6] {
