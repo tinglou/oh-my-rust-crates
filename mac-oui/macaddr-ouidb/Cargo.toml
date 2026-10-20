@@ -45,3 +45,6 @@ arc-swap = { version = "1.9", optional = true }
 
 [build-dependencies]
 macaddr-ouidb-support = { path = "../macaddr-ouidb-support", version = "0.2.0" }
+
+[dev-dependencies]
+serde_json = "1.0"

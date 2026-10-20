@@ -214,6 +214,27 @@ impl core::fmt::Debug for OuiEntry<'_> {
     }
 }
 
+/// Serializes with the same field set as `Debug`:
+/// `prefix` (hex string), `name`, `country_or_region_code`, and `address`
+/// (only when the `address` feature is enabled).
+#[cfg(feature = "serde")]
+impl serde::Serialize for OuiEntry<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let len = if cfg!(feature = "address") { 4 } else { 3 };
+        let mut st = serializer.serialize_struct("OuiEntry", len)?;
+        st.serialize_field("prefix", &self.prefix_hex())?;
+        st.serialize_field("name", &self.name())?;
+        st.serialize_field("country_or_region_code", &self.country_or_region_code())?;
+        #[cfg(feature = "address")]
+        st.serialize_field("address", &self.address())?;
+        st.end()
+    }
+}
+
 /// Owned entry data source: a `'static` reference for the bundled data, an `Arc` for a runtime database.
 #[derive(Clone)]
 pub(crate) enum EntrySourceOwned {
@@ -298,6 +319,30 @@ impl core::fmt::Debug for OuiEntryOwned {
         #[cfg(feature = "address")]
         debug.field("address", &self.address());
         debug.finish()
+    }
+}
+
+/// Serializes with the same field set as `Debug`:
+/// `prefix` (hex string), `name`, `country_or_region_code`, and `address`
+/// (only when the `address` feature is enabled).
+///
+/// This makes an entry directly usable with `serde-wasm-bindgen` /
+/// `serde_json` in wasm or FFI contexts without hand-written field mapping.
+#[cfg(feature = "serde")]
+impl serde::Serialize for OuiEntryOwned {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let len = if cfg!(feature = "address") { 4 } else { 3 };
+        let mut st = serializer.serialize_struct("OuiEntryOwned", len)?;
+        st.serialize_field("prefix", &self.prefix_hex())?;
+        st.serialize_field("name", &self.name())?;
+        st.serialize_field("country_or_region_code", &self.country_or_region_code())?;
+        #[cfg(feature = "address")]
+        st.serialize_field("address", &self.address())?;
+        st.end()
     }
 }
 
@@ -911,6 +956,27 @@ pub fn reset_oui_db() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use alloc::string::ToString;
+    use alloc::vec::Vec;
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serde_serialize_matches_debug_fields() {
+        let mac = crate::MacAddress::new([0x00, 0x00, 0x01, 0x00, 0x00, 0x00]);
+        let db = crate::oui_db();
+        let entry = db.lookup_mac(mac).expect("XEROX entry");
+        let v = serde_json::to_string(&entry).unwrap();
+        assert!(v.contains("\"prefix\":\"000001\""));
+        assert!(v.contains("\"country_or_region_code\":\"US\""));
+        assert!(v.contains("\"name\":"));
+        #[cfg(feature = "address")]
+        assert!(v.contains("\"address\":"));
+
+        let owned = crate::oui_db().lookup_mac_owned(mac).expect("XEROX entry");
+        let v = serde_json::to_string(&owned).unwrap();
+        assert!(v.contains("\"prefix\":\"000001\""));
+        assert!(v.contains("\"country_or_region_code\":\"US\""));
+    }
 
     #[test]
     fn prefix_hex_all_widths() {

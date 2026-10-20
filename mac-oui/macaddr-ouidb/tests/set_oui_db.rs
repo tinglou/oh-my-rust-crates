@@ -2,6 +2,7 @@
 //!
 //! Kept in a separate integration test file: each `tests/*.rs` compiles to its own
 //! binary, isolating global state from other test processes.
+#![cfg(feature = "std")]
 
 use macaddr_ouidb::{OUI_DB_BUNDLED, OuiDb, OuiDbOwned, oui_db, reset_oui_db, set_oui_db};
 

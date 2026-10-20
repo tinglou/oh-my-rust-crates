@@ -100,6 +100,8 @@ replaced instances are reclaimed automatically once the last reference is droppe
 (no leak). `reset_oui_db` restores the bundled database:
 
 ```rust,no_run
+# #[cfg(feature = "std")]
+# {
 use macaddr_ouidb::{set_oui_db, reset_oui_db, oui_db, OuiDb, OuiDbOwned, OUI_DB_BUNDLED};
 
 // Load and install a runtime database (merged from two files).
@@ -118,6 +120,7 @@ assert!(matches!(&*oui_db(), OuiDb::Bundled(_)));
 // Reset back to the bundled database.
 reset_oui_db();
 assert!(matches!(&*oui_db(), OuiDb::Bundled(_)));
+# }
 ```
 
 Borrowed lookups (`lookup` / `lookup_mac`) return an `OuiEntry<'_>`, which is valid
