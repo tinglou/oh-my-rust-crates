@@ -11,7 +11,7 @@
 //! Note: This binary itself uses std for console output,
 //! but demonstrates macaddr-ouidb's no_std compatibility.
 
-use macaddr_ouidb::{MacAddress, OuiDb, oui_db};
+use macaddr_ouidb::{oui_db, MacAddress, OuiDb};
 use pnet_base::MacAddr;
 use serde::{Deserialize, Serialize};
 
@@ -154,7 +154,7 @@ fn main() {
     println!("   Converted to MacAddress: {}", mac_from_pnet);
 
     // Convert back
-    let octets: [u8; 6] = mac_from_pnet.octets().try_into().unwrap();
+    let octets: [u8; 6] = mac_from_pnet.octets();
     let pnet_mac_back = MacAddr::from(octets);
     println!(
         "   Converted back: {:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",

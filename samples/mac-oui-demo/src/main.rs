@@ -11,7 +11,7 @@
 //! - pnet interop
 //! - Batch processing
 
-use macaddr_ouidb::{MacAddress, OuiDb, oui_db};
+use macaddr_ouidb::{oui_db, MacAddress, OuiDb};
 use pnet_base::MacAddr;
 use serde::{Deserialize, Serialize};
 
@@ -109,7 +109,7 @@ fn demo_entry_api() {
     println!("│ 3. OUI entry lookup (lookup_mac / prefix_hex)            │");
     println!("└───────────────────────────────────────────────────────────┘");
 
-    println!("  Database updated: {}", db.updated);
+    println!("  Database updated: {}", db.updated());
 
     let samples = [
         ("Xerox (24-bit)", "00:00:01:00:00:00"),
@@ -314,7 +314,7 @@ fn demo_pnet_interop() {
     println!("    {}", mac);
 
     // Convert back
-    let octets: [u8; 6] = mac.octets().try_into().unwrap();
+    let octets: [u8; 6] = mac.octets();
     let pnet_back = MacAddr::from(octets);
     println!("\n  Converted back to MacAddr:");
     println!(

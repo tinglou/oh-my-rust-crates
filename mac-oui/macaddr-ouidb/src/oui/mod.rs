@@ -36,7 +36,10 @@ pub use bundled::OuiDbBundled;
 #[cfg(feature = "std")]
 pub use owned::{OuiDbOwned, OuiDbOwnedError};
 
-pub(crate) use bundled::{OuiSubtable, OuiTable};
+pub(crate) use macaddr_ouidb_support::layout::{
+    LOC_SUBTABLE_FLAG, OuiLoc, SUBTABLE_INDEX_MASK, SUBTABLE_TYPE_36, SubtableDesc,
+    decode_loc_names,
+};
 
 const OUI_SUBTABLE: &str = "Ieee Registration Authority";
 
@@ -49,34 +52,6 @@ const OUI_VIRTUAL: [&str; 7] = [
     "Oracle VirtualBox virtual NIC",
     "OpenStack",
 ];
-
-/// # Locate an org name or subtable offset
-///
-/// ## Type 0 - points into the `names` string (bit 31 = 0)
-/// ```text
-/// bit:  31 | 30 29 ... 11 10 09 08 | 07 06 ... 01 00
-///       ──   ─────────────────────   ───────────────
-///       0      offset (23 bits)        length
-/// ```
-///
-/// ## Type 1 - points to a subtable offset (bit 31 = 1)
-/// ```text
-/// bit:  31 | 30 | 29 28 ... 01 00
-///       ──   ──   ───────────────
-///       1  type    subtable index
-/// ```
-///
-/// * bit 31: 0=names, 1=subtable
-///   - bit 31 = 0: offset and length within `names`
-///       - bit-30-08: offset (23 bits)
-///       - bit-07-00: length (8 bits)
-///   - bit 31 = 1: points to a subtable
-///       - bit-30: subtable type
-///         - 0 points to oui_28
-///         - 1 points to oui_36
-///       - bit-29-00: subtable index (30 bits)
-///
-type OuiLoc = u32;
 
 /// Encoding of `OuiEntry::extra_prefix`: the top 2 bits are a type flag (bit-15-14)
 /// and the low 12 bits hold the extra value.
@@ -110,8 +85,7 @@ impl EntrySource<'_> {
 /// Decodes `loc` and returns the slice from `names` (length already validated by
 /// `build_entry` / `build_owned_entry`)
 fn name_slice(names: &str, loc: OuiLoc) -> &str {
-    let offset = ((loc >> 9) & 0x3F_FFFF) as usize;
-    let length = (loc & 0x1FF) as usize;
+    let (offset, length) = macaddr_ouidb_support::layout::decode_loc_names(loc);
     &names[offset..offset + length]
 }
 
@@ -399,7 +373,7 @@ fn resolve<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<Resolved> {
     let loc = db.oui_24_loc()[idx];
     let prefix = db.oui_24_prefix()[idx];
 
-    if loc & (1 << 31) == 0 {
+    if loc & LOC_SUBTABLE_FLAG == 0 {
         // 24-bit: loc points directly into names
         return Some(Resolved {
             prefix,
@@ -408,8 +382,8 @@ fn resolve<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<Resolved> {
         });
     }
 
-    let sub_idx = (loc & 0x3FFF_FFFF) as usize;
-    if loc & (1 << 30) == 0 {
+    let sub_idx = (loc & SUBTABLE_INDEX_MASK) as usize;
+    if loc & SUBTABLE_TYPE_36 == 0 {
         // 28-bit: the extra prefix comes directly from the subtable
         let key4 = mac[3] & 0xF0;
         let (p, sub_loc) = db.sub28(sub_idx);
@@ -434,8 +408,7 @@ fn resolve<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<Resolved> {
 
 /// Builds an [`OuiEntry`] from `Resolved` + data source (validates the names slice)
 fn build_entry(source: EntrySource<'_>, r: Resolved) -> Option<OuiEntry<'_>> {
-    let offset = ((r.loc >> 9) & 0x3F_FFFF) as usize;
-    let length = (r.loc & 0x1FF) as usize;
+    let (offset, length) = decode_loc_names(r.loc);
     if source.names().get(offset..offset + length)?.len() < 2 {
         return None;
     }
@@ -449,8 +422,7 @@ fn build_entry(source: EntrySource<'_>, r: Resolved) -> Option<OuiEntry<'_>> {
 
 /// Builds an [`OuiEntryOwned`] from `Resolved` + owned data source (validates the names slice)
 fn build_owned_entry(source: EntrySourceOwned, r: Resolved) -> Option<OuiEntryOwned> {
-    let offset = ((r.loc >> 9) & 0x3F_FFFF) as usize;
-    let length = (r.loc & 0x1FF) as usize;
+    let (offset, length) = decode_loc_names(r.loc);
     if source.names().get(offset..offset + length)?.len() < 2 {
         return None;
     }
@@ -776,7 +748,7 @@ fn iter_step<B: OuiBackend>(db: &B, pos: &mut IterPos) -> Option<Resolved> {
         let loc = db.oui_24_loc()[idx];
         let base = db.oui_24_prefix()[idx];
 
-        if loc & (1 << 31) == 0 {
+        if loc & LOC_SUBTABLE_FLAG == 0 {
             return Some(Resolved {
                 prefix: base,
                 extra_prefix: EXTRA_NONE,
@@ -784,9 +756,9 @@ fn iter_step<B: OuiBackend>(db: &B, pos: &mut IterPos) -> Option<Resolved> {
             });
         }
         pos.sub = Some(SubPos {
-            is36: loc & (1 << 30) != 0,
+            is36: loc & SUBTABLE_TYPE_36 != 0,
             base,
-            sub_idx: (loc & 0x3FFF_FFFF) as usize,
+            sub_idx: (loc & SUBTABLE_INDEX_MASK) as usize,
             entry_idx: 0,
         });
     }
@@ -1028,13 +1000,12 @@ mod tests {
         }
 
         let expect_24 = db
-            .oui_24
-            .loc
+            .oui_24_loc
             .iter()
-            .filter(|l| **l & (1 << 31) == 0)
+            .filter(|l| **l & LOC_SUBTABLE_FLAG == 0)
             .count();
-        let expect_28: usize = db.oui_28.iter().map(|s| s.loc.len()).sum();
-        let expect_36: usize = db.oui_36.iter().map(|s| s.loc.len()).sum();
+        let expect_28: usize = db.oui_28.iter().map(|s| s.loc_len as usize).sum();
+        let expect_36: usize = db.oui_36.iter().map(|s| s.loc_len as usize).sum();
 
         assert_eq!(c24, expect_24);
         assert_eq!(c28, expect_28);

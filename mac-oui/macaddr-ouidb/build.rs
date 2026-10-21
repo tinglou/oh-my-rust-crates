@@ -1,17 +1,8 @@
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
+use macaddr_ouidb_support::layout::{encode_loc_names, encode_loc_subtable};
 use macaddr_ouidb_support::{OuiDataBuilder, SubtableRef};
-
-/// Encodes an `OuiLoc` value pointing to a subtable.
-///
-/// Format: bit-31=1 (subtable flag), bit-30=type (0=oui-28, 1=oui-36), bit-29-00=index
-fn encode_loc_subtable(subtable_type: u32, subtable_idx: usize) -> u32 {
-    assert!(subtable_type <= 1, "Invalid subtable type");
-    assert!(subtable_idx <= 0x3FFF_FFFF, "Subtable index too large");
-    (1 << 31) | (subtable_type << 30) | (subtable_idx as u32)
-}
 
 /// Generates Rust code: produces `oui_data.rs` from the intermediate `builder` data structure
 fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
@@ -96,7 +87,7 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
         code.push_str("// ================================================\n\n");
     }
 
-    code.push_str("use crate::oui::{OuiSubtable, OuiTable};\n\n");
+    code.push_str("use crate::oui::SubtableDesc;\n\n");
     code.push_str("use crate::oui::OuiDbBundled;\n\n");
 
     // Generate the names constant
@@ -105,22 +96,22 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
         names_string
     ));
 
-    // Generate the oui_24 table - data embedded directly
+    // Generate the oui_24 prefix/loc columns - data embedded directly
     code.push_str("#[rustfmt::skip]\n");
-    code.push_str("const OUI_24_TABLE: OuiTable<3> = OuiTable {\n");
+    code.push_str("const OUI_24_PREFIX: &[[u8; 3]] = &[\n        ");
 
-    // prefix field - 20 items per line
-    code.push_str("    prefix: &[\n        ");
+    // prefix column - 20 items per line
     for (i, prefix) in oui24_prefixes.iter().enumerate() {
         if i > 0 && i % 20 == 0 {
             code.push_str("\n        ");
         }
         code.push_str(&format!("[{},{},{}],", prefix[0], prefix[1], prefix[2]));
     }
-    code.push_str("\n    ],\n");
+    code.push_str("\n];\n\n");
 
-    // loc field - 30 items per line
-    code.push_str("    loc: &[\n        ");
+    // loc column - 30 items per line
+    code.push_str("#[rustfmt::skip]\n");
+    code.push_str("const OUI_24_LOC: &[u32] = &[\n        ");
     for (i, prefix) in oui24_prefixes.iter().enumerate() {
         if i > 0 && i % 30 == 0 {
             code.push_str("\n        ");
@@ -136,132 +127,133 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
                 let length = name.len();
                 assert!(offset <= 0x3F_FFFF, "Offset too large: {}", offset);
                 assert!(length <= 0x1FF, "Length too large: {}", length);
-                ((offset as u32) << 9) | (length as u32)
+                encode_loc_names(offset, length)
             }
         };
         code.push_str(&format!("0x{:08X},", loc));
     }
-    code.push_str("\n    ],\n");
-    code.push_str("};\n\n");
+    code.push_str("\n];\n\n");
 
-    // Generate the oui_28 array - embeds all subtable data directly, one line per
-    // table, with a 24-bit prefix comment
-    // prefix arrays are interned at generation time: the linker does not merge
-    // identical anonymous constants, so an identical prefix list produces a
-    // single named constant shared by reference across subtables
-    let mut prefix28_intern: HashMap<Vec<u8>, usize> = HashMap::new();
-    let mut prefix28_consts: Vec<Vec<u8>> = Vec::new();
-    let mut table28_prefix_id: Vec<usize> = Vec::with_capacity(builder.oui28_tables.len());
-    for table in &builder.oui28_tables {
-        let key: Vec<u8> = table.iter().map(|e| e.prefix).collect();
-        let id = *prefix28_intern.entry(key.clone()).or_insert_with(|| {
-            prefix28_consts.push(key);
-            prefix28_consts.len() - 1
-        });
-        table28_prefix_id.push(id);
-    }
-    for (id, prefixes) in prefix28_consts.iter().enumerate() {
-        code.push_str(&format!("const OUI_28_PREFIX_{id}: &[u8] = &["));
-        for (i, p) in prefixes.iter().enumerate() {
+    // Generate the oui_28 subtable descriptors + prefix/loc memory pools.
+    // Layout matches `OuiDbOwned`: all subtable prefixes and locs are concatenated
+    // into contiguous pools, and each subtable is described by a `SubtableDesc`
+    // (offset + length) rather than holding its own slice.
+    code.push_str("#[rustfmt::skip]\n");
+    code.push_str("const OUI_28_TABLES: &[SubtableDesc] = &[\n");
+    {
+        let mut prefix_pool: Vec<u8> = Vec::new();
+        let mut loc_pool: Vec<u32> = Vec::new();
+        for (idx, table) in builder.oui28_tables.iter().enumerate() {
+            let prefix3 = builder.oui28_idx_to_prefix.get(&idx).unwrap();
+            let prefix_start = prefix_pool.len() as u32;
+            let loc_start = loc_pool.len() as u32;
+            prefix_pool.extend(table.iter().map(|e| e.prefix));
+            for entry in table {
+                let offset = name_offsets[entry.name_idx];
+                let length = builder.names[entry.name_idx].len();
+                assert!(offset <= 0x3F_FFFF, "Offset too large: {}", offset);
+                assert!(length <= 0x1FF, "Length too large: {}", length);
+                loc_pool.push(encode_loc_names(offset, length));
+            }
+            let len = table.len() as u16;
+            code.push_str(&format!(
+                "    /* {:02X}{:02X}{:02X} */ SubtableDesc {{ prefix_start: {}, loc_start: {}, prefix_len: {}, loc_len: {} }},\n",
+                prefix3[0], prefix3[1], prefix3[2], prefix_start, loc_start, len, len
+            ));
+        }
+        code.push_str("];\n\n");
+
+        // prefix pool (u8)
+        code.push_str("#[rustfmt::skip]\n");
+        code.push_str("const OUI_28_PREFIX_POOL: &[u8] = &[");
+        for (i, p) in prefix_pool.iter().enumerate() {
             if i > 0 {
                 code.push(',');
             }
             code.push_str(&format!("0x{p:02X}"));
         }
-        code.push_str("];\n");
-    }
-    if !prefix28_consts.is_empty() {
-        code.push('\n');
-    }
+        code.push_str("];\n\n");
 
-    code.push_str("#[rustfmt::skip]\n");
-    code.push_str("const OUI_28_TABLES: &[OuiSubtable<u8>] = &[\n");
-    for (idx, table) in builder.oui28_tables.iter().enumerate() {
-        // Get the 24-bit prefix comment
-        let prefix3 = builder.oui28_idx_to_prefix.get(&idx).unwrap();
-        code.push_str(&format!(
-            "    /* {:02X}{:02X}{:02X} */ OuiSubtable {{ prefix: OUI_28_PREFIX_{}, loc: &[",
-            prefix3[0], prefix3[1], prefix3[2], table28_prefix_id[idx]
-        ));
-
-        // loc field - single line
-        for (i, entry) in table.iter().enumerate() {
+        // loc pool (u32)
+        code.push_str("#[rustfmt::skip]\n");
+        code.push_str("const OUI_28_LOC_POOL: &[u32] = &[\n        ");
+        for (i, l) in loc_pool.iter().enumerate() {
             if i > 0 {
                 code.push(',');
             }
-            let offset = name_offsets[entry.name_idx];
-            let name = &builder.names[entry.name_idx];
-            let length = name.len();
-            assert!(offset <= 0x3F_FFFF, "Offset too large: {}", offset);
-            assert!(length <= 0x1FF, "Length too large: {}", length);
-            let loc = ((offset as u32) << 9) | (length as u32);
-            code.push_str(&format!("0x{:08X}", loc));
+            if i > 0 && i % 8 == 0 {
+                code.push_str("\n        ");
+            }
+            code.push_str(&format!("0x{l:08X}"));
         }
-        code.push_str("] },\n");
+        code.push_str("\n];\n\n");
     }
-    code.push_str("];\n\n");
 
-    // Generate the oui_36 array - prefix is likewise interned at generation time
-    let mut prefix36_intern: HashMap<Vec<u16>, usize> = HashMap::new();
-    let mut prefix36_consts: Vec<Vec<u16>> = Vec::new();
-    let mut table36_prefix_id: Vec<usize> = Vec::with_capacity(builder.oui36_tables.len());
-    for table in &builder.oui36_tables {
-        let key: Vec<u16> = table.iter().map(|e| e.prefix).collect();
-        let id = *prefix36_intern.entry(key.clone()).or_insert_with(|| {
-            prefix36_consts.push(key);
-            prefix36_consts.len() - 1
-        });
-        table36_prefix_id.push(id);
-    }
-    for (id, prefixes) in prefix36_consts.iter().enumerate() {
-        code.push_str(&format!("const OUI_36_PREFIX_{id}: &[u16] = &["));
-        for (i, p) in prefixes.iter().enumerate() {
+    // Generate the oui_36 subtable descriptors + prefix/loc memory pools (same layout).
+    code.push_str("#[rustfmt::skip]\n");
+    code.push_str("const OUI_36_TABLES: &[SubtableDesc] = &[\n");
+    {
+        let mut prefix_pool: Vec<u16> = Vec::new();
+        let mut loc_pool: Vec<u32> = Vec::new();
+        for (idx, table) in builder.oui36_tables.iter().enumerate() {
+            let prefix3 = builder.oui36_idx_to_prefix.get(&idx).unwrap();
+            let prefix_start = prefix_pool.len() as u32;
+            let loc_start = loc_pool.len() as u32;
+            prefix_pool.extend(table.iter().map(|e| e.prefix));
+            for entry in table {
+                let offset = name_offsets[entry.name_idx];
+                let length = builder.names[entry.name_idx].len();
+                assert!(offset <= 0x3F_FFFF, "Offset too large: {}", offset);
+                assert!(length <= 0x1FF, "Length too large: {}", length);
+                loc_pool.push(encode_loc_names(offset, length));
+            }
+            let len = table.len() as u16;
+            code.push_str(&format!(
+                "    /* {:02X}{:02X}{:02X} */ SubtableDesc {{ prefix_start: {}, loc_start: {}, prefix_len: {}, loc_len: {} }},\n",
+                prefix3[0], prefix3[1], prefix3[2], prefix_start, loc_start, len, len
+            ));
+        }
+        code.push_str("];\n\n");
+
+        // prefix pool (u16)
+        code.push_str("#[rustfmt::skip]\n");
+        code.push_str("const OUI_36_PREFIX_POOL: &[u16] = &[");
+        for (i, p) in prefix_pool.iter().enumerate() {
             if i > 0 {
                 code.push(',');
             }
             code.push_str(&format!("0x{p:04X}"));
         }
-        code.push_str("];\n");
-    }
-    if !prefix36_consts.is_empty() {
-        code.push('\n');
-    }
+        code.push_str("];\n\n");
 
-    code.push_str("#[rustfmt::skip]\n");
-    code.push_str("const OUI_36_TABLES: &[OuiSubtable<u16>] = &[\n");
-    for (idx, table) in builder.oui36_tables.iter().enumerate() {
-        // Get the 24-bit prefix comment
-        let prefix3 = builder.oui36_idx_to_prefix.get(&idx).unwrap();
-        code.push_str(&format!(
-            "    /* {:02X}{:02X}{:02X} */ OuiSubtable {{ prefix: OUI_36_PREFIX_{}, loc: &[",
-            prefix3[0], prefix3[1], prefix3[2], table36_prefix_id[idx]
-        ));
-
-        // loc field - single line
-        for (i, entry) in table.iter().enumerate() {
+        // loc pool (u32)
+        code.push_str("#[rustfmt::skip]\n");
+        code.push_str("const OUI_36_LOC_POOL: &[u32] = &[\n        ");
+        for (i, l) in loc_pool.iter().enumerate() {
             if i > 0 {
                 code.push(',');
             }
-            let offset = name_offsets[entry.name_idx];
-            let name = &builder.names[entry.name_idx];
-            let length = name.len();
-            assert!(offset <= 0x3F_FFFF, "Offset too large: {}", offset);
-            assert!(length <= 0x1FF, "Length too large: {}", length);
-            let loc = ((offset as u32) << 9) | (length as u32);
-            code.push_str(&format!("0x{:08X}", loc));
+            if i > 0 && i % 8 == 0 {
+                code.push_str("\n        ");
+            }
+            code.push_str(&format!("0x{l:08X}"));
         }
-        code.push_str("] },\n");
+        code.push_str("\n];\n\n");
     }
-    code.push_str("];\n\n");
 
     // Generate the OuiDbBundled constant
     code.push_str("/// Bundled (compile-time) OUI database\n");
     code.push_str("pub const OUI_DB_BUNDLED: OuiDbBundled = OuiDbBundled {\n");
     code.push_str(&format!("    updated: \"{}\",\n", builder.updated));
     code.push_str("    names: OUI_NAMES,\n");
-    code.push_str("    oui_24: &OUI_24_TABLE,\n");
+    code.push_str("    oui_24_prefix: OUI_24_PREFIX,\n");
+    code.push_str("    oui_24_loc: OUI_24_LOC,\n");
     code.push_str("    oui_28: OUI_28_TABLES,\n");
+    code.push_str("    prefix_pool_28: OUI_28_PREFIX_POOL,\n");
+    code.push_str("    loc_pool_28: OUI_28_LOC_POOL,\n");
     code.push_str("    oui_36: OUI_36_TABLES,\n");
+    code.push_str("    prefix_pool_36: OUI_36_PREFIX_POOL,\n");
+    code.push_str("    loc_pool_36: OUI_36_LOC_POOL,\n");
     code.push_str("};\n");
 
     // Update the generated-file-size statistic (replace the placeholder)
