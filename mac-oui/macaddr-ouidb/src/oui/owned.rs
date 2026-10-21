@@ -12,8 +12,8 @@
 
 use std::path::Path;
 
-use macaddr_ouidb_support::layout::{encode_loc_names, encode_loc_subtable};
-use macaddr_ouidb_support::{OuiDataBuilder, SubtableRef};
+use macaddr_ouidb_support::OuiDataBuilder;
+use macaddr_ouidb_support::SubtableRef;
 
 use super::{
     EntrySource, OuiBackend, OuiEntry, OuiIter, OuiIterInner, OuiLoc, OuiTableIter, SubtableDesc,
@@ -159,17 +159,11 @@ impl OuiDbOwned {
 
         let encode = |name_idx: usize| -> OuiLoc {
             let offset = name_offsets[name_idx];
-            let name = &builder.names[name_idx];
-            let length = name.len();
-            assert!(offset <= 0x3F_FFFF, "Offset too large: {offset}");
-            assert!(length <= 0x1FF, "Length too large: {length}");
-            encode_loc_names(offset, length)
+            let length = builder.names[name_idx].len();
+            OuiLoc::names(offset, length)
         };
-        let encode_subtable = |subtable_type: u32, subtable_idx: usize| -> OuiLoc {
-            assert!(subtable_type <= 1, "Invalid subtable type");
-            assert!(subtable_idx <= 0x3FFF_FFFF, "Subtable index too large");
-            encode_loc_subtable(subtable_type, subtable_idx)
-        };
+        let encode_subtable =
+            |is_36: bool, subtable_idx: usize| -> OuiLoc { OuiLoc::subtable(is_36, subtable_idx) };
 
         // 24-bit main table: the BTreeMap order is the sorted prefix order
         // (a single array, so there is no fragmentation issue)
@@ -178,8 +172,8 @@ impl OuiDbOwned {
         for (prefix, (name_idx, subtable)) in &builder.oui24_map {
             oui_24_prefix.push(*prefix);
             let loc = match subtable {
-                Some(SubtableRef::Oui28(idx)) => encode_subtable(0, *idx),
-                Some(SubtableRef::Oui36(idx)) => encode_subtable(1, *idx),
+                Some(SubtableRef::Oui28(idx)) => encode_subtable(false, *idx),
+                Some(SubtableRef::Oui36(idx)) => encode_subtable(true, *idx),
                 None => encode(*name_idx),
             };
             oui_24_loc.push(loc);
@@ -198,13 +192,7 @@ impl OuiDbOwned {
             prefix_pool_28.extend(table.iter().map(|e| e.prefix));
             let loc_start = loc_pool_28.len() as u32;
             loc_pool_28.extend(table.iter().map(|e| encode(e.name_idx)));
-            let len = u16::try_from(table.len()).expect("subtable too large for u16");
-            oui_28.push(SubtableDesc {
-                prefix_start,
-                loc_start,
-                prefix_len: len,
-                loc_len: len,
-            });
+            oui_28.push(SubtableDesc::new(prefix_start, loc_start, table.len()));
         }
 
         let mut oui_36 = alloc::vec::Vec::with_capacity(builder.oui36_tables.len());
@@ -213,13 +201,7 @@ impl OuiDbOwned {
             prefix_pool_36.extend(table.iter().map(|e| e.prefix));
             let loc_start = loc_pool_36.len() as u32;
             loc_pool_36.extend(table.iter().map(|e| encode(e.name_idx)));
-            let len = u16::try_from(table.len()).expect("subtable too large for u16");
-            oui_36.push(SubtableDesc {
-                prefix_start,
-                loc_start,
-                prefix_len: len,
-                loc_len: len,
-            });
+            oui_36.push(SubtableDesc::new(prefix_start, loc_start, table.len()));
         }
 
         OuiDbOwned {
