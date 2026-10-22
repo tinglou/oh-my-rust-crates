@@ -164,6 +164,23 @@ entry named `"IEEE Registration Authority"` (country/region `US`, address
 `445 Hoes Lane Piscataway NJ US 08554` with the `address` feature) is returned for
 that 24-bit prefix.
 
+`OuiDb::lookup_str` is a convenience wrapper over `lookup` that takes a string.
+The separators `.`, `-` and `:` are ignored anywhere, and partial addresses are
+allowed — a trailing lone hex digit is treated as the high nibble of a final
+byte. So `"00:00:0C:00:00:00"`, `"0000.0C00.0000"`, `"00000C000000"` and even
+`"B8:4C:87:9"` (→ the 28-bit prefix `B84C879`) are all accepted.
+
+```rust
+use macaddr_ouidb::oui_db;
+
+let db = oui_db();
+let a = db.lookup_str("00:00:0C:00:00:00");
+let b = db.lookup_str("0000.0C00.0000");
+let c = db.lookup_str("B8:4C:87:9");   // partial 28-bit prefix
+assert_eq!(a.map(|e| e.prefix_hex()), b.map(|e| e.prefix_hex()));
+assert!(c.is_some());
+```
+
 Without the `std` feature, only the bundled database is available and
 `set_oui_db` / `OuiDbOwned` are not compiled.
 

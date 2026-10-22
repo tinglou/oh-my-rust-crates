@@ -7,6 +7,7 @@
 //!   macaddr-oui 00-55-DA-0A-BB-CC
 //!   macaddr-oui 00:55:DA:0A:BB:CC:0D:3A
 //!   macaddr-oui 0055.DA0A.BBCC.0D3A
+//!   macaddr-oui B8:4C:87:9        (partial prefix; trailing half-byte allowed)
 
 use macaddr_ouidb::{MacAddress, MacAddress8, OuiDb, oui_db};
 use std::env;
@@ -25,6 +26,9 @@ fn main() {
         eprintln!("  {} 0055.DA0A.BBCC.0D3A", args[0]);
         eprintln!();
         eprintln!("MAC address format:");
+        eprintln!("  - Separators . - : are ignored anywhere");
+        eprintln!("  - A trailing lone hex digit is a half-byte (high nibble)");
+        eprintln!("  - At least 3 bytes / 6 hex digits are required");
         eprintln!("  - 6 bytes (EUI-48): colon-separated 00:11:22:33:44:55");
         eprintln!("  - 6 bytes (EUI-48): dash-separated  00-11-22-33-44-55");
         eprintln!("  - 8 bytes (EUI-64): colon-separated 00:11:22:33:44:55:66:77");
@@ -35,17 +39,39 @@ fn main() {
     let mac_str = &args[1];
 
     // Try an 8-byte (EUI-64) address first, then fall back to 6-byte (EUI-48).
-    let (octets, len): ([u8; 8], usize) = if let Ok(mac8) = mac_str.parse::<MacAddress8>() {
-        (mac8.octets(), 8)
-    } else if let Ok(mac6) = mac_str.parse::<MacAddress>() {
-        let mut o = [0u8; 8];
-        o[..6].copy_from_slice(&mac6.octets());
-        (o, 6)
+    let parsed: Option<([u8; 8], usize)> = if let Ok(mac8) = mac_str.parse::<MacAddress8>() {
+        Some((mac8.octets(), 8))
     } else {
-        eprintln!("Error: Invalid MAC address '{}'", mac_str);
-        process::exit(1);
+        mac_str.parse::<MacAddress>().ok().map(|mac6| {
+            let mut o = [0u8; 8];
+            o[..6].copy_from_slice(&mac6.octets());
+            (o, 6)
+        })
     };
-    let mac = &octets[..len];
+
+    let db = oui_db();
+
+    // Partial input (e.g. a bare 28-bit sub-prefix) has no full address form, so
+    // parse it fails and we fall back to a string lookup directly.
+    let mac: &[u8] = match &parsed {
+        Some((octets, len)) => &octets[..*len],
+        None => match db.lookup_str(mac_str) {
+            Some(entry) => {
+                println!("MAC Address: {} (partial)", mac_str);
+                println!("OUI prefix:  {}", entry.prefix_hex());
+                println!(
+                    "Organization: {} ({})",
+                    entry.name(),
+                    entry.country_or_region_code()
+                );
+                return;
+            }
+            None => {
+                eprintln!("Error: Invalid MAC address '{}'", mac_str);
+                process::exit(1);
+            }
+        },
+    };
 
     // Print MAC address information
     println!("MAC Address: {}", mac_str);
@@ -88,7 +114,6 @@ fn main() {
     println!();
 
     // OUI lookup
-    let db = oui_db();
     match db.lookup(mac) {
         Some(entry) => {
             println!(

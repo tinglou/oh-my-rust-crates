@@ -574,3 +574,69 @@ fn test_lookup_mac6_owned_independent() {
     let name = owned.name().to_string();
     assert!(name.starts_with("XEROX"));
 }
+
+#[test]
+fn test_lookup_str_full_and_partial() {
+    let db = oui_db();
+
+    // Fully separated forms, all equivalent to 00:00:0C:00:00:00
+    let colon = db.lookup_str("00:00:0C:00:00:00").expect("colon");
+    let dash = db.lookup_str("00-00-0C-00-00-00").expect("dash");
+    let cisco = db.lookup_str("0000.0C00.0000").expect("cisco");
+    let continuous = db.lookup_str("00000C000000").expect("continuous");
+    assert!(colon.name().starts_with("Cisco Systems"));
+    assert_eq!(colon.prefix_hex(), "00000C");
+    assert_eq!(colon.prefix_hex(), dash.prefix_hex());
+    assert_eq!(colon.prefix_hex(), cisco.prefix_hex());
+    assert_eq!(colon.prefix_hex(), continuous.prefix_hex());
+
+    // Mixed separators / case are tolerated
+    assert_eq!(
+        db.lookup_str("00:00-0c.00:00:00").map(|e| e.prefix_hex()),
+        Some("00000C".to_string())
+    );
+
+    // Lone 24-bit prefix (3 bytes)
+    assert_eq!(
+        db.lookup_str("00000C").map(|e| e.prefix_hex()),
+        Some("00000C".to_string())
+    );
+}
+
+#[test]
+fn test_lookup_str_half_byte_tail() {
+    let db = oui_db();
+
+    // B84C87 is a 28-bit subtable parent. "B8:4C:87" (3 bytes) falls back to the
+    // synthetic "IEEE Registration Authority" parent entry...
+    let parent = db.lookup_str("B8:4C:87").expect("parent");
+    assert_eq!(parent.name(), "IEEE Registration Authority");
+
+    // ...while a trailing lone nibble "9" completes the 28-bit sub-prefix
+    // B84C879, which is the real Airgain entry (byte 0x90).
+    let airgain = db.lookup_str("B8:4C:87:9").expect("B84C879");
+    assert_eq!(airgain.prefix_hex(), "B84C879");
+    // Same as passing the explicit high nibble byte.
+    assert_eq!(
+        airgain.prefix_hex(),
+        db.lookup_str("B8:4C:87:90").unwrap().prefix_hex()
+    );
+}
+
+#[test]
+fn test_lookup_str_invalid() {
+    let db = oui_db();
+
+    // Fewer than 3 significant hex digits -> None
+    assert!(db.lookup_str("").is_none());
+    assert!(db.lookup_str(":").is_none());
+    assert!(db.lookup_str("0C").is_none());
+    assert!(db.lookup_str("0:C").is_none());
+
+    // Non-hex characters -> None
+    assert!(db.lookup_str("00:00:0G:00:00:00").is_none());
+    assert!(db.lookup_str("hello").is_none());
+
+    // A lone half-byte still counts as a byte once there is enough data
+    assert!(db.lookup_str("00:00:0C:0").is_some());
+}

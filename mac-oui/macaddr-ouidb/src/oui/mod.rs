@@ -19,6 +19,7 @@
 use alloc::string::String;
 #[cfg(feature = "std")]
 use alloc::sync::Arc;
+use alloc::vec::Vec;
 use core::fmt::Write;
 use core::ops::Deref;
 
@@ -110,6 +111,37 @@ fn synthetic_slice() -> &'static str {
     {
         "USIEEE Registration Authority"
     }
+}
+
+/// Decodes a (possibly partial) MAC/EUI address from a string, tolerating the
+/// separators `.`, `-`, `:` anywhere in the input.
+///
+/// The input is a sequence of hex digits (case-insensitive) with separators
+/// removed. An **odd** number of hex digits is allowed: the trailing lone digit
+/// is treated as the high nibble of a final byte whose low nibble is zero
+/// (e.g. `"B8:4C:87:9"` -> `[0xB8, 0x4C, 0x87, 0x90]`). This lets the caller
+/// probe a partial prefix such as a lone 28-bit sub-prefix nibble.
+///
+/// Returns `None` if the input contains no bytes or a non-hex character.
+fn parse_partial_hex(input: &str) -> Option<Vec<u8>> {
+    let mut out = Vec::with_capacity(8);
+    let mut high: Option<u8> = None;
+    for c in input.chars() {
+        match c {
+            '.' | '-' | ':' => continue,
+            _ => {}
+        }
+        let digit = c.to_digit(16)?;
+        match high.take() {
+            Some(h) => out.push((h << 4) | digit as u8),
+            None => high = Some(digit as u8),
+        }
+    }
+    if let Some(h) = high {
+        // A trailing half-byte: keep the high nibble, low nibble is zero.
+        out.push(h << 4);
+    }
+    if out.is_empty() { None } else { Some(out) }
 }
 
 /// Builds the uppercase hex string of the full prefix from `prefix` + `extra_prefix`:
@@ -748,6 +780,39 @@ impl OuiDb {
             #[cfg(feature = "std")]
             OuiDb::Owned(o) => lookup_impl(&**o, mac),
         }
+    }
+
+    /// Looks up the organization entry for a MAC/EUI address given as a string.
+    ///
+    /// Convenience wrapper over [`OuiDb::lookup`] that accepts human-formatted
+    /// input. The separators `.`, `-` and `:` are ignored anywhere in the
+    /// string, so all of these are equivalent:
+    ///
+    /// - `"00:00:0C:00:00:00"`
+    /// - `"00-00-0C-00-00-00"`
+    /// - `"0000.0C00.0000"` (Cisco dotted)
+    /// - `"00000C000000"` (continuous hex)
+    ///
+    /// **Partial addresses are supported.** An odd number of hex digits is
+    /// allowed; a trailing lone digit is treated as the high nibble of a final
+    /// byte (low nibble zero). For example `"B8:4C:87:9"` decodes to
+    /// `[0xB8, 0x4C, 0x87, 0x90]`, which lets callers probe a bare 28-bit
+    /// sub-prefix. At least 3 bytes must be present; the same "IEEE Registration
+    /// Authority" fallback as [`OuiDb::lookup`] applies.
+    ///
+    /// Returns `None` if the string contains a non-hex character or fewer than 3
+    /// significant hex digits.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use macaddr_ouidb::oui_db;
+    /// assert!(oui_db().lookup_str("00:00:0C:00:00:00").is_some());
+    /// assert!(oui_db().lookup_str("0000.0C00.0000").is_some());
+    /// ```
+    pub fn lookup_str(&self, mac: &str) -> Option<OuiEntry<'_>> {
+        let bytes = parse_partial_hex(mac)?;
+        self.lookup(&bytes)
     }
 
     /// Owned-returning counterpart of [`OuiDb::lookup`].

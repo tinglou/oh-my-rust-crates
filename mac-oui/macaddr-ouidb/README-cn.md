@@ -131,6 +131,22 @@ assert!(matches!(&*oui_db(), OuiDb::Bundled(_)));
 "IEEE Registration Authority" 条目（国家/地区 `US`；启用 `address` feature 时地址为
 `445 Hoes Lane Piscataway NJ US 08554`）。
 
+`OuiDb::lookup_str` 是 `lookup` 的字符串便捷封装。分隔符 `.`、`-`、`:` 在任意位置
+均被忽略，且允许**不完整地址**——末尾单个十六进制数字视为最后一个字节的高半字节。
+因此 `"00:00:0C:00:00:00"`、`"0000.0C00.0000"`、`"00000C000000"` 乃至
+`"B8:4C:87:9"`（→ 28 位前缀 `B84C879`）均可被接受。
+
+```rust
+use macaddr_ouidb::oui_db;
+
+let db = oui_db();
+let a = db.lookup_str("00:00:0C:00:00:00");
+let b = db.lookup_str("0000.0C00.0000");
+let c = db.lookup_str("B8:4C:87:9");   // 不完整的 28 位前缀
+assert_eq!(a.map(|e| e.prefix_hex()), b.map(|e| e.prefix_hex()));
+assert!(c.is_some());
+```
+
 未启用 `std` feature 时，仅提供内置数据库，`set_oui_db` / `OuiDbOwned` 不参与编译。
 
 ## API 文档

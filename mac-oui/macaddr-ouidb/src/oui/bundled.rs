@@ -122,6 +122,32 @@ impl OuiDbBundled {
         lookup_impl(self, mac)
     }
 
+    /// Looks up the organization entry for a MAC/EUI address given as a string.
+    ///
+    /// Convenience wrapper over [`OuiDb::lookup`] that accepts human-formatted
+    /// input. The separators `.`, `-` and `:` are ignored anywhere in the
+    /// string, so all of these are equivalent:
+    ///
+    /// - `"00:00:0C:00:00:00"`
+    /// - `"00-00-0C-00-00-00"`
+    /// - `"0000.0C00.0000"` (Cisco dotted)
+    /// - `"00000C000000"` (continuous hex)
+    ///
+    /// **Partial addresses are supported.** An odd number of hex digits is
+    /// allowed; a trailing lone digit is treated as the high nibble of a final
+    /// byte (low nibble zero). For example `"B8:4C:87:9"` decodes to
+    /// `[0xB8, 0x4C, 0x87, 0x90]`, which lets callers probe a bare 28-bit
+    /// sub-prefix. At least 3 bytes must be present; the same "IEEE Registration
+    /// Authority" fallback as [`OuiDb::lookup`] applies.
+    ///
+    /// Returns `None` if the string contains a non-hex character or fewer than 3
+    /// significant hex digits.
+    ///
+    pub fn lookup_str(&self, mac: &str) -> Option<OuiEntry<'_>> {
+        let bytes = super::parse_partial_hex(mac)?;
+        self.lookup(&bytes)
+    }
+
     /// Looks up the organization name (OUI vendor information) for a given MAC address.
     pub fn lookup_mac(&self, mac: crate::MacAddress) -> Option<OuiEntry<'_>> {
         self.lookup(&mac.octets())
