@@ -2,10 +2,11 @@ use std::fs;
 use std::path::Path;
 
 use macaddr_ouidb_support::layout::OuiLoc;
+use macaddr_ouidb_support::regdate::SENTINEL;
 use macaddr_ouidb_support::{OuiDataBuilder, SubtableRef};
 
 /// Generates Rust code: produces `oui_data.rs` from the intermediate `builder` data structure
-fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
+fn generate_code(builder: &OuiDataBuilder, output_path: &Path, regdate: bool) {
     let mut code = String::new();
 
     // Build the names string
@@ -147,6 +148,20 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
     }
     code.push_str("\n];\n\n");
 
+    // Generate the oui_24 registration-date column (parallel to OUI_24_PREFIX)
+    if regdate {
+        code.push_str("#[rustfmt::skip]\n");
+        code.push_str("const OUI_24_REGDATE: &[u16] = &[\n        ");
+        for (i, prefix) in oui24_prefixes.iter().enumerate() {
+            if i > 0 && i % 20 == 0 {
+                code.push_str("\n        ");
+            }
+            let d = builder.regdate24.get(prefix).copied().unwrap_or(SENTINEL);
+            code.push_str(&format!("{d},"));
+        }
+        code.push_str("\n];\n\n");
+    }
+
     // Generate the oui_28 subtable descriptors + prefix/loc memory pools.
     // Layout matches `OuiDbOwned`: all subtable prefixes and locs are concatenated
     // into contiguous pools, and each subtable is described by a `SubtableDesc`
@@ -156,6 +171,7 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
     {
         let mut prefix_pool: Vec<u8> = Vec::new();
         let mut loc_pool: Vec<OuiLoc> = Vec::new();
+        let mut regdate_pool: Vec<u16> = Vec::new();
         for (idx, table) in builder.oui28_tables.iter().enumerate() {
             let prefix3 = builder.oui28_idx_to_prefix.get(&idx).unwrap();
             let prefix_start = prefix_pool.len() as u32;
@@ -165,6 +181,7 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
                 let offset = name_offsets[entry.name_idx];
                 let length = builder.names[entry.name_idx].len();
                 loc_pool.push(OuiLoc::names(offset, length));
+                regdate_pool.push(entry.regdate);
             }
             assert!(
                 table.len() <= OuiLoc::MAX_SUBTABLE_INDEX + 1,
@@ -203,6 +220,18 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
             code.push_str(&format!("OuiLoc::new(0x{:08X})", l.value()));
         }
         code.push_str("\n];\n\n");
+
+        if regdate {
+            code.push_str("#[rustfmt::skip]\n");
+            code.push_str("const OUI_28_REGDATE_POOL: &[u16] = &[\n        ");
+            for (i, d) in regdate_pool.iter().enumerate() {
+                if i > 0 && i % 20 == 0 {
+                    code.push_str("\n        ");
+                }
+                code.push_str(&format!("{d},"));
+            }
+            code.push_str("\n];\n\n");
+        }
     }
 
     // Generate the oui_36 subtable descriptors + prefix/loc memory pools (same layout).
@@ -211,6 +240,7 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
     {
         let mut prefix_pool: Vec<u16> = Vec::new();
         let mut loc_pool: Vec<OuiLoc> = Vec::new();
+        let mut regdate_pool: Vec<u16> = Vec::new();
         for (idx, table) in builder.oui36_tables.iter().enumerate() {
             let prefix3 = builder.oui36_idx_to_prefix.get(&idx).unwrap();
             let prefix_start = prefix_pool.len() as u32;
@@ -220,6 +250,7 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
                 let offset = name_offsets[entry.name_idx];
                 let length = builder.names[entry.name_idx].len();
                 loc_pool.push(OuiLoc::names(offset, length));
+                regdate_pool.push(entry.regdate);
             }
             assert!(
                 table.len() <= OuiLoc::MAX_SUBTABLE_INDEX + 1,
@@ -258,6 +289,18 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
             code.push_str(&format!("OuiLoc::new(0x{:08X})", l.value()));
         }
         code.push_str("\n];\n\n");
+
+        if regdate {
+            code.push_str("#[rustfmt::skip]\n");
+            code.push_str("const OUI_36_REGDATE_POOL: &[u16] = &[\n        ");
+            for (i, d) in regdate_pool.iter().enumerate() {
+                if i > 0 && i % 20 == 0 {
+                    code.push_str("\n        ");
+                }
+                code.push_str(&format!("{d},"));
+            }
+            code.push_str("\n];\n\n");
+        }
     }
 
     // Generate the OuiDbBundled constant
@@ -267,12 +310,24 @@ fn generate_code(builder: &OuiDataBuilder, output_path: &Path) {
     code.push_str("    names: OUI_NAMES,\n");
     code.push_str("    oui_24_prefix: OUI_24_PREFIX,\n");
     code.push_str("    oui_24_loc: OUI_24_LOC,\n");
+    if regdate {
+        code.push_str("    #[cfg(feature = \"regdate\")]\n");
+        code.push_str("    oui_24_regdate: OUI_24_REGDATE,\n");
+    }
     code.push_str("    oui_28: OUI_28_TABLES,\n");
     code.push_str("    prefix_pool_28: OUI_28_PREFIX_POOL,\n");
     code.push_str("    loc_pool_28: OUI_28_LOC_POOL,\n");
+    if regdate {
+        code.push_str("    #[cfg(feature = \"regdate\")]\n");
+        code.push_str("    regdate_pool_28: OUI_28_REGDATE_POOL,\n");
+    }
     code.push_str("    oui_36: OUI_36_TABLES,\n");
     code.push_str("    prefix_pool_36: OUI_36_PREFIX_POOL,\n");
     code.push_str("    loc_pool_36: OUI_36_LOC_POOL,\n");
+    if regdate {
+        code.push_str("    #[cfg(feature = \"regdate\")]\n");
+        code.push_str("    regdate_pool_36: OUI_36_REGDATE_POOL,\n");
+    }
     code.push_str("};\n");
 
     // Update the generated-file-size statistic (replace the placeholder)
@@ -363,6 +418,9 @@ fn main() {
     println!("cargo:rerun-if-changed=custom-mac-oui.txt");
     println!("cargo:rerun-if-env-changed=CARGO_FEATURE_FULLNAME");
     println!("cargo:rerun-if-env-changed=CARGO_FEATURE_ADDRESS");
+    println!("cargo:rerun-if-env-changed=CARGO_FEATURE_REGDATE");
+
+    let regdate = std::env::var("CARGO_FEATURE_REGDATE").is_ok();
 
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
     let ieee_path = Path::new(manifest_dir).join(ieee_file);
@@ -377,11 +435,11 @@ fn main() {
     // - duplicate prefixes within the ieee file are already deduplicated by ouidb-builder at generation time, so they are not handled here
     // - the update time is also parsed from the ieee file header comment into `builder.updated`
     let mut builder = OuiDataBuilder::new();
-    if let Err(err) = builder.build(&custom_path, &ieee_path, use_address) {
+    if let Err(err) = builder.build(&custom_path, &ieee_path, use_address, regdate) {
         eprintln!("{err}");
         std::process::exit(1);
     }
 
     // Generate the code
-    generate_code(&builder, &output_path);
+    generate_code(&builder, &output_path, regdate);
 }

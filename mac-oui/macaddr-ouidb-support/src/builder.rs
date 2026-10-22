@@ -24,6 +24,8 @@ pub struct Oui28Entry {
     /// 高 4 位有效
     pub prefix: u8,
     pub name_idx: usize,
+    /// 注册日期（自 1998-01-01 起的天数）
+    pub regdate: u16,
 }
 
 /// 36 位子表条目
@@ -32,6 +34,8 @@ pub struct Oui36Entry {
     /// 高 12 位有效：高 8 位是第 4 字节，低 4 位是第 5 字节的高 4 位
     pub prefix: u16,
     pub name_idx: usize,
+    /// 注册日期（自 1998-01-01 起的天数）
+    pub regdate: u16,
 }
 
 /// 构建中间数据结构
@@ -55,6 +59,8 @@ pub struct OuiDataBuilder {
     pub oui36_idx_to_prefix: BTreeMap<usize, [u8; 3]>,
     /// 记录只有子表没有 24 位条目的前缀（用于日志）
     pub subtable_only_prefixes: Vec<([u8; 3], SubtableRef, usize)>,
+    /// 24 位主表的注册日期：prefix -> 天数（仅当 `regdate_enabled` 时有意义）
+    pub regdate24: BTreeMap<[u8; 3], u16>,
 }
 
 impl OuiDataBuilder {
@@ -68,11 +74,13 @@ impl OuiDataBuilder {
     /// - 同时从 ieee 文件头注释解析 `# Updated:` 时间戳到 [`OuiDataBuilder::updated`]
     /// - ieee 文件内部的重复前缀已由 ouidb-builder 在生成时去重，此处不再处理
     /// - `keep_address` 透传给 [`parse_oui_file`]：为 `true` 时保留 `ORG` 中 `|` 之后的地址
+    /// - `regdate_enabled`：为 `true` 时保留注册日期；无日期的行回落到 ieee 的 `# Updated:` 日期
     pub fn build(
         &mut self,
         custom_path: &Path,
         ieee_path: &Path,
         keep_address: bool,
+        regdate_enabled: bool,
     ) -> Result<(), String> {
         let custom_name = file_name(custom_path);
         let ieee_name = file_name(ieee_path);
@@ -85,8 +93,26 @@ impl OuiDataBuilder {
         )?;
 
         self.updated = Self::parse_updated_timestamp(ieee_path);
-        self.build_from_entries(entries);
+        let fallback = if regdate_enabled {
+            Self::fallback_regdate(&self.updated)
+        } else {
+            None
+        };
+        self.build_from_entries(entries, fallback);
         Ok(())
+    }
+
+    /// 从 `# Updated:` 时间戳字符串（如 `2026-10-21 09:24:18 ...`）提取日期为天数
+    fn fallback_regdate(updated: &str) -> Option<u16> {
+        let bytes = updated.as_bytes();
+        if bytes.len() < 8 || bytes[4] != b'-' || bytes[7] != b'-' {
+            return None;
+        }
+        let mut ymd = [0u8; 8];
+        ymd[..4].copy_from_slice(&bytes[0..4]);
+        ymd[4..6].copy_from_slice(&bytes[5..7]);
+        ymd[6..8].copy_from_slice(&bytes[8..10]);
+        crate::regdate::parse_yyyymmdd(&ymd)
     }
 
     /// 获取或添加名称，返回索引
@@ -144,18 +170,23 @@ impl OuiDataBuilder {
     }
 
     /// 从已解析条目构建所有数据结构（供 [`OuiDataBuilder::build`] 及测试使用）
-    pub fn build_from_entries(&mut self, entries: Vec<OuiEntry>) {
+    ///
+    /// `fallback`：当条目自身无注册日期时使用的日期（通常来自 `# Updated:`）；为 `None`
+    /// 时表示不记录注册日期（`regdate` feature 关闭）。
+    pub fn build_from_entries(&mut self, entries: Vec<OuiEntry>, fallback: Option<u16>) {
         // 按前缀长度分组
-        // entries_24: 3 字节前缀 -> 名称列表
-        // entries_28: 3 字节前缀 -> (4 字节高 4 位，名称) 列表
-        // entries_36: 3 字节前缀 -> (第 4 字节 + 第 5 字节高 4 位，名称) 列表
-        let mut entries_24: BTreeMap<[u8; 3], Vec<(usize, String)>> = BTreeMap::new();
-        let mut entries_28: BTreeMap<[u8; 3], Vec<(u8, usize)>> = BTreeMap::new();
-        let mut entries_36: BTreeMap<[u8; 3], Vec<(u16, usize)>> = BTreeMap::new();
+        // entries_24: 3 字节前缀 -> (名称, 日期) 列表
+        // entries_28: 3 字节前缀 -> (4 字节高 4 位，名称, 日期) 列表
+        // entries_36: 3 字节前缀 -> (第 4 字节 + 第 5 字节高 4 位，名称, 日期) 列表
+        let fallback = fallback.unwrap_or(crate::regdate::SENTINEL);
+        let mut entries_24: BTreeMap<[u8; 3], Vec<(usize, String, u16)>> = BTreeMap::new();
+        let mut entries_28: BTreeMap<[u8; 3], Vec<(u8, usize, u16)>> = BTreeMap::new();
+        let mut entries_36: BTreeMap<[u8; 3], Vec<(u16, usize, u16)>> = BTreeMap::new();
 
         for entry in entries {
             let name_idx = self.get_or_add_name(&entry.org_name);
             let bytes = parse_prefix_hex(&entry.prefix_str);
+            let regdate = entry.regdate.unwrap_or(fallback);
 
             match entry.bit_len {
                 24 => {
@@ -163,7 +194,7 @@ impl OuiDataBuilder {
                     entries_24
                         .entry(prefix)
                         .or_default()
-                        .push((name_idx, entry.org_name));
+                        .push((name_idx, entry.org_name, regdate));
                 }
                 28 => {
                     // 按 3 字节前缀分组，存储第 4 字节的高 4 位
@@ -172,7 +203,7 @@ impl OuiDataBuilder {
                     entries_28
                         .entry(prefix3)
                         .or_default()
-                        .push((key4, name_idx));
+                        .push((key4, name_idx, regdate));
                 }
                 36 => {
                     // 按 3 字节前缀分组，存储第 4 字节 + 第 5 字节高 4 位
@@ -181,7 +212,7 @@ impl OuiDataBuilder {
                     entries_36
                         .entry(prefix3)
                         .or_default()
-                        .push((key5, name_idx));
+                        .push((key5, name_idx, regdate));
                 }
                 _ => {}
             }
@@ -195,9 +226,10 @@ impl OuiDataBuilder {
             let entry_count = entries_list.len(); // 先保存长度
             let mut table: Vec<Oui28Entry> = entries_list
                 .into_iter()
-                .map(|(key4, name_idx)| Oui28Entry {
+                .map(|(key4, name_idx, regdate)| Oui28Entry {
                     prefix: key4,
                     name_idx,
+                    regdate,
                 })
                 .collect();
             table.sort();
@@ -223,9 +255,10 @@ impl OuiDataBuilder {
             let entry_count = entries_list.len(); // 先保存长度
             let mut table: Vec<Oui36Entry> = entries_list
                 .into_iter()
-                .map(|(key5, name_idx)| Oui36Entry {
+                .map(|(key5, name_idx, regdate)| Oui36Entry {
                     prefix: key5,
                     name_idx,
+                    regdate,
                 })
                 .collect();
             table.sort();
@@ -246,31 +279,44 @@ impl OuiDataBuilder {
         }
 
         // 构建 24 位表：合并所有 3 字节前缀（包括只有子表的前缀）
-        let mut all_prefixes: BTreeMap<[u8; 3], Option<usize>> = BTreeMap::new();
+        let mut all_prefixes: BTreeMap<[u8; 3], Option<(usize, u16)>> = BTreeMap::new();
 
         // 添加 24 位条目的前缀
         for (prefix, name_list) in &entries_24 {
-            let name_idx = name_list[0].0;
-            all_prefixes.insert(*prefix, Some(name_idx));
+            let (name_idx, _, regdate) = name_list[0];
+            all_prefixes.insert(*prefix, Some((name_idx, regdate)));
         }
 
-        // 添加只有子表的前缀（使用子表中第一个条目的名称）
+        // 添加只有子表的前缀（名称取子表第一个条目；日期取子表中最早日期）
         for (prefix, subtable_ref) in &oui24_to_subtable {
             if !all_prefixes.contains_key(prefix) {
-                // 从子表中获取第一个名称
-                let name_idx = match subtable_ref {
-                    SubtableRef::Oui28(idx) => self.oui28_tables[*idx].first().map(|e| e.name_idx),
-                    SubtableRef::Oui36(idx) => self.oui36_tables[*idx].first().map(|e| e.name_idx),
+                let nd = match subtable_ref {
+                    SubtableRef::Oui28(idx) => self.oui28_tables[*idx]
+                        .first()
+                        .map(|e| (e.name_idx, e.regdate)),
+                    SubtableRef::Oui36(idx) => self.oui36_tables[*idx]
+                        .first()
+                        .map(|e| (e.name_idx, e.regdate)),
                 };
-                all_prefixes.insert(*prefix, name_idx);
+                let earliest = match subtable_ref {
+                    SubtableRef::Oui28(idx) => {
+                        self.oui28_tables[*idx].iter().map(|e| e.regdate).min()
+                    }
+                    SubtableRef::Oui36(idx) => {
+                        self.oui36_tables[*idx].iter().map(|e| e.regdate).min()
+                    }
+                };
+                let nd = nd.map(|(name_idx, _)| (name_idx, earliest.unwrap_or(fallback)));
+                all_prefixes.insert(*prefix, nd);
             }
         }
 
-        // 构建 oui_24_map
-        for (prefix, name_idx_opt) in all_prefixes {
-            let name_idx = name_idx_opt.unwrap_or(0);
+        // 构建 oui_24_map 与 regdate24
+        for (prefix, name_opt) in all_prefixes {
+            let (name_idx, regdate) = name_opt.unwrap_or((0, fallback));
             let subtable = oui24_to_subtable.get(&prefix).copied();
             self.oui24_map.insert(prefix, (name_idx, subtable));
+            self.regdate24.insert(prefix, regdate);
         }
     }
 }
@@ -291,17 +337,21 @@ mod tests {
             prefix_str: prefix.into(),
             org_name: org.into(),
             bit_len,
+            regdate: None,
         }
     }
 
     #[test]
     fn build_24bit_table() {
         let mut b = OuiDataBuilder::new();
-        b.build_from_entries(vec![
-            entry("000001", "USFoo", 24),
-            entry("000001", "USBar", 24),
-            entry("000002", "USFoo", 24),
-        ]);
+        b.build_from_entries(
+            vec![
+                entry("000001", "USFoo", 24),
+                entry("000001", "USBar", 24),
+                entry("000002", "USFoo", 24),
+            ],
+            None,
+        );
         assert_eq!(b.oui24_map.len(), 2);
         assert_eq!(b.names, vec!["USFoo", "USBar"]);
         let (name_idx, sub) = b.oui24_map[&[0x00, 0x00, 0x01]];
@@ -312,11 +362,14 @@ mod tests {
     #[test]
     fn build_subtables_and_subtable_only_prefix() {
         let mut b = OuiDataBuilder::new();
-        b.build_from_entries(vec![
-            entry("000001", "USFoo", 24),
-            entry("0000010", "USBaz", 28),
-            entry("000002123", "USQux", 36),
-        ]);
+        b.build_from_entries(
+            vec![
+                entry("000001", "USFoo", 24),
+                entry("0000010", "USBaz", 28),
+                entry("000002123", "USQux", 36),
+            ],
+            None,
+        );
 
         // 28 位子表
         assert_eq!(b.oui28_tables.len(), 1);
@@ -337,6 +390,44 @@ mod tests {
         // subtable-only 记录
         assert_eq!(b.subtable_only_prefixes.len(), 1);
         assert_eq!(b.subtable_only_prefixes[0].0, [0x00, 0x00, 0x02]);
+    }
+
+    #[test]
+    fn regdate_fallback_and_explicit() {
+        let with_date = OuiEntry {
+            prefix_str: "000001".into(),
+            org_name: "USFoo".into(),
+            bit_len: 24,
+            regdate: crate::regdate::parse_yyyymmdd(b"20230719"),
+        };
+        let no_date = entry("000002", "USBar", 24);
+
+        let fallback = crate::regdate::parse_yyyymmdd(b"20200101");
+        let mut b = OuiDataBuilder::new();
+        b.build_from_entries(vec![with_date, no_date], fallback);
+
+        // Explicit date wins; missing date falls back to `# Updated:`
+        assert_eq!(
+            b.regdate24[&[0x00, 0x00, 0x01]],
+            crate::regdate::parse_yyyymmdd(b"20230719").unwrap()
+        );
+        assert_eq!(
+            b.regdate24[&[0x00, 0x00, 0x02]],
+            crate::regdate::parse_yyyymmdd(b"20200101").unwrap()
+        );
+
+        // Without a fallback the sentinel is stored
+        let mut c = OuiDataBuilder::new();
+        c.build_from_entries(
+            vec![OuiEntry {
+                prefix_str: "000003".into(),
+                org_name: "USQux".into(),
+                bit_len: 24,
+                regdate: None,
+            }],
+            None,
+        );
+        assert_eq!(c.regdate24[&[0x00, 0x00, 0x03]], crate::regdate::SENTINEL);
     }
 
     #[test]

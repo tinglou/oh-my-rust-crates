@@ -27,15 +27,23 @@ pub struct OuiDbBundled {
     pub(crate) oui_24_prefix: &'static [[u8; 3]],
     pub(crate) oui_24_loc: &'static [OuiLoc],
 
+    /// MA-L registration dates (parallel to `oui_24_prefix`), days since 1998-01-01
+    #[cfg(feature = "regdate")]
+    pub(crate) oui_24_regdate: &'static [u16],
+
     /// MA-M (28-bit prefix) subtable descriptors + prefix/loc memory pools
     pub(crate) oui_28: &'static [SubtableDesc],
     pub(crate) prefix_pool_28: &'static [u8],
     pub(crate) loc_pool_28: &'static [OuiLoc],
+    #[cfg(feature = "regdate")]
+    pub(crate) regdate_pool_28: &'static [u16],
 
     /// MA-S (36-bit prefix) subtable descriptors + prefix/loc memory pools
     pub(crate) oui_36: &'static [SubtableDesc],
     pub(crate) prefix_pool_36: &'static [u16],
     pub(crate) loc_pool_36: &'static [OuiLoc],
+    #[cfg(feature = "regdate")]
+    pub(crate) regdate_pool_36: &'static [u16],
 }
 
 impl core::fmt::Debug for OuiDbBundled {
@@ -79,6 +87,23 @@ impl OuiBackend for OuiDbBundled {
             d.prefix_slice(self.prefix_pool_36),
             d.loc_slice(self.loc_pool_36),
         )
+    }
+
+    #[cfg(feature = "regdate")]
+    fn regdate_24(&self, idx: usize) -> u16 {
+        self.oui_24_regdate[idx]
+    }
+
+    #[cfg(feature = "regdate")]
+    fn regdate_28(&self, sub_idx: usize, i: usize) -> u16 {
+        let d = &self.oui_28[sub_idx];
+        self.regdate_pool_28[d.loc_start as usize + i]
+    }
+
+    #[cfg(feature = "regdate")]
+    fn regdate_36(&self, sub_idx: usize, i: usize) -> u16 {
+        let d = &self.oui_36[sub_idx];
+        self.regdate_pool_36[d.loc_start as usize + i]
     }
 
     fn entry_source(&self) -> EntrySource<'_> {
@@ -131,12 +156,21 @@ impl OuiDbBundled {
         let mut total = self.names.len();
         total += core::mem::size_of_val(self.oui_24_prefix);
         total += core::mem::size_of_val(self.oui_24_loc);
+        #[cfg(feature = "regdate")]
+        {
+            total += core::mem::size_of_val(self.oui_24_regdate);
+        }
         total += core::mem::size_of_val(self.oui_28);
         total += core::mem::size_of_val(self.prefix_pool_28);
         total += core::mem::size_of_val(self.loc_pool_28);
         total += core::mem::size_of_val(self.oui_36);
         total += core::mem::size_of_val(self.prefix_pool_36);
         total += core::mem::size_of_val(self.loc_pool_36);
+        #[cfg(feature = "regdate")]
+        {
+            total += core::mem::size_of_val(self.regdate_pool_28);
+            total += core::mem::size_of_val(self.regdate_pool_36);
+        }
         total
     }
 }

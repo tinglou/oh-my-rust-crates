@@ -123,6 +123,9 @@ pub struct OuiEntry<'a> {
     pub(crate) extra_prefix: u16,
     /// `OuiLoc` encoding pointing into `source.names()`
     loc: OuiLoc,
+    /// Registration date (days since 1998-01-01); `SENTINEL` when unknown
+    #[cfg(feature = "regdate")]
+    regdate: u16,
 }
 
 impl<'a> OuiEntry<'a> {
@@ -170,6 +173,16 @@ impl<'a> OuiEntry<'a> {
     pub fn country_or_region_code(&self) -> &str {
         &self.loc_slice()[0..2]
     }
+
+    /// Registered (assignment) date as an ISO `"YYYY-MM-DD"` string.
+    ///
+    /// Only available with the `regdate` feature. Returns `""` when the entry has
+    /// no known date (e.g. a database built without the feature, or a
+    /// runtime-loaded database whose source file lacks the date column).
+    #[cfg(feature = "regdate")]
+    pub fn registered_date(&self) -> String {
+        macaddr_ouidb_support::regdate::format_date(self.regdate)
+    }
 }
 
 impl core::fmt::Debug for OuiEntry<'_> {
@@ -181,13 +194,16 @@ impl core::fmt::Debug for OuiEntry<'_> {
             .field("country_or_region_code", &self.country_or_region_code());
         #[cfg(feature = "address")]
         debug.field("address", &self.address());
+        #[cfg(feature = "regdate")]
+        debug.field("registered_date", &self.registered_date());
         debug.finish()
     }
 }
 
 /// Serializes with the same field set as `Debug`:
-/// `prefix` (hex string), `name`, `country_or_region_code`, and `address`
-/// (only when the `address` feature is enabled).
+/// `prefix` (hex string), `name`, `country_or_region_code`, `address`
+/// (only when the `address` feature is enabled), and `registered_date`
+/// (only when the `regdate` feature is enabled).
 #[cfg(feature = "serde")]
 impl serde::Serialize for OuiEntry<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -195,13 +211,21 @@ impl serde::Serialize for OuiEntry<'_> {
         S: serde::Serializer,
     {
         use serde::ser::SerializeStruct;
-        let len = if cfg!(feature = "address") { 4 } else { 3 };
+        let mut len = 3;
+        if cfg!(feature = "address") {
+            len += 1;
+        }
+        if cfg!(feature = "regdate") {
+            len += 1;
+        }
         let mut st = serializer.serialize_struct("OuiEntry", len)?;
         st.serialize_field("prefix", &self.prefix_hex())?;
         st.serialize_field("name", &self.name())?;
         st.serialize_field("country_or_region_code", &self.country_or_region_code())?;
         #[cfg(feature = "address")]
         st.serialize_field("address", &self.address())?;
+        #[cfg(feature = "regdate")]
+        st.serialize_field("registered_date", &self.registered_date())?;
         st.end()
     }
 }
@@ -236,6 +260,8 @@ pub struct OuiEntryOwned {
     prefix: [u8; 3],
     extra_prefix: u16,
     loc: OuiLoc,
+    #[cfg(feature = "regdate")]
+    regdate: u16,
 }
 
 impl OuiEntryOwned {
@@ -278,6 +304,15 @@ impl OuiEntryOwned {
     pub fn prefix_hex(&self) -> String {
         format_prefix_hex(self.prefix, self.extra_prefix)
     }
+
+    /// Registered (assignment) date as an ISO `"YYYY-MM-DD"` string.
+    ///
+    /// Only available with the `regdate` feature. Returns `""` when the entry has
+    /// no known date.
+    #[cfg(feature = "regdate")]
+    pub fn registered_date(&self) -> String {
+        macaddr_ouidb_support::regdate::format_date(self.regdate)
+    }
 }
 
 impl core::fmt::Debug for OuiEntryOwned {
@@ -289,13 +324,16 @@ impl core::fmt::Debug for OuiEntryOwned {
             .field("country_or_region_code", &self.country_or_region_code());
         #[cfg(feature = "address")]
         debug.field("address", &self.address());
+        #[cfg(feature = "regdate")]
+        debug.field("registered_date", &self.registered_date());
         debug.finish()
     }
 }
 
 /// Serializes with the same field set as `Debug`:
-/// `prefix` (hex string), `name`, `country_or_region_code`, and `address`
-/// (only when the `address` feature is enabled).
+/// `prefix` (hex string), `name`, `country_or_region_code`, `address`
+/// (only when the `address` feature is enabled), and `registered_date`
+/// (only when the `regdate` feature is enabled).
 ///
 /// This makes an entry directly usable with `serde-wasm-bindgen` /
 /// `serde_json` in wasm or FFI contexts without hand-written field mapping.
@@ -306,13 +344,21 @@ impl serde::Serialize for OuiEntryOwned {
         S: serde::Serializer,
     {
         use serde::ser::SerializeStruct;
-        let len = if cfg!(feature = "address") { 4 } else { 3 };
+        let mut len = 3;
+        if cfg!(feature = "address") {
+            len += 1;
+        }
+        if cfg!(feature = "regdate") {
+            len += 1;
+        }
         let mut st = serializer.serialize_struct("OuiEntryOwned", len)?;
         st.serialize_field("prefix", &self.prefix_hex())?;
         st.serialize_field("name", &self.name())?;
         st.serialize_field("country_or_region_code", &self.country_or_region_code())?;
         #[cfg(feature = "address")]
         st.serialize_field("address", &self.address())?;
+        #[cfg(feature = "regdate")]
+        st.serialize_field("registered_date", &self.registered_date())?;
         st.end()
     }
 }
@@ -331,6 +377,13 @@ impl core::fmt::Display for OuiEntryOwned {
             let address = self.address();
             if !address.is_empty() {
                 write!(f, " [{address}]")?;
+            }
+        }
+        #[cfg(feature = "regdate")]
+        {
+            let date = self.registered_date();
+            if !date.is_empty() {
+                write!(f, " <{date}>")?;
             }
         }
         Ok(())
@@ -352,6 +405,16 @@ pub(crate) trait OuiBackend: sealed::Sealed {
     fn sub28(&self, i: usize) -> (&[u8], &[OuiLoc]);
     fn sub36(&self, i: usize) -> (&[u16], &[OuiLoc]);
 
+    /// Registration date (days since 1998-01-01) for the 24-bit entry at `idx`
+    #[cfg(feature = "regdate")]
+    fn regdate_24(&self, idx: usize) -> u16;
+    /// Registration date for the 28-bit subtable `sub_idx` entry at `i`
+    #[cfg(feature = "regdate")]
+    fn regdate_28(&self, sub_idx: usize, i: usize) -> u16;
+    /// Registration date for the 36-bit subtable `sub_idx` entry at `i`
+    #[cfg(feature = "regdate")]
+    fn regdate_36(&self, sub_idx: usize, i: usize) -> u16;
+
     /// Constructs the source of a lookup result (borrowing `self`)
     fn entry_source(&self) -> EntrySource<'_>;
 }
@@ -361,6 +424,8 @@ struct Resolved {
     prefix: [u8; 3],
     extra_prefix: u16,
     loc: OuiLoc,
+    #[cfg(feature = "regdate")]
+    regdate: u16,
 }
 
 /// Lookup core logic (generic monomorphization, shared by Bundled/Owned): resolves to a `Resolved`
@@ -376,6 +441,8 @@ fn resolve<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<Resolved> {
             prefix,
             extra_prefix: EXTRA_NONE,
             loc,
+            #[cfg(feature = "regdate")]
+            regdate: db.regdate_24(idx),
         });
     }
 
@@ -389,6 +456,8 @@ fn resolve<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<Resolved> {
             prefix,
             extra_prefix: EXTRA_OUI28 | (p[i] as u16 >> 4),
             loc: sub_loc[i],
+            #[cfg(feature = "regdate")]
+            regdate: db.regdate_28(sub_idx, i),
         })
     } else {
         // 36-bit: the extra prefix comes directly from the subtable
@@ -399,6 +468,8 @@ fn resolve<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<Resolved> {
             prefix,
             extra_prefix: EXTRA_OUI36 | (p[i] >> 4),
             loc: sub_loc[i],
+            #[cfg(feature = "regdate")]
+            regdate: db.regdate_36(sub_idx, i),
         })
     }
 }
@@ -414,6 +485,8 @@ fn build_entry(source: EntrySource<'_>, r: Resolved) -> Option<OuiEntry<'_>> {
         prefix: r.prefix,
         extra_prefix: r.extra_prefix,
         loc: r.loc,
+        #[cfg(feature = "regdate")]
+        regdate: r.regdate,
     })
 }
 
@@ -428,6 +501,8 @@ fn build_owned_entry(source: EntrySourceOwned, r: Resolved) -> Option<OuiEntryOw
         prefix: r.prefix,
         extra_prefix: r.extra_prefix,
         loc: r.loc,
+        #[cfg(feature = "regdate")]
+        regdate: r.regdate,
     })
 }
 
@@ -666,6 +741,33 @@ impl OuiBackend for OuiDb {
         }
     }
 
+    #[cfg(feature = "regdate")]
+    fn regdate_24(&self, idx: usize) -> u16 {
+        match self {
+            OuiDb::Bundled(b) => b.regdate_24(idx),
+            #[cfg(feature = "std")]
+            OuiDb::Owned(o) => o.regdate_24(idx),
+        }
+    }
+
+    #[cfg(feature = "regdate")]
+    fn regdate_28(&self, sub_idx: usize, i: usize) -> u16 {
+        match self {
+            OuiDb::Bundled(b) => b.regdate_28(sub_idx, i),
+            #[cfg(feature = "std")]
+            OuiDb::Owned(o) => o.regdate_28(sub_idx, i),
+        }
+    }
+
+    #[cfg(feature = "regdate")]
+    fn regdate_36(&self, sub_idx: usize, i: usize) -> u16 {
+        match self {
+            OuiDb::Bundled(b) => b.regdate_36(sub_idx, i),
+            #[cfg(feature = "std")]
+            OuiDb::Owned(o) => o.regdate_36(sub_idx, i),
+        }
+    }
+
     fn entry_source(&self) -> EntrySource<'_> {
         match self {
             OuiDb::Bundled(b) => EntrySource::Bundled(b),
@@ -716,6 +818,8 @@ fn iter_step<B: OuiBackend>(db: &B, pos: &mut IterPos) -> Option<Resolved> {
                         prefix: sub.base,
                         extra_prefix: EXTRA_OUI36 | (p[i] >> 4),
                         loc: l[i],
+                        #[cfg(feature = "regdate")]
+                        regdate: db.regdate_36(sub.sub_idx, i),
                     }
                 })
             } else {
@@ -726,6 +830,8 @@ fn iter_step<B: OuiBackend>(db: &B, pos: &mut IterPos) -> Option<Resolved> {
                         prefix: sub.base,
                         extra_prefix: EXTRA_OUI28 | (p[i] as u16 >> 4),
                         loc: l[i],
+                        #[cfg(feature = "regdate")]
+                        regdate: db.regdate_28(sub.sub_idx, i),
                     }
                 })
             };
@@ -750,6 +856,8 @@ fn iter_step<B: OuiBackend>(db: &B, pos: &mut IterPos) -> Option<Resolved> {
                 prefix: base,
                 extra_prefix: EXTRA_NONE,
                 loc,
+                #[cfg(feature = "regdate")]
+                regdate: db.regdate_24(idx),
             });
         }
         pos.sub = Some(SubPos {
@@ -954,6 +1062,8 @@ mod tests {
             prefix,
             extra_prefix,
             loc: 0u32.into(),
+            #[cfg(feature = "regdate")]
+            regdate: macaddr_ouidb_support::regdate::SENTINEL,
         };
 
         let e24 = entry([0x00, 0x1A, 0x2B], EXTRA_NONE);
@@ -1100,9 +1210,28 @@ mod tests {
     #[test]
     fn updated_timestamp_is_present() {
         let db = &crate::OUI_DB_BUNDLED;
-        // RFC 3339: 2026-10-17T03:14:54Z
+        // New data-file header format: `2026-10-21 09:24:18.881121200 +0000 UTC`
         assert!(!db.updated.is_empty());
-        assert!(db.updated.ends_with('Z'));
-        assert_eq!(db.updated.len(), 20);
+        assert!(db.updated.ends_with(" UTC"));
+        assert!(db.updated.starts_with("20"));
+    }
+
+    #[cfg(feature = "regdate")]
+    #[test]
+    fn registered_date_format_and_fallback() {
+        let db = &crate::OUI_DB_BUNDLED;
+        let mac = MacAddress::new([0x00, 0x00, 0x01, 0x00, 0x00, 0x00]); // XEROX
+        let date = db.lookup_mac(mac).unwrap().registered_date();
+        // Exactly `YYYY-MM-DD`
+        assert_eq!(date.len(), 10, "unexpected date format: {date:?}");
+        assert_eq!(&date[4..5], "-");
+        assert_eq!(&date[7..8], "-");
+        assert!(date.starts_with("19") || date.starts_with("20"));
+
+        // Every entry exposes a well-formed date or an empty string
+        for e in db.iter() {
+            let d = e.registered_date();
+            assert!(d.is_empty() || d.len() == 10, "bad date {d:?}");
+        }
     }
 }

@@ -31,6 +31,7 @@ pnet = []
 serde = ["dep:serde"]
 fullname = []
 address = []
+regdate = []
 
 [[bin]]
 name = "mac-oui"
@@ -40,11 +41,11 @@ path = "src/main.rs"
 pnet_base = { version = "0.35.0", default-features = false }
 serde = { version = "1.0.228", default-features = false, optional = true }
 thiserror = { version = "2.0.18", default-features = false }
-macaddr-ouidb-support = { path = "../macaddr-ouidb-support", version = "0.2.2", default-features = false }
+macaddr-ouidb-support = { path = "../macaddr-ouidb-support", version = "0.2.3", default-features = false }
 arc-swap = { version = "1.9", optional = true }
 
 [build-dependencies]
-macaddr-ouidb-support = { path = "../macaddr-ouidb-support", version = "0.2.2" }
+macaddr-ouidb-support = { path = "../macaddr-ouidb-support", version = "0.2.3" }
 
 [dev-dependencies]
 serde_json = "1.0"

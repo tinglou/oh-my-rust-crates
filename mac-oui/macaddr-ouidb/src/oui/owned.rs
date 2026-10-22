@@ -50,15 +50,23 @@ pub struct OuiDbOwned {
     pub(crate) oui_24_prefix: alloc::vec::Vec<[u8; 3]>,
     pub(crate) oui_24_loc: alloc::vec::Vec<OuiLoc>,
 
+    /// MA-L registration dates (parallel to `oui_24_prefix`)
+    #[cfg(feature = "regdate")]
+    pub(crate) oui_24_regdate: alloc::vec::Vec<u16>,
+
     /// MA-M (28-bit prefix) subtable descriptors + prefix/loc memory pools
     pub(crate) oui_28: alloc::vec::Vec<SubtableDesc>,
     pub(crate) prefix_pool_28: alloc::vec::Vec<u8>,
     pub(crate) loc_pool_28: alloc::vec::Vec<OuiLoc>,
+    #[cfg(feature = "regdate")]
+    pub(crate) regdate_pool_28: alloc::vec::Vec<u16>,
 
     /// MA-S (36-bit prefix) subtable descriptors + prefix/loc memory pools
     pub(crate) oui_36: alloc::vec::Vec<SubtableDesc>,
     pub(crate) prefix_pool_36: alloc::vec::Vec<u16>,
     pub(crate) loc_pool_36: alloc::vec::Vec<OuiLoc>,
+    #[cfg(feature = "regdate")]
+    pub(crate) regdate_pool_36: alloc::vec::Vec<u16>,
 }
 
 /// Error returned by [`OuiDbOwned::from_files`]
@@ -108,7 +116,12 @@ impl OuiDbOwned {
 
         let mut builder = OuiDataBuilder::new();
         builder
-            .build(custom, ieee, cfg!(feature = "address"))
+            .build(
+                custom,
+                ieee,
+                cfg!(feature = "address"),
+                cfg!(feature = "regdate"),
+            )
             .map_err(OuiDbOwnedError::Conflict)?;
         Ok(Self::from_builder(builder))
     }
@@ -169,6 +182,8 @@ impl OuiDbOwned {
         // (a single array, so there is no fragmentation issue)
         let mut oui_24_prefix = alloc::vec::Vec::with_capacity(builder.oui24_map.len());
         let mut oui_24_loc = alloc::vec::Vec::with_capacity(builder.oui24_map.len());
+        #[cfg(feature = "regdate")]
+        let mut oui_24_regdate = alloc::vec::Vec::with_capacity(builder.oui24_map.len());
         for (prefix, (name_idx, subtable)) in &builder.oui24_map {
             oui_24_prefix.push(*prefix);
             let loc = match subtable {
@@ -177,6 +192,14 @@ impl OuiDbOwned {
                 None => encode(*name_idx),
             };
             oui_24_loc.push(loc);
+            #[cfg(feature = "regdate")]
+            oui_24_regdate.push(
+                builder
+                    .regdate24
+                    .get(prefix)
+                    .copied()
+                    .unwrap_or(macaddr_ouidb_support::regdate::SENTINEL),
+            );
         }
 
         // 28/36-bit subtables: prefix and loc go into their own contiguous
@@ -185,6 +208,10 @@ impl OuiDbOwned {
         let mut loc_pool_28: alloc::vec::Vec<OuiLoc> = alloc::vec::Vec::new();
         let mut prefix_pool_36: alloc::vec::Vec<u16> = alloc::vec::Vec::new();
         let mut loc_pool_36: alloc::vec::Vec<OuiLoc> = alloc::vec::Vec::new();
+        #[cfg(feature = "regdate")]
+        let mut regdate_pool_28: alloc::vec::Vec<u16> = alloc::vec::Vec::new();
+        #[cfg(feature = "regdate")]
+        let mut regdate_pool_36: alloc::vec::Vec<u16> = alloc::vec::Vec::new();
 
         let mut oui_28 = alloc::vec::Vec::with_capacity(builder.oui28_tables.len());
         for table in &builder.oui28_tables {
@@ -192,6 +219,8 @@ impl OuiDbOwned {
             prefix_pool_28.extend(table.iter().map(|e| e.prefix));
             let loc_start = loc_pool_28.len() as u32;
             loc_pool_28.extend(table.iter().map(|e| encode(e.name_idx)));
+            #[cfg(feature = "regdate")]
+            regdate_pool_28.extend(table.iter().map(|e| e.regdate));
             oui_28.push(SubtableDesc::new(prefix_start, loc_start, table.len()));
         }
 
@@ -201,6 +230,8 @@ impl OuiDbOwned {
             prefix_pool_36.extend(table.iter().map(|e| e.prefix));
             let loc_start = loc_pool_36.len() as u32;
             loc_pool_36.extend(table.iter().map(|e| encode(e.name_idx)));
+            #[cfg(feature = "regdate")]
+            regdate_pool_36.extend(table.iter().map(|e| e.regdate));
             oui_36.push(SubtableDesc::new(prefix_start, loc_start, table.len()));
         }
 
@@ -209,12 +240,18 @@ impl OuiDbOwned {
             names,
             oui_24_prefix,
             oui_24_loc,
+            #[cfg(feature = "regdate")]
+            oui_24_regdate,
             oui_28,
             prefix_pool_28,
             loc_pool_28,
+            #[cfg(feature = "regdate")]
+            regdate_pool_28,
             oui_36,
             prefix_pool_36,
             loc_pool_36,
+            #[cfg(feature = "regdate")]
+            regdate_pool_36,
         }
     }
 
@@ -259,12 +296,21 @@ impl OuiDbOwned {
         let mut total = self.names.len();
         total += size_of_val(&self.oui_24_prefix[..]);
         total += size_of_val(&self.oui_24_loc[..]);
+        #[cfg(feature = "regdate")]
+        {
+            total += size_of_val(&self.oui_24_regdate[..]);
+        }
         total += size_of_val(&self.oui_28[..]);
         total += size_of_val(&self.prefix_pool_28[..]);
         total += size_of_val(&self.loc_pool_28[..]);
         total += size_of_val(&self.oui_36[..]);
         total += size_of_val(&self.prefix_pool_36[..]);
         total += size_of_val(&self.loc_pool_36[..]);
+        #[cfg(feature = "regdate")]
+        {
+            total += size_of_val(&self.regdate_pool_28[..]);
+            total += size_of_val(&self.regdate_pool_36[..]);
+        }
         total
     }
 }
@@ -300,6 +346,23 @@ impl OuiBackend for OuiDbOwned {
         )
     }
 
+    #[cfg(feature = "regdate")]
+    fn regdate_24(&self, idx: usize) -> u16 {
+        self.oui_24_regdate[idx]
+    }
+
+    #[cfg(feature = "regdate")]
+    fn regdate_28(&self, sub_idx: usize, i: usize) -> u16 {
+        let d = &self.oui_28[sub_idx];
+        self.regdate_pool_28[d.loc_start as usize + i]
+    }
+
+    #[cfg(feature = "regdate")]
+    fn regdate_36(&self, sub_idx: usize, i: usize) -> u16 {
+        let d = &self.oui_36[sub_idx];
+        self.regdate_pool_36[d.loc_start as usize + i]
+    }
+
     fn entry_source(&self) -> EntrySource<'_> {
         EntrySource::OwnedBorrowed(self)
     }
@@ -326,6 +389,8 @@ mod tests {
         let custom = format!("{MANIFEST_DIR}/custom-mac-oui.txt");
         let ieee = if cfg!(feature = "address") {
             format!("{MANIFEST_DIR}/ieee-mac-oui-address.txt")
+        } else if cfg!(feature = "fullname") {
+            format!("{MANIFEST_DIR}/ieee-mac-oui-fullname.txt")
         } else {
             format!("{MANIFEST_DIR}/ieee-mac-oui.txt")
         };
@@ -343,6 +408,8 @@ mod tests {
             assert_eq!(o.country_or_region_code(), b.country_or_region_code());
             #[cfg(feature = "address")]
             assert_eq!(o.address(), b.address());
+            #[cfg(feature = "regdate")]
+            assert_eq!(o.registered_date(), b.registered_date());
             count += 1;
         }
         assert_eq!(count, OUI_DB_BUNDLED.iter().count());

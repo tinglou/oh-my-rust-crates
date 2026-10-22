@@ -93,6 +93,13 @@ fn main() {
                     println!("Address:     {address}");
                 }
             }
+            #[cfg(feature = "regdate")]
+            {
+                let date = entry.registered_date();
+                if !date.is_empty() {
+                    println!("Registered:  {date}");
+                }
+            }
             if OuiDb::is_virtual_nic(entry.name()) {
                 println!("  ⚠️  This is a virtual NIC");
             }

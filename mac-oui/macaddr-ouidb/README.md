@@ -12,6 +12,7 @@ High-performance MAC address OUI (Organizationally Unique Identifier) lookup lib
 - 🔍 **Comprehensive Coverage**: Contains 40,000+ OUI-24 entries, 6,600+ OUI-28 (MA-M) entries, 11,000+ OUI-36 (MA-S/IAB) entries
 - 🌍 **Region Info**: Each entry carries an ISO 3166-1 alpha-2 country code alongside the organization name
 - 🏢 **Registered Address (optional)**: With the `address` feature each entry also exposes the registered organization address via `OuiEntry::address()`
+- 📅 **Registered Date (optional)**: With the `regdate` feature each entry also exposes the registration date (`"YYYY-MM-DD"`) via `OuiEntry::registered_date()`
 - 🎯 **Virtual NIC Detection**: Built-in common virtualization platform NIC recognition (VMware, QEMU, VirtualBox, OpenStack, etc.)
 - 📦 **Flexible Integration**: Supports `serde` serialization, optional `pnet` interoperability
 - 🔒 **no_std Support**: Works in `no_std` environments (optional features for std)
@@ -71,6 +72,28 @@ let mac = "00:00:01:00:00:00".parse().unwrap();
 if let Some(entry) = db.lookup_mac(mac) {
     println!("Organization: {}", entry.name());
     println!("Address:      {}", entry.address());
+}
+```
+
+### Registered Date (optional)
+
+With the `regdate` feature the bundled dataset additionally stores each
+organization's registration (assignment) date. `OuiEntry::registered_date()` /
+`OuiEntryOwned::registered_date()` return it as an ISO `"YYYY-MM-DD"` string;
+entries with an unknown date return `""`. Dates are stored internally as the
+number of days since 1998-01-01 (a `u16`), so the feature adds roughly 2 bytes
+per lookup entry. Lines without a date in the source data fall back to the
+file's `# Updated:` date; a prefix that only has subtables uses the earliest
+date among its subtable entries.
+
+```rust,ignore
+use macaddr_ouidb::oui_db;
+
+let db = oui_db();
+let mac = "00:00:01:00:00:00".parse().unwrap();
+if let Some(entry) = db.lookup_mac(mac) {
+    println!("Organization: {}", entry.name());
+    println!("Registered:   {}", entry.registered_date());
 }
 ```
 
@@ -217,6 +240,7 @@ Data is automatically generated at compile time via `build.rs`, ensuring:
 | `pnet`     | Enable pnet interoperability                        | Yes     |
 | `fullname` | Use the full (untrimmed) organization names dataset | No      |
 | `address`  | Include registered organization addresses           | No      |
+| `regdate`  | Include organization registration dates             | No      |
 
 ## no_std Support
 
@@ -248,7 +272,8 @@ Organization: Shinko Technos (JP)
 ```
 
 With the `address` feature an additional `Address:` line is printed when the
-organization has a registered address.
+organization has a registered address. Likewise, with the `regdate` feature a
+`Registered:` line prints the registration date.
 
 ## Performance
 
