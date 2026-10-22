@@ -4,7 +4,7 @@
 //! 并构建为查表用的中间数据结构（names 字典、24 位主表、28/36 位子表），
 //! 供调用方（如 `build.rs`）生成目标代码。
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::io::BufReader;
 use std::path::Path;
@@ -17,6 +17,9 @@ pub enum SubtableRef {
     Oui28(usize),
     Oui36(usize),
 }
+
+/// custom 覆盖 ieee 的条目记录：`(prefix, bit_len, custom_org, ieee_org)`
+pub type Override = (String, usize, String, String);
 
 /// 28 位子表条目
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -61,6 +64,8 @@ pub struct OuiDataBuilder {
     pub subtable_only_prefixes: Vec<([u8; 3], SubtableRef, usize)>,
     /// 24 位主表的注册日期：prefix -> 天数（仅当 `regdate_enabled` 时有意义）
     pub regdate24: BTreeMap<[u8; 3], u16>,
+    /// custom 覆盖 ieee 的条目记录，每项为 [`Override`]
+    pub overrides: Vec<Override>,
 }
 
 impl OuiDataBuilder {
@@ -70,7 +75,7 @@ impl OuiDataBuilder {
 
     /// 从 custom / ieee 两个数据文件构建中间数据结构。
     ///
-    /// - custom 优先；与 ieee 出现相同 `(bit_len, prefix)` 时返回错误（不允许静默覆盖）
+    /// - custom 优先；与 ieee 出现相同 `(bit_len, prefix)` 时以 custom 覆盖 ieee，并打印日志
     /// - 同时从 ieee 文件头注释解析 `# Updated:` 时间戳到 [`OuiDataBuilder::updated`]
     /// - ieee 文件内部的重复前缀已由 ouidb-builder 在生成时去重，此处不再处理
     /// - `keep_address` 透传给 [`parse_oui_file`]：为 `true` 时保留 `ORG` 中 `|` 之后的地址
@@ -85,12 +90,13 @@ impl OuiDataBuilder {
         let custom_name = file_name(custom_path);
         let ieee_name = file_name(ieee_path);
 
-        let entries = Self::merge_entries(
+        let (entries, overrides) = Self::merge_entries(
             parse_oui_file(custom_path, keep_address),
             parse_oui_file(ieee_path, keep_address),
             &custom_name,
             &ieee_name,
         )?;
+        self.overrides = overrides;
 
         self.updated = Self::parse_updated_timestamp(ieee_path);
         let fallback = if regdate_enabled {
@@ -127,37 +133,38 @@ impl OuiDataBuilder {
         }
     }
 
-    /// 合并 custom 与 ieee 条目，custom 优先。
+    /// 合并 custom 与 ieee 条目，custom 优先覆盖。
     ///
-    /// `custom_name` / `ieee_name` 仅用于错误信息显示。
+    /// 当同一 `(bit_len, prefix)` 同时出现在 custom 与 ieee 时，保留 custom 条目，
+    /// 丢弃 ieee 条目，并打印一条覆盖日志（含 `custom_name` / `ieee_name` 与双方 org name）。
     fn merge_entries(
         custom_entries: Vec<OuiEntry>,
         ieee_entries: Vec<OuiEntry>,
         custom_name: &str,
         ieee_name: &str,
-    ) -> Result<Vec<OuiEntry>, String> {
+    ) -> Result<(Vec<OuiEntry>, Vec<Override>), String> {
         let mut entries = custom_entries;
-        let custom_keys: HashSet<(usize, String)> = entries
+        let custom_orgs: HashMap<(usize, String), String> = entries
             .iter()
-            .map(|e| (e.bit_len, e.prefix_str.clone()))
+            .map(|e| ((e.bit_len, e.prefix_str.clone()), e.org_name.clone()))
             .collect();
 
+        let mut overrides = Vec::new();
         for e in ieee_entries {
             let key = (e.bit_len, e.prefix_str.clone());
-            if custom_keys.contains(&key) {
-                let custom_org = entries
-                    .iter()
-                    .find(|x| x.bit_len == e.bit_len && x.prefix_str == e.prefix_str)
-                    .map(|x| x.org_name.clone())
-                    .unwrap_or_default();
-                return Err(format!(
-                    "error: prefix {} ({} bits) appears in both {} and {}\n  custom entry org: {:?}\n  ieee entry org:   {:?}",
-                    e.prefix_str, e.bit_len, custom_name, ieee_name, custom_org, e.org_name
+            if let Some(custom_org) = custom_orgs.get(&key) {
+                overrides.push((
+                    e.prefix_str.clone(),
+                    e.bit_len,
+                    custom_org.clone(),
+                    e.org_name.clone(),
                 ));
+                continue;
             }
             entries.push(e);
         }
-        Ok(entries)
+        let _ = (custom_name, ieee_name);
+        Ok((entries, overrides))
     }
 
     /// 解析文件头注释中的 `# Updated: <timestamp>` 行，返回时间戳字符串
@@ -431,7 +438,7 @@ mod tests {
     }
 
     #[test]
-    fn merge_custom_wins_and_conflicts_error() {
+    fn merge_custom_wins_and_overrides_ieee() {
         let custom = vec![entry("000001", "USCustom", 24)];
         let ieee = vec![
             entry("000002", "USIeee", 24),
@@ -439,7 +446,7 @@ mod tests {
         ];
 
         // 无冲突时合并，custom 在前
-        let ok = OuiDataBuilder::merge_entries(
+        let (ok, overrides) = OuiDataBuilder::merge_entries(
             custom.clone(),
             ieee[..1].to_vec(),
             "custom-mac-oui.txt",
@@ -449,19 +456,28 @@ mod tests {
         assert_eq!(ok.len(), 2);
         assert_eq!(ok[0].org_name, "USCustom");
         assert_eq!(ok[1].org_name, "USIeee");
+        assert!(overrides.is_empty());
 
-        // 冲突时报错
-        let err = OuiDataBuilder::merge_entries(
+        // 冲突时 custom 覆盖 ieee：只保留 custom 条目，并记录覆盖信息
+        let (merged, overrides) = OuiDataBuilder::merge_entries(
             custom,
             ieee.clone(),
             "custom-mac-oui.txt",
             "ieee-mac-oui.txt",
         )
-        .unwrap_err();
-        assert!(err.contains("000001"));
-        assert!(err.contains("USConflict"));
-        assert!(err.contains("custom-mac-oui.txt"));
-        assert!(err.contains("ieee-mac-oui.txt"));
+        .unwrap();
+        assert_eq!(merged.len(), 2);
+        let conflict = merged
+            .iter()
+            .find(|e| e.prefix_str == "000001")
+            .expect("000001 present");
+        assert_eq!(conflict.org_name, "USCustom");
+        assert!(!merged.iter().any(|e| e.org_name == "USConflict"));
+        assert_eq!(overrides.len(), 1);
+        assert_eq!(overrides[0].0, "000001");
+        assert_eq!(overrides[0].1, 24);
+        assert_eq!(overrides[0].2, "USCustom");
+        assert_eq!(overrides[0].3, "USConflict");
 
         // 不同 bit_len 的相同前缀不冲突
         let custom_28 = vec![entry("000001", "USCustom28", 28)];

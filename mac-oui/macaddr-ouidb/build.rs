@@ -431,13 +431,20 @@ fn main() {
     let output_path = Path::new(&out_dir).join("oui_data.rs");
 
     // Parse the custom / ieee data files and build the intermediate data structure
-    // - custom wins; a duplicate prefix versus ieee aborts with an error (silent override is not allowed)
+    // - custom wins; a duplicate prefix versus ieee is overridden by the custom entry (logged below)
     // - duplicate prefixes within the ieee file are already deduplicated by ouidb-builder at generation time, so they are not handled here
     // - the update time is also parsed from the ieee file header comment into `builder.updated`
     let mut builder = OuiDataBuilder::new();
     if let Err(err) = builder.build(&custom_path, &ieee_path, use_address, regdate) {
         eprintln!("{err}");
         std::process::exit(1);
+    }
+
+    // Log any custom-over-ieee overrides
+    for (prefix, bit_len, custom_org, ieee_org) in &builder.overrides {
+        println!(
+            "cargo:warning=custom override: {prefix} ({bit_len} bits): {ieee_org:?} -> {custom_org:?}"
+        );
     }
 
     // Generate the code

@@ -1,9 +1,90 @@
-525400 -- QEMU virtual NIC
+# Custom OUI overrides, grouped by vendor.
+# Format: PREFIX [YYYYMMDD] -- ORG
+# custom entries take priority over ieee-mac-oui.txt (same prefix -> custom wins).
+#
+# These prefixes belong to NICs handed to the *guest* by the hypervisor.
+# They are ordinary unicast L2 addresses seen by upstream switches (FDB/L2
+# learning, DHCP snooping, port-security) just like a physical NIC.
+#
+# A platform often owns several OUIs because it registered different blocks over
+# time and uses them per product/role: a default guest NIC block, blocks for
+# host-side virtual interfaces/adapters, and locally-administered blocks for
+# auto-generated addresses. All are grouped here.
+
+# QEMU
+# QEMU's registered OUI; the default guest NIC in QEMU/KVM and libvirt.
+525400 20030318 -- QEMU virtual NIC
+
+# Bochs
+# Default guest NIC in the Bochs x86 PC emulator.
 B0C420 -- Bochs virtual NIC
+
+# PearPC
+# Default guest NIC in the PearPC PowerPC emulator.
 DEADCA -- PearPC virtual NIC
+
+# Cooperative Linux
+# NIC for coLinux (Linux co-hosted with Windows); typically a TAP adapter.
 00FFD1 -- Cooperative Linux virtual NIC
-# 080027 -- Oracle VirtualBox virtual NIC
-0A0027 -- Oracle VirtualBox virtual NIC
+
+# Oracle / VirtualBox
+# Oracle owns several OUIs; VirtualBox uses different blocks for the default
+# guest adapter, host-only/NAT adapters and locally-administered guest MACs.
+# (080027 is actually registered to Cadmus/PCS Systemtechnik but VirtualBox
+# reuses it for its default guest NIC, so it is widely recognized as VirtualBox.)
+# 2CC260 Oracle Corp, reg. address Zarhin 13, Raanana, IL (likely linked to the
+# Ravello Systems team acquired by Oracle in 2016 / Oracle Cloud IaaS);
+# no official docs confirm it is a VM/Host-Only NIC prefix.
+2CC260 20120119 -- Oracle virtual NIC
+080027 20040123 -- Oracle VirtualBox virtual NIC
+0021F6 20080618 -- Oracle VirtualBox virtual NIC
+000F4B 20040123 -- Oracle VirtualBox virtual NIC
+0A0027 20100101 -- Oracle VirtualBox virtual NIC
+
+# VMware
+# VMware's guest-NIC OUIs, one per generation/product:
+# 005056 manual/vCenter-generated MACs, 000C29 Workstation/standalone ESXi,
+# 000569 legacy ESX/GSX, 001C14 later vSphere.
+005056 20000104 -- VMware virtual NIC
+000C29 20030121 -- VMware virtual NIC
+000569 20010417 -- VMware virtual NIC
+001C14 20070408 -- VMware virtual NIC
+
+# Xen
+# 00163E is the OUI the Xen Project hands out for guest vifs.
+# 00CAFE is commonly observed on Citrix XenServer virtual interfaces.
+00163E 20051029 -- Xen virtual NIC
+00CAFE 20051029 -- Xen virtual NIC
+
+# Microsoft Hyper-V
+# Microsoft reserved several of its MA-L blocks for Hyper-V guest MACs; Microsoft
+# docs tell admins to avoid 00:03:FF, 00:0D:3A, 00:12:5A, 00:15:5D, 00:17:FA,
+# 00:50:F2 and 00:1D:D8 for exactly this reason.
+# 00155D is the documented default dynamic range (docs: first 3 octets are
+# Microsoft's OUI 00:15:5D; rest derived from host IP). 0003FF is Microsoft's
+# oldest MA-L (2000) and 001DD8 backs the VMM default Hyper-V MAC pool
+# (00:1D:D8:B7:1C:00 - 00:1D:D8:F4:1F:FF).
+00155D 20050804 -- Microsoft Hyper-V virtual NIC
+0003FF 20001109 -- Microsoft Hyper-V virtual NIC
+001DD8 20070925 -- Microsoft Hyper-V virtual NIC
+
+# Linux KVM
+# Default OUI used by libvirt/KVM when a guest NIC has no configured address.
+545200 20080901 -- Linux KVM virtual NIC
+
+# Parallels
+# Guest NIC assigned by Parallels Desktop (both guest adapters and host vnic*).
+001C42 20070513 -- Parallels virtual NIC
+
+# Proxmox
+# Default OUI for Proxmox VE auto-generated guest MACs (datacenter.cfg).
+BC2411 20230616 -- Proxmox virtual NIC
+
+# Google Cloud
+# Fixed prefix baked into the virtual NIC of GCP (Compute Engine) instances.
+42010A 20230616 -- Google Cloud virtual NIC
 
 # OpenStack Neutron default configuration: FA163E
-FA163E -- OpenStack
+# Neutron derives tenant/port MACs from this fixed base_mac prefix
+# (fa:16:3e:00:00:00); dvr_base_mac uses fa:16:3f.
+FA163E 20101001 -- OpenStack virtual NIC

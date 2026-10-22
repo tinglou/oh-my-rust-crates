@@ -72,12 +72,12 @@ fn test_oui_lookup_24bit() {
         org
     );
 
-    // Microsoft (00:03:FF)
+    // Microsoft Hyper-V (00:03:FF) overridden by custom-mac-oui.txt
     let mac: MacAddress = "00:03:FF:00:00:00".parse().unwrap();
     let org = db.lookup_mac(mac);
     assert!(
-        matches!(&org, Some(e) if e.country_or_region_code() == "US" && e.name().starts_with("Microsoft")),
-        "Expected Microsoft (US), got {:?}",
+        matches!(&org, Some(e) if e.name() == "Microsoft Hyper-V virtual NIC"),
+        "Expected Microsoft Hyper-V virtual NIC, got {:?}",
         org
     );
 

@@ -40,14 +40,21 @@ pub(crate) use macaddr_ouidb_support::layout::{OuiLoc, SubtableDesc};
 
 const OUI_SUBTABLE: &str = "Ieee Registration Authority";
 
-const OUI_VIRTUAL: [&str; 7] = [
-    "VMware",
+const OUI_VIRTUAL: [&str; 14] = [
     "QEMU virtual NIC",
     "Bochs virtual NIC",
     "PearPC virtual NIC",
     "Cooperative Linux virtual NIC",
     "Oracle VirtualBox virtual NIC",
-    "OpenStack",
+    "OpenStack virtual NIC",
+    "Linux KVM virtual NIC",
+    "Parallels virtual NIC",
+    "Oracle virtual NIC",
+    "VMware virtual NIC",
+    "Xen virtual NIC",
+    "Microsoft Hyper-V virtual NIC",
+    "Proxmox virtual NIC",
+    "Google Cloud virtual NIC",
 ];
 
 /// Encoding of `OuiEntry::extra_prefix`: the top 2 bits are a type flag (bit-15-14)
@@ -1210,9 +1217,9 @@ mod tests {
     #[test]
     fn updated_timestamp_is_present() {
         let db = &crate::OUI_DB_BUNDLED;
-        // New data-file header format: `2026-10-21 09:24:18.881121200 +0000 UTC`
+        // The header format varies (`2026-10-19T07:29:54Z` or `... +0000 UTC`);
+        // only require a non-empty timestamp that starts with a plausible year.
         assert!(!db.updated.is_empty());
-        assert!(db.updated.ends_with(" UTC"));
         assert!(db.updated.starts_with("20"));
     }
 

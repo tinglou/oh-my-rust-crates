@@ -83,9 +83,9 @@ pub enum OuiDbOwnedError {
     #[error("missing '# Updated:' comment in {0}")]
     MissingUpdated(alloc::string::String),
 
-    /// custom and ieee contain the same prefix (custom wins; silent override is not allowed)
+    /// The data files could not be parsed/built
     #[error("{0}")]
-    Conflict(alloc::string::String),
+    Build(alloc::string::String),
 }
 
 impl OuiDbOwned {
@@ -93,8 +93,7 @@ impl OuiDbOwned {
     ///
     /// The merging semantics are identical to `build.rs`:
     /// - A missing custom file is treated as empty; a missing ieee file returns [`OuiDbOwnedError::Open`]
-    /// - custom wins; a duplicate `(bit_len, prefix)` versus ieee returns
-    ///   [`OuiDbOwnedError::Conflict`] (silent override is not allowed)
+    /// - custom wins; a duplicate `(bit_len, prefix)` versus ieee is overridden by the custom entry
     /// - A missing `# Updated:` comment in the ieee header returns [`OuiDbOwnedError::MissingUpdated`]
     /// - An invalid data-line format (prefix length other than 6/7/9 hex chars) panics (matching `build.rs` behavior)
     pub fn from_files(
@@ -122,7 +121,7 @@ impl OuiDbOwned {
                 cfg!(feature = "address"),
                 cfg!(feature = "regdate"),
             )
-            .map_err(OuiDbOwnedError::Conflict)?;
+            .map_err(OuiDbOwnedError::Build)?;
         Ok(Self::from_builder(builder))
     }
 
@@ -503,7 +502,7 @@ mod tests {
     }
 
     #[test]
-    fn conflicting_prefix_errors() {
+    fn conflicting_prefix_custom_wins() {
         let custom = temp_path("conflict-custom.txt");
         let ieee = temp_path("conflict-ieee.txt");
         std::fs::write(&custom, "000001 US Custom Company\n").unwrap();
@@ -513,11 +512,11 @@ mod tests {
         )
         .unwrap();
 
-        let err =
-            OuiDbOwned::from_files(&custom, &ieee).expect_err("duplicate prefix should error");
-        assert!(matches!(err, OuiDbOwnedError::Conflict(_)));
-        let msg = err.to_string();
-        assert!(msg.contains("000001"), "error should mention prefix: {msg}");
+        let db = OuiDbOwned::from_files(&custom, &ieee).expect("custom should override ieee");
+        let entry = db
+            .lookup([0x00, 0x00, 0x01, 0x00, 0x00, 0x00])
+            .expect("000001 present");
+        assert_eq!(entry.name(), "Custom Company");
 
         std::fs::remove_file(&custom).ok();
         std::fs::remove_file(&ieee).ok();
