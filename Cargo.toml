@@ -6,13 +6,13 @@ members = [
     "backerror-rs/backerror-macros",
     "init-log4rs",
     "mac-oui/macaddr-ouidb",
-    "mac-oui/macaddr-ouidb-support", 
+    "mac-oui/macaddr-ouidb-support",
     "conan2-rs",
 
     "hypervectorscan-rs/hypervectorscan",
     "hypervectorscan-rs/hypervectorscan-sys",
     "hypervectorscan-rs/hyperscan-src",
-    "hypervectorscan-rs/vectorscan-src", 
+    "hypervectorscan-rs/vectorscan-src",
 ]
 
 # Exclude sample projects from workspace
@@ -26,9 +26,8 @@ edition = "2024"
 repository = "https://github.com/tinglou/oh-my-rust-crates"
 
 [workspace.dependencies]
-backerror-macros = { path = "backerror-rs/backerror-macros", version = "0.2.3" }
+backerror-macros = { path = "backerror-rs/backerror-macros", version = "0.2.4" } # should be version.workspace
 
-hypervectorscan-sys = { path = "hypervectorscan-rs/hypervectorscan-sys", version = "0.2.3" }
+hypervectorscan-sys = { path = "hypervectorscan-rs/hypervectorscan-sys", version = "0.2.4" } # should be version.workspace
 hyperscan-src = { path = "hypervectorscan-rs/hyperscan-src", version = "5.4.2-2" }
 vectorscan-src = { path = "hypervectorscan-rs/vectorscan-src", version = "5.4.13" }
-
