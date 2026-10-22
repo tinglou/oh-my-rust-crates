@@ -254,16 +254,23 @@ impl OuiDbOwned {
         }
     }
 
-    /// Looks up the organization entry for a given MAC address byte array.
+    /// Looks up the organization entry for a MAC address given as a byte slice.
     ///
-    /// Supports 24-bit, 28-bit, and 36-bit OUI queries.
-    pub fn lookup(&self, mac: [u8; 6]) -> Option<OuiEntry<'_>> {
+    /// At least 3 bytes are required (only the leading bytes are significant),
+    /// so this accepts both 6-byte MAC and 8-byte EUI-64 addresses. Supports
+    /// 24-bit, 28-bit, and 36-bit OUI queries.
+    pub fn lookup(&self, mac: &[u8]) -> Option<OuiEntry<'_>> {
         lookup_impl(self, mac)
     }
 
     /// Looks up the organization name (OUI vendor information) for a given MAC address.
     pub fn lookup_mac(&self, mac: MacAddress) -> Option<OuiEntry<'_>> {
-        self.lookup(mac.octets())
+        self.lookup(&mac.octets())
+    }
+
+    /// Looks up the organization name for an **8-byte** (EUI-64) MAC address.
+    pub fn lookup_mac6(&self, mac: crate::MacAddress8) -> Option<OuiEntry<'_>> {
+        self.lookup(&mac.octets())
     }
 
     /// Returns an iterator over every [`OuiEntry`] in the database.
@@ -423,8 +430,8 @@ mod tests {
             [0xFA, 0x16, 0x3E, 0x00, 0x00, 0x00], // OpenStack (custom)
         ];
         for mac in samples {
-            let o = owned.lookup(mac);
-            let b = OUI_DB_BUNDLED.lookup(mac);
+            let o = owned.lookup(&mac);
+            let b = OUI_DB_BUNDLED.lookup(&mac);
             assert_eq!(
                 o.as_ref().map(|e| e.prefix_hex()),
                 b.as_ref().map(|e| e.prefix_hex()),
@@ -514,7 +521,7 @@ mod tests {
 
         let db = OuiDbOwned::from_files(&custom, &ieee).expect("custom should override ieee");
         let entry = db
-            .lookup([0x00, 0x00, 0x01, 0x00, 0x00, 0x00])
+            .lookup(&[0x00, 0x00, 0x01, 0x00, 0x00, 0x00])
             .expect("000001 present");
         assert_eq!(entry.name(), "Custom Company");
 
@@ -528,7 +535,7 @@ mod tests {
         let ieee = format!("{MANIFEST_DIR}/ieee-mac-oui.txt");
         let owned = OuiDbOwned::from_files("no-such-custom.txt", &ieee).expect("custom optional");
         let entry = owned
-            .lookup([0x00, 0x00, 0x01, 0x00, 0x00, 0x00])
+            .lookup(&[0x00, 0x00, 0x01, 0x00, 0x00, 0x00])
             .expect("XEROX entry");
         assert!(entry.name().starts_with("XEROX"));
     }
@@ -546,10 +553,10 @@ mod tests {
 
         let owned = OuiDbOwned::from_files(&custom, &ieee).expect("load");
         // Both the custom entry (QEMU) and the ieee entry (Cisco) are visible
-        assert!(owned.lookup([0x52, 0x54, 0x00, 0, 0, 0]).is_some());
-        assert!(owned.lookup([0x00, 0x00, 0x0C, 0, 0, 0]).is_some());
+        assert!(owned.lookup(&[0x52, 0x54, 0x00, 0, 0, 0]).is_some());
+        assert!(owned.lookup(&[0x00, 0x00, 0x0C, 0, 0, 0]).is_some());
         // A prefix that does not exist in custom
-        assert!(owned.lookup([0xFF, 0xFF, 0xFE, 0, 0, 0]).is_none());
+        assert!(owned.lookup(&[0xFF, 0xFF, 0xFE, 0, 0, 0]).is_none());
 
         std::fs::remove_file(&ieee).ok();
     }

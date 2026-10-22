@@ -117,11 +117,19 @@ reset_oui_db();
 assert!(matches!(&*oui_db(), OuiDb::Bundled(_)));
 ```
 
-借用式查询（`lookup` / `lookup_mac`）返回 `OuiEntry<'_>`，仅在数据库借用期内有效，
+借用式查询（`lookup` / `lookup_mac` / `lookup_mac6`）返回 `OuiEntry<'_>`，仅在数据库借用期内有效，
 适合即取即用（零拷贝）。当条目需要比句柄活得更久（例如存入结构体、由函数返回，
 或在 `set_oui_db` 替换数据库后继续使用）时，使用拥有式查询
-`lookup_owned` / `lookup_mac_owned`（或 [`MacAddress::oui_entry`]）；它们返回
-`OuiEntryOwned`，自身持有数据来源，并实现 `Clone`、`Debug` 与 `Display`。
+`lookup_owned` / `lookup_mac_owned` / `lookup_mac6_owned`（或 [`MacAddress::oui_entry`]）；
+它们返回 `OuiEntryOwned`，自身持有数据来源，并实现 `Clone`、`Debug` 与 `Display`。
+
+`OuiDb::lookup` 接受**至少 3 字节**的字节切片（仅前导字节有意义），因此同时支持
+6 字节 `MacAddress` 与 8 字节 `MacAddress8`（EUI-64）输入。便捷包装 `lookup_mac`
+（6 字节）与 `lookup_mac6`（8 字节）可直接接收对应地址类型。若前 3 字节命中
+"IEEE Registration Authority" 子表父前缀，但切片长度不足以解析子表（28 位需要
+第 4 字节，36 位需要第 4-5 字节），则针对该 24 位前缀返回合成的
+"IEEE Registration Authority" 条目（国家/地区 `US`；启用 `address` feature 时地址为
+`445 Hoes Lane Piscataway NJ US 08554`）。
 
 未启用 `std` feature 时，仅提供内置数据库，`set_oui_db` / `OuiDbOwned` 不参与编译。
 
@@ -164,6 +172,34 @@ let entry = db.lookup_mac_owned(mac);  // Option<OuiEntryOwned>  （拥有式条
 let entry = mac.oui_entry();           // Option<OuiEntryOwned>  （拥有式条目）
 let is_virtual = mac.is_virtual_nic(); // bool
 ```
+
+### `MacAddress8`
+
+64 位 EUI-64 地址类型（8 字节）。OUI 查询仅依赖前导字节，因此与 `MacAddress`
+使用相同的数据库与规则。
+
+```rust
+use macaddr_ouidb::{MacAddress8, oui_db};
+
+// 构造函数
+let mac = MacAddress8::new([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77]);
+let mac = MacAddress8::new8(0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77);
+let mac: MacAddress8 = "00:11:22:33:44:55:66:77".parse().unwrap();
+let mac: MacAddress8 = "00-11-22-33-44-55-66-77".parse().unwrap();
+let mac: MacAddress8 = "0011223344556677".parse().unwrap();     // 连续十六进制
+let mac: MacAddress8 = "0011.2233.4455.6677".parse().unwrap();  // Cisco 点分格式
+
+// 方法
+let octets = mac.octets();              // [u8; 8]
+let value = mac.to_u64();               // u64（大端）
+let db = oui_db();
+let entry = db.lookup_mac6(mac);        // Option<OuiEntry<'_>>   （借用式条目）
+let entry = db.lookup_mac6_owned(mac);  // Option<OuiEntryOwned>  （拥有式条目）
+let entry = mac.oui_entry();            // Option<OuiEntryOwned>  （拥有式条目）
+let is_virtual = mac.is_virtual_nic();  // bool
+```
+
+若已持有原始字节，可直接调用 `db.lookup(&octets)`——它接受 3 字节及以上的切片。
 
 ## 数据格式
 

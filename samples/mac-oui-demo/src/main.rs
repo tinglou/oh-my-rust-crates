@@ -5,13 +5,14 @@
 //! - Address type detection (unicast/multicast/broadcast/etc.)
 //! - OUI lookup (24/28/36-bit)
 //! - OUI entry lookup (lookup_mac / prefix_hex)
+//! - EUI-64 (8-byte) addresses via MacAddress8 / lookup_mac6
 //! - Full-database iteration (iter / for_each)
 //! - Virtual NIC detection
 //! - Serde serialization
 //! - pnet interop
 //! - Batch processing
 
-use macaddr_ouidb::{oui_db, MacAddress, OuiDb};
+use macaddr_ouidb::{oui_db, MacAddress, MacAddress8, OuiDb};
 use pnet_base::MacAddr;
 use serde::{Deserialize, Serialize};
 
@@ -31,6 +32,7 @@ fn main() {
     demo_basic_operations();
     demo_oui_lookup();
     demo_entry_api();
+    demo_eui64();
     demo_iterate();
     demo_virtual_detection();
     demo_special_addresses();
@@ -130,6 +132,46 @@ fn demo_entry_api() {
             None => println!("  {:18} {} -> None", desc, mac),
         }
     }
+    println!();
+}
+
+fn demo_eui64() {
+    let db = oui_db();
+    println!("┌───────────────────────────────────────────────────────────┐");
+    println!("│ 3b. EUI-64 (8-byte) MAC addresses (MacAddress8)          │");
+    println!("└───────────────────────────────────────────────────────────┘");
+
+    let samples = [
+        ("Colon", "00:00:0C:00:00:00:12:34"),
+        ("Dash", "52-54-00-12-34-56-78-9A"),
+        ("Continuous", "0011223344556677"),
+        ("Cisco dotted", "0011.2233.4455.6677"),
+    ];
+    for (desc, mac_str) in samples {
+        match mac_str.parse::<MacAddress8>() {
+            Ok(mac) => {
+                let entry = db.lookup_mac6(mac);
+                println!("  {:14} {}  (u64: 0x{:016X})", desc, mac, mac.to_u64());
+                match entry {
+                    Some(e) => println!(
+                        "       -> {} ({})  prefix={}",
+                        e.name(),
+                        e.country_or_region_code(),
+                        e.prefix_hex()
+                    ),
+                    None => println!("       -> Not found in database"),
+                }
+            }
+            Err(e) => println!("  {:14} Error: {:?}", desc, e),
+        }
+    }
+
+    // `lookup` also accepts a raw byte slice of 3+ bytes
+    let bytes = [0x00, 0x00, 0x0C, 0x00, 0x00, 0x00];
+    println!(
+        "\n  db.lookup(&[..]) on a 6-byte slice: {:?}",
+        db.lookup(&bytes).map(|e| e.name().to_string())
+    );
     println!();
 }
 

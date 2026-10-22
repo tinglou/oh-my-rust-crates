@@ -146,12 +146,23 @@ assert!(matches!(&*oui_db(), OuiDb::Bundled(_)));
 # }
 ```
 
-Borrowed lookups (`lookup` / `lookup_mac`) return an `OuiEntry<'_>`, which is valid
-only while the database is borrowed — the zero-copy choice for immediate use. When
-an entry must outlive the handle (stored in a struct, returned from a function, or
-used after `set_oui_db` swaps the database), use the owned-returning
-`lookup_owned` / `lookup_mac_owned`, or `MacAddress::oui_entry()`: they return an
-`OuiEntryOwned` that owns its data source and supports `Clone`, `Debug` and `Display`.
+Borrowed lookups (`lookup` / `lookup_mac` / `lookup_mac6`) return an `OuiEntry<'_>`,
+which is valid only while the database is borrowed — the zero-copy choice for
+immediate use. When an entry must outlive the handle (stored in a struct, returned
+from a function, or used after `set_oui_db` swaps the database), use the
+owned-returning `lookup_owned` / `lookup_mac_owned` / `lookup_mac6_owned`, or
+`MacAddress::oui_entry()`: they return an `OuiEntryOwned` that owns its data source
+and supports `Clone`, `Debug` and `Display`.
+
+`OuiDb::lookup` accepts any byte slice with **at least 3 bytes** (only the leading
+bytes are significant), so it handles both 6-byte `MacAddress` and 8-byte
+`MacAddress8` (EUI-64) inputs. Convenience wrappers `lookup_mac` (6-byte) and
+`lookup_mac6` (8-byte) take the address types directly. If the leading 3 bytes match
+an "IEEE Registration Authority" subtable-parent prefix but the slice is too short
+to resolve the subtable (28-bit needs byte 4, 36-bit needs bytes 4-5), a synthetic
+entry named `"IEEE Registration Authority"` (country/region `US`, address
+`445 Hoes Lane Piscataway NJ US 08554` with the `address` feature) is returned for
+that 24-bit prefix.
 
 Without the `std` feature, only the bundled database is available and
 `set_oui_db` / `OuiDbOwned` are not compiled.
@@ -195,6 +206,35 @@ let entry = db.lookup_mac_owned(mac);  // Option<OuiEntryOwned>  (owned entry)
 let entry = mac.oui_entry();           // Option<OuiEntryOwned>  (owned entry)
 let is_virtual = mac.is_virtual_nic(); // bool
 ```
+
+### `MacAddress8`
+
+64-bit EUI-64 address type (8 bytes). OUI lookup only depends on the leading
+bytes, so it shares the same database and rules as `MacAddress`.
+
+```rust
+use macaddr_ouidb::{MacAddress8, oui_db};
+
+// Constructors
+let mac = MacAddress8::new([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77]);
+let mac = MacAddress8::new8(0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77);
+let mac: MacAddress8 = "00:11:22:33:44:55:66:77".parse().unwrap();
+let mac: MacAddress8 = "00-11-22-33-44-55-66-77".parse().unwrap();
+let mac: MacAddress8 = "0011223344556677".parse().unwrap();       // Continuous hex
+let mac: MacAddress8 = "0011.2233.4455.6677".parse().unwrap();    // Cisco dotted
+
+// Methods
+let octets = mac.octets();             // [u8; 8]
+let value = mac.to_u64();              // u64  (big-endian)
+let db = oui_db();
+let entry = db.lookup_mac6(mac);        // Option<OuiEntry<'_>>   (borrowed entry)
+let entry = db.lookup_mac6_owned(mac);  // Option<OuiEntryOwned>  (owned entry)
+let entry = mac.oui_entry();            // Option<OuiEntryOwned>  (owned entry)
+let is_virtual = mac.is_virtual_nic();  // bool
+```
+
+When you already have raw bytes, call `db.lookup(&octets)` directly — it accepts
+slices of 3 bytes or more.
 
 ## Data Format
 

@@ -23,6 +23,7 @@ use core::fmt::Write;
 use core::ops::Deref;
 
 use crate::MacAddress;
+use crate::MacAddress8;
 use crate::oui_data::OUI_DB_BUNDLED;
 
 #[cfg(feature = "std")]
@@ -38,7 +39,7 @@ pub use owned::{OuiDbOwned, OuiDbOwnedError};
 
 pub(crate) use macaddr_ouidb_support::layout::{OuiLoc, SubtableDesc};
 
-const OUI_SUBTABLE: &str = "Ieee Registration Authority";
+const OUI_SUBTABLE: &str = "IEEE Registration Authority";
 
 const OUI_VIRTUAL: [&str; 14] = [
     "QEMU virtual NIC",
@@ -93,6 +94,24 @@ fn name_slice(names: &str, loc: OuiLoc) -> &str {
     &names[offset..offset + length]
 }
 
+/// Synthetic names slice for an "IEEE Registration Authority" entry, in the same
+/// `CC + ORG[|ADDRESS]` shape as a real names entry so `name()` /
+/// `country_or_region_code()` / `address()` decode it unchanged.
+///
+/// The layout is identical to a real entry: the first 2 bytes are the
+/// country/region code (`US`), the rest is `ORG` optionally followed by a
+/// `|`-separated address.
+fn synthetic_slice() -> &'static str {
+    #[cfg(feature = "address")]
+    {
+        "USIEEE Registration Authority|445 Hoes Lane Piscataway NJ US 08554"
+    }
+    #[cfg(not(feature = "address"))]
+    {
+        "USIEEE Registration Authority"
+    }
+}
+
 /// Builds the uppercase hex string of the full prefix from `prefix` + `extra_prefix`:
 /// - 24-bit: 6 chars, e.g. `"000001"`
 /// - 28-bit: 7 chars, e.g. `"000001A"`
@@ -128,8 +147,12 @@ pub struct OuiEntry<'a> {
     pub(crate) prefix: [u8; 3],
     /// extra prefix for oui-28 or oui-36 (top 2 bits type flag, low 12 bits extra value key>>4)
     pub(crate) extra_prefix: u16,
-    /// `OuiLoc` encoding pointing into `source.names()`
-    loc: OuiLoc,
+    /// `OuiLoc` encoding pointing into `source.names()`.
+    ///
+    /// `None` marks a synthetic entry returned for an "IEEE Registration
+    /// Authority" subtable parent when the lookup input has too few bytes to
+    /// resolve the subtable: the name / country / address are hardcoded.
+    loc: Option<OuiLoc>,
     /// Registration date (days since 1998-01-01); `SENTINEL` when unknown
     #[cfg(feature = "regdate")]
     regdate: u16,
@@ -137,7 +160,10 @@ pub struct OuiEntry<'a> {
 
 impl<'a> OuiEntry<'a> {
     fn loc_slice(&self) -> &str {
-        name_slice(self.source.names(), self.loc)
+        match self.loc {
+            Some(loc) => name_slice(self.source.names(), loc),
+            None => synthetic_slice(),
+        }
     }
 
     /// Returns the uppercase hex string of the full prefix:
@@ -266,14 +292,18 @@ pub struct OuiEntryOwned {
     source: EntrySourceOwned,
     prefix: [u8; 3],
     extra_prefix: u16,
-    loc: OuiLoc,
+    /// `None` marks a synthetic "IEEE Registration Authority" entry (see [`OuiEntry`]).
+    loc: Option<OuiLoc>,
     #[cfg(feature = "regdate")]
     regdate: u16,
 }
 
 impl OuiEntryOwned {
     fn loc_slice(&self) -> &str {
-        name_slice(self.source.names(), self.loc)
+        match self.loc {
+            Some(loc) => name_slice(self.source.names(), loc),
+            None => synthetic_slice(),
+        }
     }
 
     /// Organization/vendor name (without the country/region code prefix)
@@ -430,13 +460,39 @@ pub(crate) trait OuiBackend: sealed::Sealed {
 struct Resolved {
     prefix: [u8; 3],
     extra_prefix: u16,
-    loc: OuiLoc,
+    /// `None` marks a synthetic "IEEE Registration Authority" entry.
+    loc: Option<OuiLoc>,
     #[cfg(feature = "regdate")]
     regdate: u16,
 }
 
+/// Builds a synthetic `Resolved` for an "IEEE Registration Authority" subtable
+/// parent: keeps the 24-bit prefix and its registration date, but marks the
+/// names locator as synthetic (no subtable resolution is possible).
+fn synthetic_resolved<B: OuiBackend>(
+    prefix: [u8; 3],
+    #[cfg_attr(not(feature = "regdate"), allow(unused_variables))] idx: usize,
+    #[cfg_attr(not(feature = "regdate"), allow(unused_variables))] db: &B,
+) -> Resolved {
+    Resolved {
+        prefix,
+        extra_prefix: EXTRA_NONE,
+        loc: None,
+        #[cfg(feature = "regdate")]
+        regdate: db.regdate_24(idx),
+    }
+}
+
 /// Lookup core logic (generic monomorphization, shared by Bundled/Owned): resolves to a `Resolved`
-fn resolve<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<Resolved> {
+///
+/// `mac` is any byte slice with at least 3 bytes (only the leading bytes are
+/// significant). When a 24-bit prefix is a subtable parent but `mac` is too
+/// short to resolve the subtable (28-bit needs byte 4, 36-bit needs bytes 4-5),
+/// a synthetic "IEEE Registration Authority" entry is returned.
+fn resolve<B: OuiBackend>(db: &B, mac: &[u8]) -> Option<Resolved> {
+    if mac.len() < 3 {
+        return None;
+    }
     let key3 = [mac[0], mac[1], mac[2]];
     let idx = db.oui_24_prefix().binary_search(&key3).ok()?;
     let loc = db.oui_24_loc()[idx];
@@ -447,7 +503,7 @@ fn resolve<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<Resolved> {
         return Some(Resolved {
             prefix,
             extra_prefix: EXTRA_NONE,
-            loc,
+            loc: Some(loc),
             #[cfg(feature = "regdate")]
             regdate: db.regdate_24(idx),
         });
@@ -455,26 +511,32 @@ fn resolve<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<Resolved> {
 
     let sub_idx = loc.subtable_index();
     if !loc.subtable_is_36() {
-        // 28-bit: the extra prefix comes directly from the subtable
+        // 28-bit: needs byte 4 (high nibble)
+        if mac.len() < 4 {
+            return Some(synthetic_resolved(prefix, idx, db));
+        }
         let key4 = mac[3] & 0xF0;
         let (p, sub_loc) = db.sub28(sub_idx);
         let i = p.binary_search(&key4).ok()?;
         Some(Resolved {
             prefix,
             extra_prefix: EXTRA_OUI28 | (p[i] as u16 >> 4),
-            loc: sub_loc[i],
+            loc: Some(sub_loc[i]),
             #[cfg(feature = "regdate")]
             regdate: db.regdate_28(sub_idx, i),
         })
     } else {
-        // 36-bit: the extra prefix comes directly from the subtable
+        // 36-bit: needs bytes 4 and 5 (high nibble)
+        if mac.len() < 5 {
+            return Some(synthetic_resolved(prefix, idx, db));
+        }
         let key5 = ((mac[3] as u16) << 8) | ((mac[4] & 0xF0) as u16);
         let (p, sub_loc) = db.sub36(sub_idx);
         let i = p.binary_search(&key5).ok()?;
         Some(Resolved {
             prefix,
             extra_prefix: EXTRA_OUI36 | (p[i] >> 4),
-            loc: sub_loc[i],
+            loc: Some(sub_loc[i]),
             #[cfg(feature = "regdate")]
             regdate: db.regdate_36(sub_idx, i),
         })
@@ -483,9 +545,11 @@ fn resolve<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<Resolved> {
 
 /// Builds an [`OuiEntry`] from `Resolved` + data source (validates the names slice)
 fn build_entry(source: EntrySource<'_>, r: Resolved) -> Option<OuiEntry<'_>> {
-    let (offset, length) = r.loc.decode_names();
-    if source.names().get(offset..offset + length)?.len() < 2 {
-        return None;
+    if let Some(loc) = r.loc {
+        let (offset, length) = loc.decode_names();
+        if source.names().get(offset..offset + length)?.len() < 2 {
+            return None;
+        }
     }
     Some(OuiEntry {
         source,
@@ -499,9 +563,11 @@ fn build_entry(source: EntrySource<'_>, r: Resolved) -> Option<OuiEntry<'_>> {
 
 /// Builds an [`OuiEntryOwned`] from `Resolved` + owned data source (validates the names slice)
 fn build_owned_entry(source: EntrySourceOwned, r: Resolved) -> Option<OuiEntryOwned> {
-    let (offset, length) = r.loc.decode_names();
-    if source.names().get(offset..offset + length)?.len() < 2 {
-        return None;
+    if let Some(loc) = r.loc {
+        let (offset, length) = loc.decode_names();
+        if source.names().get(offset..offset + length)?.len() < 2 {
+            return None;
+        }
     }
     Some(OuiEntryOwned {
         source,
@@ -514,7 +580,7 @@ fn build_owned_entry(source: EntrySourceOwned, r: Resolved) -> Option<OuiEntryOw
 }
 
 /// Lookup core logic (generic monomorphization, shared by Bundled/Owned)
-fn lookup_impl<B: OuiBackend>(db: &B, mac: [u8; 6]) -> Option<OuiEntry<'_>> {
+fn lookup_impl<'a, B: OuiBackend>(db: &'a B, mac: &[u8]) -> Option<OuiEntry<'a>> {
     let r = resolve(db, mac)?;
     build_entry(db.entry_source(), r)
 }
@@ -610,7 +676,23 @@ impl OuiDb {
     /// let org = oui_db().lookup_mac(mac);
     /// ```
     pub fn lookup_mac(&self, mac: MacAddress) -> Option<OuiEntry<'_>> {
-        self.lookup(mac.octets())
+        self.lookup(&mac.octets())
+    }
+
+    /// Looks up the organization entry for an **8-byte** (EUI-64) MAC address.
+    ///
+    /// Only the leading bytes are significant, so this behaves exactly like
+    /// [`OuiDb::lookup`] but accepts a [`MacAddress8`] directly.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use macaddr_ouidb::*;
+    /// let mac = MacAddress8::new([0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E, 0x6F, 0x70]);
+    /// let org = oui_db().lookup_mac6(mac);
+    /// ```
+    pub fn lookup_mac6(&self, mac: MacAddress8) -> Option<OuiEntry<'_>> {
+        self.lookup(&mac.octets())
     }
 
     /// Owned-returning counterpart of [`OuiDb::lookup_mac`].
@@ -626,21 +708,41 @@ impl OuiDb {
     /// let org = oui_db().lookup_mac_owned(mac);
     /// ```
     pub fn lookup_mac_owned(&self, mac: MacAddress) -> Option<OuiEntryOwned> {
-        self.lookup_owned(mac.octets())
+        self.lookup_owned(&mac.octets())
     }
 
-    /// Looks up the organization entry for a given MAC address byte array.
+    /// Owned-returning counterpart of [`OuiDb::lookup_mac6`] (8-byte EUI-64).
     ///
-    /// Supports 24-bit, 28-bit, and 36-bit OUI queries.
+    /// # Example
+    ///
+    /// ```
+    /// use macaddr_ouidb::*;
+    /// let mac = MacAddress8::new([0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E, 0x6F, 0x70]);
+    /// let org = oui_db().lookup_mac6_owned(mac);
+    /// ```
+    pub fn lookup_mac6_owned(&self, mac: MacAddress8) -> Option<OuiEntryOwned> {
+        self.lookup_owned(&mac.octets())
+    }
+
+    /// Looks up the organization entry for a MAC address given as a byte slice.
+    ///
+    /// At least 3 bytes are required (only the leading bytes are significant),
+    /// so this accepts both 6-byte MAC and 8-byte EUI-64 addresses. Supports
+    /// 24-bit, 28-bit, and 36-bit OUI queries.
+    ///
+    /// If the leading 3 bytes match a subtable-parent prefix ("IEEE Registration
+    /// Authority") but the slice is too short to resolve the subtable (28-bit
+    /// needs byte 4, 36-bit needs bytes 4-5), a synthetic entry named
+    /// `"IEEE Registration Authority"` is returned describing the parent prefix.
     ///
     /// # Arguments
     ///
-    /// * `mac` - A 6-byte MAC address byte array.
+    /// * `mac` - A byte slice with at least 3 bytes. Shorter input returns `None`.
     ///
     /// # Returns
     ///
     /// Returns `Some(OuiEntry)` if found, otherwise `None`.
-    pub fn lookup(&self, mac: [u8; 6]) -> Option<OuiEntry<'_>> {
+    pub fn lookup(&self, mac: &[u8]) -> Option<OuiEntry<'_>> {
         match self {
             OuiDb::Bundled(b) => lookup_impl(b, mac),
             #[cfg(feature = "std")]
@@ -653,7 +755,7 @@ impl OuiDb {
     /// Returns an [`OuiEntryOwned`] that owns its data source (a `'static`
     /// reference for the bundled database, an `Arc` for a runtime-loaded one),
     /// so it is independent of the database's borrow.
-    pub fn lookup_owned(&self, mac: [u8; 6]) -> Option<OuiEntryOwned> {
+    pub fn lookup_owned(&self, mac: &[u8]) -> Option<OuiEntryOwned> {
         let r = resolve(self, mac)?;
         let source = match self {
             OuiDb::Bundled(_) => EntrySourceOwned::Bundled(&OUI_DB_BUNDLED),
@@ -824,7 +926,7 @@ fn iter_step<B: OuiBackend>(db: &B, pos: &mut IterPos) -> Option<Resolved> {
                     Resolved {
                         prefix: sub.base,
                         extra_prefix: EXTRA_OUI36 | (p[i] >> 4),
-                        loc: l[i],
+                        loc: Some(l[i]),
                         #[cfg(feature = "regdate")]
                         regdate: db.regdate_36(sub.sub_idx, i),
                     }
@@ -836,7 +938,7 @@ fn iter_step<B: OuiBackend>(db: &B, pos: &mut IterPos) -> Option<Resolved> {
                     Resolved {
                         prefix: sub.base,
                         extra_prefix: EXTRA_OUI28 | (p[i] as u16 >> 4),
-                        loc: l[i],
+                        loc: Some(l[i]),
                         #[cfg(feature = "regdate")]
                         regdate: db.regdate_28(sub.sub_idx, i),
                     }
@@ -862,7 +964,7 @@ fn iter_step<B: OuiBackend>(db: &B, pos: &mut IterPos) -> Option<Resolved> {
             return Some(Resolved {
                 prefix: base,
                 extra_prefix: EXTRA_NONE,
-                loc,
+                loc: Some(loc),
                 #[cfg(feature = "regdate")]
                 regdate: db.regdate_24(idx),
             });
@@ -1068,7 +1170,7 @@ mod tests {
             source: EntrySource::Bundled(&OUI_DB_BUNDLED),
             prefix,
             extra_prefix,
-            loc: 0u32.into(),
+            loc: Some(0u32.into()),
             #[cfg(feature = "regdate")]
             regdate: macaddr_ouidb_support::regdate::SENTINEL,
         };
@@ -1139,7 +1241,7 @@ mod tests {
                 _ => {}
             }
             let looked = db
-                .lookup(mac)
+                .lookup(&mac)
                 .unwrap_or_else(|| panic!("lookup failed for {}", e.prefix_hex()));
             assert_eq!(looked.prefix_hex(), e.prefix_hex());
             assert_eq!(looked.name(), e.name());
@@ -1194,7 +1296,7 @@ mod tests {
 
         // An IEEE entry carries a registered address; the name is stripped at '|'
         let entry = db
-            .lookup([0x00, 0x00, 0x01, 0x00, 0x00, 0x00])
+            .lookup(&[0x00, 0x00, 0x01, 0x00, 0x00, 0x00])
             .expect("XEROX entry");
         assert!(entry.name().starts_with("XEROX"), "name: {}", entry.name());
         assert!(
@@ -1209,7 +1311,7 @@ mod tests {
 
         // A custom entry has no address -> empty string
         let custom = db
-            .lookup([0x52, 0x54, 0x00, 0x00, 0x00, 0x00])
+            .lookup(&[0x52, 0x54, 0x00, 0x00, 0x00, 0x00])
             .expect("QEMU custom entry");
         assert_eq!(custom.address(), "");
     }

@@ -1,6 +1,6 @@
 //! macaddr-oui integration tests
 
-use macaddr_ouidb::{MacAddress, OuiDb, oui_db};
+use macaddr_ouidb::{MacAddress, MacAddress8, OuiDb, oui_db};
 
 #[test]
 fn test_mac_address_parsing() {
@@ -198,7 +198,7 @@ fn test_virtual_nic_detection() {
 
 #[test]
 fn test_oui_subtable_name() {
-    assert_eq!(OuiDb::oui_subtable_name(), "Ieee Registration Authority");
+    assert_eq!(OuiDb::oui_subtable_name(), "IEEE Registration Authority");
 }
 
 #[test]
@@ -477,4 +477,100 @@ fn test_iter_print_xerox_entries() {
     }
     println!("Total XEROX entries: {count}");
     assert!(count > 0, "expected at least one XEROX entry");
+}
+
+#[test]
+fn test_mac8_parsing_and_octets() {
+    let mac: MacAddress8 = "00:11:22:33:44:55:66:77".parse().unwrap();
+    assert_eq!(
+        mac.octets(),
+        [0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77]
+    );
+
+    let mac_dash: MacAddress8 = "00-11-22-33-44-55-66-77".parse().unwrap();
+    assert_eq!(mac, mac_dash);
+
+    let mac_cisco: MacAddress8 = "0011.2233.4455.6677".parse().unwrap();
+    assert_eq!(mac, mac_cisco);
+
+    let mac_plain: MacAddress8 = "0011223344556677".parse().unwrap();
+    assert_eq!(mac, mac_plain);
+
+    // round-trip via display
+    assert_eq!(format!("{mac}"), "00:11:22:33:44:55:66:77");
+
+    // to_u64 (big-endian)
+    assert_eq!(mac.to_u64(), 0x0011_2233_4455_6677);
+}
+
+#[test]
+fn test_lookup_mac6_returns_entry() {
+    let db = oui_db();
+    let mac = MacAddress8::new([0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    let org = db.lookup_mac6(mac).expect("XEROX entry");
+    assert!(org.name().starts_with("XEROX"));
+
+    // 8-byte and 6-byte prefixes with the same leading bytes resolve identically
+    let mac6: MacAddress = "00:00:01:00:00:00".parse().unwrap();
+    let org6 = db.lookup_mac(mac6).expect("XEROX entry");
+    assert_eq!(org.prefix_hex(), org6.prefix_hex());
+}
+
+#[test]
+fn test_lookup_slice_length_handling() {
+    let db = oui_db();
+
+    // Fewer than 3 bytes is never found
+    assert!(db.lookup(&[]).is_none());
+    assert!(db.lookup(&[0x00]).is_none());
+    assert!(db.lookup(&[0x00, 0x00]).is_none());
+
+    // Exactly the 24-bit prefix resolves like the full 6-byte address
+    let three = db.lookup(&[0x00, 0x00, 0x01]).expect("000001");
+    let six = db.lookup(&[0x00, 0x00, 0x01, 0, 0, 0]).expect("000001");
+    assert_eq!(three.prefix_hex(), six.prefix_hex());
+    assert_eq!(three.name(), six.name());
+}
+
+#[test]
+fn test_lookup_subtable_authority_fallback() {
+    let db = oui_db();
+
+    // B84C87 is a 28-bit "IEEE Registration Authority" subtable parent.
+    // 3 bytes is too short to resolve the 28-bit sub-prefix (needs byte 4).
+    let parent = db.lookup(&[0xB8, 0x4C, 0x87]).expect("parent entry");
+    assert_eq!(parent.name(), "IEEE Registration Authority");
+    assert_eq!(parent.country_or_region_code(), "US");
+    assert_eq!(parent.prefix_hex(), "B84C87");
+
+    // With byte 4 present the actual 28-bit sub-entry resolves (not the parent).
+    let airgain = db.lookup(&[0xB8, 0x4C, 0x87, 0x90]).expect("B84C879 entry");
+    assert_eq!(airgain.prefix_hex(), "B84C879");
+
+    // 70B3D5 is a 36-bit "IEEE Registration Authority" subtable parent.
+    // 4 bytes is not enough (36-bit needs bytes 4 and 5); 3/4 bytes fall back.
+    let p36 = db.lookup(&[0x70, 0xB3, 0xD5]).expect("parent entry");
+    assert_eq!(p36.name(), "IEEE Registration Authority");
+    let p36_len4 = db.lookup(&[0x70, 0xB3, 0xD5, 0x06]).expect("parent entry");
+    assert_eq!(p36_len4.name(), "IEEE Registration Authority");
+
+    // With bytes 4 and 5 present the 36-bit sub-entry resolves.
+    let sub36 = db.lookup(&[0x70, 0xB3, 0xD5, 0x06, 0x00]);
+    assert!(sub36.is_some());
+
+    // A normal 24-bit prefix ignores extra bytes.
+    let normal = db
+        .lookup(&[0x00, 0x00, 0x01, 0xFF, 0xFF, 0xFF])
+        .expect("000001");
+    assert!(normal.name().starts_with("XEROX"));
+}
+
+#[test]
+fn test_lookup_mac6_owned_independent() {
+    let db = oui_db();
+    let mac = MacAddress8::new([0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    let owned = db.lookup_mac6_owned(mac).expect("XEROX entry");
+    // Owned entry does not borrow the database
+    let name = owned.name().to_string();
+    assert!(name.starts_with("XEROX"));
 }

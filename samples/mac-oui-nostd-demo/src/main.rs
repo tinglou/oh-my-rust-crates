@@ -7,11 +7,12 @@
 //! - pnet interop (works in no_std)
 //! - OUI lookup (requires std feature in macaddr-ouidb)
 //! - OUI entry lookup (lookup_mac / prefix_hex) and iter / for_each
+//! - EUI-64 (8-byte) addresses via MacAddress8 / lookup_mac6
 //!
 //! Note: This binary itself uses std for console output,
 //! but demonstrates macaddr-ouidb's no_std compatibility.
 
-use macaddr_ouidb::{oui_db, MacAddress, OuiDb};
+use macaddr_ouidb::{oui_db, MacAddress, MacAddress8, OuiDb};
 use pnet_base::MacAddr;
 use serde::{Deserialize, Serialize};
 
@@ -109,6 +110,29 @@ fn main() {
     });
     println!("   iter() total entries: {}", total);
     println!("   for_each() virtual-NIC entries: {}", virtual_count);
+    println!();
+
+    // Demo 4b: EUI-64 (8-byte) addresses
+    println!("4b. EUI-64 (8-byte) addresses (MacAddress8 / lookup_mac6)");
+    println!("   -----------------------------------------------");
+    let eui64_samples = ["00:00:0C:00:00:00:12:34", "0011.2233.4455.6677"];
+    for mac_str in &eui64_samples {
+        match mac_str.parse::<MacAddress8>() {
+            Ok(mac) => {
+                print!("   {} -> {}", mac_str, mac);
+                match db.lookup_mac6(mac) {
+                    Some(entry) => println!(
+                        "  => {} ({})  prefix={}",
+                        entry.name(),
+                        entry.country_or_region_code(),
+                        entry.prefix_hex()
+                    ),
+                    None => println!("  => Unknown (not in database)"),
+                }
+            }
+            Err(_) => println!("   {} -> Invalid EUI-64", mac_str),
+        }
+    }
     println!();
 
     // Demo 5: Serde Serialization (no_std compatible with serde feature)

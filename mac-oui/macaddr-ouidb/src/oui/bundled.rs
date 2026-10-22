@@ -112,16 +112,26 @@ impl OuiBackend for OuiDbBundled {
 }
 
 impl OuiDbBundled {
-    /// Looks up the organization entry for a given MAC address byte array.
+    /// Looks up the organization entry for a MAC address given as a byte slice.
     ///
-    /// Supports 24-bit, 28-bit, and 36-bit OUI queries.
-    pub fn lookup(&self, mac: [u8; 6]) -> Option<OuiEntry<'_>> {
+    /// At least 3 bytes are required (only the leading bytes are significant),
+    /// so this accepts both 6-byte MAC and 8-byte EUI-64 addresses. Supports
+    /// 24-bit, 28-bit, and 36-bit OUI queries. See [`OuiDb::lookup`](super::OuiDb::lookup)
+    /// for the "IEEE Registration Authority" fallback semantics.
+    pub fn lookup(&self, mac: &[u8]) -> Option<OuiEntry<'_>> {
         lookup_impl(self, mac)
     }
 
     /// Looks up the organization name (OUI vendor information) for a given MAC address.
     pub fn lookup_mac(&self, mac: crate::MacAddress) -> Option<OuiEntry<'_>> {
-        self.lookup(mac.octets())
+        self.lookup(&mac.octets())
+    }
+
+    /// Looks up the organization name for an **8-byte** (EUI-64) MAC address.
+    ///
+    /// Only the leading bytes are significant; behaves like [`lookup`](Self::lookup).
+    pub fn lookup_mac6(&self, mac: crate::MacAddress8) -> Option<OuiEntry<'_>> {
+        self.lookup(&mac.octets())
     }
 
     /// Returns an iterator over every [`OuiEntry`](super::OuiEntry) in the database.
