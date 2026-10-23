@@ -10,7 +10,7 @@ categories = [
 documentation = "https://docs.rs/macaddr-ouidb/"
 keywords = ["mac", "oui", "eui48", "wireshark", "lookup"]
 
-version.workspace = true
+version = "0.3.1"
 authors.workspace = true
 license.workspace = true
 edition.workspace = true

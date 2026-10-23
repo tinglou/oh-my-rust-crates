@@ -8,7 +8,7 @@ categories = [
 documentation = "https://docs.rs/conan2-rs/"
 keywords = ["conan", "conan2", "build", "ffi"]
 
-version.workspace = true
+version = "0.1.11"
 authors.workspace = true
 license.workspace = true
 edition.workspace = true
