@@ -12,7 +12,7 @@ members = [
     "hypervectorscan-rs/hypervectorscan",
     "hypervectorscan-rs/hypervectorscan-sys",
     "hypervectorscan-rs/hyperscan-src",
-    "hypervectorscan-rs/vectorscan-src",
+    "hypervectorscan-rs/vectorscan-src", "cargo-undep",
 ]
 
 # Exclude sample projects from workspace
