@@ -2,12 +2,16 @@
 
 [English](README.md)
 
-查找并清理 Cargo 工作区 `[workspace.dependencies]` 中未被引用的依赖。
+查找并清理 Cargo 工作区 `[workspace.dependencies]` 中未被引用的依赖，并将
+成员 crate 中可安全共享的依赖来源提升到 `[workspace.dependencies]`。
 
 `cargo-undep` 会检查工作区所有成员 crate 中通过 `workspace = true` 继承的
 依赖。如果某个 `[workspace.dependencies]` 依赖没有被任何成员引用，就会被视为
 无用依赖。使用 `--fix` 时，该依赖会连同紧邻上方的注释一起从根 `Cargo.toml`
 中删除。
+
+使用 `--hoist` 时，工具会查找可以安全地在 `[workspace.dependencies]` 中只声明
+一次、并由成员 crate 继承的依赖。
 
 ## 安装
 
@@ -57,40 +61,129 @@ cargo run -- --help
 ## 用法
 
 ```text
-cargo undep [--fix] [--allow-dirty] [--manifest-path PATH]
+cargo undep [clean|hoist] [--fix] [--allow-dirty] [--manifest-path PATH]
 ```
 
 | 参数 | 说明 |
 |------|------|
-| `--fix` | 删除无用的工作区依赖 |
+| `clean` | 检测或删除无用的 `[workspace.dependencies]` |
+| `hoist` | 检测或将成员 crate 中可共享的依赖来源提升到 `[workspace.dependencies]` |
+| `--fix` | 对选定的命令应用修改 |
 | `--allow-dirty` | 允许在 git 工作区有未提交修改或 git 不可用时执行 `--fix` |
 | `--manifest-path PATH` | 指定工作区根 `Cargo.toml` |
 | `-h`, `--help` | 打印帮助 |
 | `-V`, `--version` | 打印版本 |
 
-不加 `--fix` 时只输出需要清理的依赖列表，不修改任何文件。
+不指定命令时，工具同时报告无用的工作区依赖和可提升的成员依赖。`--fix` 必须配合 `clean` 或 `hoist` 使用。
 
-### 只检测
+## 用法
+
+### 同时报告无用依赖和可提升依赖
 
 ```text
 $ cargo undep
-Unused workspace dependencies (2):
-  - snmp-parser (/path/to/Cargo.toml:42)
-  - unused-helper (/path/to/Cargo.toml:45)
+无用工作区依赖 (0):
+未发现无用工作区依赖。
+可提升工作区依赖 (24):
+  - anyhow (version = "1.0.102"; 3 声明)
+      /path/to/conan2-rs/Cargo.toml
+      /path/to/hypervectorscan-rs/hypervectorscan-sys/Cargo.toml
+      /path/to/init-log4rs/Cargo.toml
+  ...
 
-Run with --fix to remove them.
+已跳过依赖 (3):
+  - macaddr-ouidb-support: default-features 不一致
+  - serde: default-features 不一致
+  - thiserror: 不兼容的版本要求 `2.0.18` 和 `1.0.26`
+
+请运行 `cargo undep clean --fix` 删除无用依赖，或运行 `cargo undep hoist --fix` 提升依赖。
 ```
 
-### 清理
+### 只检测无用依赖
 
 ```text
-$ cargo undep --fix
-Unused workspace dependencies (2):
+$ cargo undep clean
+无用工作区依赖 (2):
   - snmp-parser (/path/to/Cargo.toml:42)
   - unused-helper (/path/to/Cargo.toml:45)
 
-Removed 2 unused workspace dependencies from /path/to/Cargo.toml.
+请运行 `cargo undep clean --fix` 删除它们。
 ```
+
+### 清理无用依赖
+
+```text
+$ cargo undep clean --fix
+无用工作区依赖 (2):
+  - snmp-parser (/path/to/Cargo.toml:42)
+  - unused-helper (/path/to/Cargo.toml:45)
+
+已从 /path/to/Cargo.toml 中删除 2 个无用工作区依赖。
+```
+
+### 只检测可提升依赖
+
+```text
+$ cargo undep hoist
+可提升工作区依赖 (24):
+  - anyhow (version = "1.0.102"; 3 声明)
+      /path/to/conan2-rs/Cargo.toml
+      /path/to/hypervectorscan-rs/hypervectorscan-sys/Cargo.toml
+      /path/to/init-log4rs/Cargo.toml
+  ...
+
+已跳过依赖 (3):
+  - macaddr-ouidb-support: default-features 不一致
+  - serde: default-features 不一致
+  - thiserror: 不兼容的版本要求 `2.0.18` 和 `1.0.26`
+
+请运行 `cargo undep hoist --fix` 应用这些变更。
+```
+
+### 提升依赖
+
+```text
+$ cargo undep hoist --fix
+可提升工作区依赖 (24):
+  ...
+
+已更新 15 个文件，提升了 24 个工作区依赖。
+```
+
+## 提升成员依赖
+
+`--hoist` 只把依赖来源（`version`、`path`、`git` 及相关来源字段）移动到
+`[workspace.dependencies]`。属于成员自身的属性仍保留在成员 manifest 中，
+包括 `features`、`optional`、`default-features`：
+
+```toml
+# 修改前
+serde = { version = "1.0", features = ["derive"], optional = true }
+
+# 修改后
+serde = { workspace = true, features = ["derive"], optional = true }
+```
+
+根依赖表获得共享来源：
+
+```toml
+[workspace.dependencies]
+serde = "1.0"
+```
+
+工具采用保守策略：
+
+- 可兼容的简单版本要求会合并，并提高最低版本，例如 `1.0` 和 `1.2` 合并为
+  `1.2`。
+- 主版本不兼容、路径不同、git 来源不同、`package` 别名不同时会跳过。
+- `default-features` 不一致时会跳过，因为 Cargo 无法在不修改成员属性的情况下
+  同时表达两种值。
+- 自定义 registry 会跳过。
+- 已存在于 `[workspace.dependencies]` 的依赖不会被修改。
+- 支持 target-specific 依赖表。
+- 通过 `toml_edit` 保留注释和无关格式。
+
+被跳过的依赖会列出原因，但不会阻止其他依赖被提升。
 
 ## 引用判定规则
 
@@ -178,7 +271,10 @@ unused = "1.0"
 - 只检查工作区成员 manifest 中的依赖声明。
 - `[patch]`、`[replace]` 以及依赖表之外的引用不会被视为使用。
 - 被注释依赖的识别规则偏保守：例如 `# note = "text"` 也会被保留。
-- 只修改工作区根目录的 `Cargo.toml`。
+- 不带 `--hoist` 时只修改工作区根目录的 `Cargo.toml`；提升模式还可能修改成员
+  manifest。
+- 提升模式不会修改已有的 `[workspace.dependencies]` 条目，也不会合并来源不兼容
+  或 `default-features` 不一致的依赖。
 
 ## 开发
 

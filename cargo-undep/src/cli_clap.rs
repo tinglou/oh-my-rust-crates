@@ -7,7 +7,16 @@
 use std::ffi::OsString;
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
+
+/// Selected operation.
+#[derive(Debug, Clone, Copy, Subcommand)]
+pub enum Mode {
+    /// Report or remove unused workspace dependencies
+    Clean,
+    /// Report or move compatible member dependency sources
+    Hoist,
+}
 
 /// Parsed command-line options.
 #[derive(Debug, Default, Parser)]
@@ -15,18 +24,21 @@ use clap::Parser;
     name = "cargo-undep",
     bin_name = "cargo undep",
     version,
-    about = "Find unused [workspace.dependencies]",
-    after_help = "Without --fix the tool only prints the dependencies that would be removed."
+    about = "Find unused workspace dependencies or hoist member dependencies",
+    after_help = "Without COMMAND, the tool reports both unused workspace dependencies and hoistable member dependencies. --fix requires `clean` or `hoist`."
 )]
 pub struct Args {
-    /// Remove unused workspace dependencies
-    #[arg(long)]
+    /// Command to run
+    #[command(subcommand)]
+    pub mode: Option<Mode>,
+    /// Apply changes for the selected command
+    #[arg(long, global = true)]
     pub fix: bool,
     /// Allow --fix with uncommitted git changes or no git
-    #[arg(long)]
+    #[arg(long, global = true)]
     pub allow_dirty: bool,
     /// Path to the workspace root Cargo.toml
-    #[arg(long, value_name = "PATH")]
+    #[arg(long, global = true, value_name = "PATH")]
     pub manifest_path: Option<PathBuf>,
 }
 
@@ -45,7 +57,13 @@ impl Args {
         }
 
         match Self::try_parse_from(argv) {
-            Ok(args) => Ok(args),
+            Ok(args) => {
+                if args.fix && args.mode.is_none() {
+                    Err("--fix requires the `clean` or `hoist` command".to_string())
+                } else {
+                    Ok(args)
+                }
+            }
             Err(error) if error.use_stderr() => Err(error.to_string()),
             Err(error) => {
                 print!("{error}");

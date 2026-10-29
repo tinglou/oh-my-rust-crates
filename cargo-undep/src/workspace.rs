@@ -11,7 +11,7 @@ use std::path::{Component, Path, PathBuf};
 use toml_edit::{Document, Item, TableLike, Value};
 
 /// Dependency table names that may inherit a workspace dependency.
-const DEPENDENCY_SECTIONS: &[&str] = &[
+pub(crate) const DEPENDENCY_SECTIONS: &[&str] = &[
     "dependencies",
     "dev-dependencies",
     "dev_dependencies",
@@ -75,28 +75,24 @@ impl Workspace {
                 )
             })?;
 
-        let dependency_table = workspace
-            .get("dependencies")
-            .and_then(Item::as_table_like)
-            .ok_or_else(|| {
-                format!(
-                    "{} does not contain [workspace.dependencies]",
-                    manifest_path.display()
-                )
-            })?;
-
-        let dependencies = dependency_table
-            .iter()
-            .map(|(name, item)| {
-                let (start_line, end_line) =
-                    dependency_line_range(dependency_table, name, item, &manifest_text);
-                WorkspaceDependency {
-                    name: name.to_string(),
-                    start_line,
-                    end_line,
-                }
-            })
-            .collect();
+        let dependencies = if let Some(dependency_table) =
+            workspace.get("dependencies").and_then(Item::as_table_like)
+        {
+            dependency_table
+                .iter()
+                .map(|(name, item)| {
+                    let (start_line, end_line) =
+                        dependency_line_range(dependency_table, name, item, &manifest_text);
+                    WorkspaceDependency {
+                        name: name.to_string(),
+                        start_line,
+                        end_line,
+                    }
+                })
+                .collect()
+        } else {
+            Vec::new()
+        };
 
         let excludes = collect_excludes(&document, &root_dir);
         let member_manifests = discover_members(&document, &manifest_path, &root_dir, &excludes)?;
@@ -391,7 +387,7 @@ fn is_excluded(path: &Path, excludes: &[PathBuf]) -> bool {
 }
 
 /// Lexically normalize a path without touching the filesystem.
-fn normalize_path(path: &Path) -> PathBuf {
+pub(crate) fn normalize_path(path: &Path) -> PathBuf {
     let mut normalized = PathBuf::new();
     for component in path.components() {
         match component {

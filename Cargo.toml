@@ -12,7 +12,8 @@ members = [
     "hypervectorscan-rs/hypervectorscan",
     "hypervectorscan-rs/hypervectorscan-sys",
     "hypervectorscan-rs/hyperscan-src",
-    "hypervectorscan-rs/vectorscan-src", "cargo-undep",
+    "hypervectorscan-rs/vectorscan-src",
+    "cargo-undep",
 ]
 
 # Exclude sample projects from workspace
@@ -30,3 +31,11 @@ backerror-macros = { path = "backerror-rs/backerror-macros", version = "0.1.8" }
 hypervectorscan-sys = { path = "hypervectorscan-rs/hypervectorscan-sys", version = "0.1.15" }
 hyperscan-src = { path = "hypervectorscan-rs/hyperscan-src", version = "5.4.2-2" }
 vectorscan-src = { path = "hypervectorscan-rs/vectorscan-src", version = "5.4.13" }
+
+
+[profile.release]
+debug = false     # 是否生成 debug 信息
+strip = true      # 自动运行 strip
+lto = "fat"       # 深度优化 (增加编译时间但显著减小体积)
+codegen-units = 1 # 禁用并行代码生成
+panic = "abort"   # 替换 unwinding 机制

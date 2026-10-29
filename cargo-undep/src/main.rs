@@ -2,7 +2,10 @@
 //!
 //! The tool scans every workspace member for dependency inheritance
 //! (`workspace = true`) in normal, development, build, and target-specific
-//! dependency tables. Without `--fix` it only reports the unused entries.
+//! dependency tables. With no command it reports both unused workspace
+//! dependencies and dependencies that can be hoisted. The `clean` command
+//! removes unused entries; the `hoist` command moves compatible member
+//! dependency sources into `[workspace.dependencies]`.
 
 mod cleaner;
 #[cfg(not(feature = "clap-cli"))]
@@ -10,15 +13,16 @@ mod cli;
 #[cfg(feature = "clap-cli")]
 mod cli_clap;
 mod git;
+mod hoist;
 mod workspace;
 
 use std::fs;
 use std::process::ExitCode;
 
 #[cfg(not(feature = "clap-cli"))]
-use cli::Args;
+use cli::{Args, Mode};
 #[cfg(feature = "clap-cli")]
-use cli_clap::Args;
+use cli_clap::{Args, Mode};
 
 fn main() -> ExitCode {
     match run() {
@@ -41,30 +45,46 @@ fn run() -> Result<(), String> {
 
     let manifest_path = workspace::find_workspace_manifest(&start)?;
     let workspace = workspace::Workspace::load(&manifest_path)?;
-    let unused = workspace.unused_dependencies()?;
 
-    if unused.is_empty() {
-        println!("No unused workspace dependencies found.");
-        return Ok(());
+    match args.mode {
+        None => report_all(&workspace),
+        Some(Mode::Clean) => run_clean(&workspace, args.fix, args.allow_dirty),
+        Some(Mode::Hoist) => run_hoist(&workspace, args.fix, args.allow_dirty),
     }
+}
 
-    println!("Unused workspace dependencies ({}):", unused.len());
-    for dependency in &unused {
+fn report_all(workspace: &workspace::Workspace) -> Result<(), String> {
+    let unused = workspace.unused_dependencies()?;
+    print_unused(workspace, &unused);
+
+    let plan = hoist::plan(workspace)?;
+    print_hoist_plan(&plan);
+
+    if !unused.is_empty() || !plan.hoisted.is_empty() || !plan.skipped.is_empty() {
+        println!();
         println!(
-            "  - {} ({}:{})",
-            dependency.name,
-            workspace.manifest_path.display(),
-            dependency.start_line + 1
+            "Run `cargo undep clean --fix` to remove unused dependencies or `cargo undep hoist --fix` to hoist dependencies."
         );
     }
 
-    if !args.fix {
-        println!();
-        println!("Run with --fix to remove them.");
+    Ok(())
+}
+
+fn run_clean(workspace: &workspace::Workspace, fix: bool, allow_dirty: bool) -> Result<(), String> {
+    let unused = workspace.unused_dependencies()?;
+    print_unused(workspace, &unused);
+
+    if unused.is_empty() {
         return Ok(());
     }
 
-    ensure_git_safety(&workspace, args.allow_dirty)?;
+    if !fix {
+        println!();
+        println!("Run `cargo undep clean --fix` to remove them.");
+        return Ok(());
+    }
+
+    ensure_git_safety(workspace, allow_dirty)?;
 
     let cleaned = cleaner::remove_dependencies(&workspace.manifest_text, &unused);
     fs::write(&workspace.manifest_path, cleaned).map_err(|error| {
@@ -82,6 +102,81 @@ fn run() -> Result<(), String> {
     );
 
     Ok(())
+}
+
+fn run_hoist(workspace: &workspace::Workspace, fix: bool, allow_dirty: bool) -> Result<(), String> {
+    let plan = hoist::plan(workspace)?;
+    print_hoist_plan(&plan);
+
+    if !fix {
+        if !plan.changes.is_empty() {
+            println!();
+            println!("Run `cargo undep hoist --fix` to apply these changes.");
+        }
+        return Ok(());
+    }
+
+    if plan.is_empty() {
+        return Ok(());
+    }
+
+    ensure_git_safety(workspace, allow_dirty)?;
+
+    for change in &plan.changes {
+        fs::write(&change.path, &change.contents)
+            .map_err(|error| format!("failed to write {}: {error}", change.path.display()))?;
+    }
+
+    println!();
+    println!(
+        "Updated {} files and hoisted {} workspace dependencies.",
+        plan.changes.len(),
+        plan.hoisted.len()
+    );
+
+    Ok(())
+}
+
+fn print_unused(workspace: &workspace::Workspace, unused: &[&workspace::WorkspaceDependency]) {
+    if unused.is_empty() {
+        println!("No unused workspace dependencies found.");
+        return;
+    }
+
+    println!("Unused workspace dependencies ({}):", unused.len());
+    for dependency in unused {
+        println!(
+            "  - {} ({}:{})",
+            dependency.name,
+            workspace.manifest_path.display(),
+            dependency.start_line + 1
+        );
+    }
+}
+
+fn print_hoist_plan(plan: &hoist::HoistPlan) {
+    if plan.hoisted.is_empty() {
+        println!("No hoistable workspace dependencies found.");
+    } else {
+        println!("Hoistable workspace dependencies ({}):", plan.hoisted.len());
+        for dependency in &plan.hoisted {
+            println!(
+                "  - {} ({}; {} declarations)",
+                dependency.name, dependency.source, dependency.declarations
+            );
+            for manifest in &dependency.manifests {
+                println!("      {}", manifest.display());
+            }
+        }
+    }
+
+    if !plan.skipped.is_empty() {
+        println!();
+        println!("Skipped dependencies ({}):", plan.skipped.len());
+        for dependency in &plan.skipped {
+            println!("  - {}: {}", dependency.name, dependency.reason);
+        }
+    }
 }
 
 /// Enforce the git safety policy for destructive `--fix` runs.

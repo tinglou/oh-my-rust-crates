@@ -2,12 +2,16 @@
 
 [中文说明](README-cn.md)
 
-Find and remove unused `[workspace.dependencies]` from a Cargo workspace.
+Find and remove unused `[workspace.dependencies]` from a Cargo workspace, and
+hoist compatible member dependency sources into `[workspace.dependencies]`.
 
 `cargo-undep` checks every workspace member for dependencies inherited with
 `workspace = true`. A workspace dependency that no member inherits is reported
 as unused. With `--fix`, it is removed from the root `Cargo.toml` together with
 its directly attached comments.
+
+With `--hoist`, the tool instead finds dependencies that can safely be declared
+once in `[workspace.dependencies]` and inherited by their member crates.
 
 ## Installation
 
@@ -57,41 +61,132 @@ subcommand form only works after the binary has been installed into `PATH`.
 ## Usage
 
 ```text
-cargo undep [--fix] [--allow-dirty] [--manifest-path PATH]
+cargo undep [clean|hoist] [--fix] [--allow-dirty] [--manifest-path PATH]
 ```
 
 | Option | Description |
 |--------|-------------|
-| `--fix` | Remove the unused workspace dependencies |
+| `clean` | Report or remove unused `[workspace.dependencies]` |
+| `hoist` | Report or move compatible member dependency sources into `[workspace.dependencies]` |
+| `--fix` | Apply changes for the selected command |
 | `--allow-dirty` | Allow `--fix` when the git work tree is dirty or git is unavailable |
 | `--manifest-path PATH` | Path to the workspace root `Cargo.toml` |
 | `-h`, `--help` | Print help |
 | `-V`, `--version` | Print version |
 
-Without `--fix`, the tool only prints the dependencies that would be removed.
-No files are modified.
+Without a command, the tool reports both unused workspace dependencies and hoistable member dependencies. `--fix` requires `clean` or `hoist`.
 
-### Report only
+## Usage
+
+### Report unused and hoistable dependencies
 
 ```text
 $ cargo undep
+Unused workspace dependencies (0):
+No unused workspace dependencies found.
+Hoistable workspace dependencies (24):
+  - anyhow (version = "1.0.102"; 3 declarations)
+      /path/to/conan2-rs/Cargo.toml
+      /path/to/hypervectorscan-rs/hypervectorscan-sys/Cargo.toml
+      /path/to/init-log4rs/Cargo.toml
+  ...
+
+Skipped dependencies (3):
+  - macaddr-ouidb-support: mixed default-features
+  - serde: mixed default-features
+  - thiserror: incompatible version requirements `2.0.18` and `1.0.26`
+
+Run `cargo undep clean --fix` to remove unused dependencies or `cargo undep hoist --fix` to hoist dependencies.
+```
+
+### Report only unused dependencies
+
+```text
+$ cargo undep clean
 Unused workspace dependencies (2):
   - snmp-parser (/path/to/Cargo.toml:42)
   - unused-helper (/path/to/Cargo.toml:45)
 
-Run with --fix to remove them.
+Run `cargo undep clean --fix` to remove them.
 ```
 
-### Remove
+### Remove unused dependencies
 
 ```text
-$ cargo undep --fix
+$ cargo undep clean --fix
 Unused workspace dependencies (2):
   - snmp-parser (/path/to/Cargo.toml:42)
   - unused-helper (/path/to/Cargo.toml:45)
 
 Removed 2 unused workspace dependencies from /path/to/Cargo.toml.
 ```
+
+### Report hoistable dependencies
+
+```text
+$ cargo undep hoist
+Hoistable workspace dependencies (24):
+  - anyhow (version = "1.0.102"; 3 declarations)
+      /path/to/conan2-rs/Cargo.toml
+      /path/to/hypervectorscan-rs/hypervectorscan-sys/Cargo.toml
+      /path/to/init-log4rs/Cargo.toml
+  ...
+
+Skipped dependencies (3):
+  - macaddr-ouidb-support: mixed default-features
+  - serde: mixed default-features
+  - thiserror: incompatible version requirements `2.0.18` and `1.0.26`
+
+Run `cargo undep hoist --fix` to apply these changes.
+```
+
+### Hoist dependencies
+
+```text
+$ cargo undep hoist --fix
+Hoistable workspace dependencies (24):
+  ...
+
+Updated 15 files and hoisted 24 workspace dependencies.
+```
+
+## Hoisting member dependencies
+
+`--hoist` moves only the dependency source (`version`, `path`, `git`, and
+related source keys) into `[workspace.dependencies]`. Attributes that belong to
+the member stay in the member manifest, including `features`, `optional`, and
+`default-features`:
+
+```toml
+# Member before
+serde = { version = "1.0", features = ["derive"], optional = true }
+
+# Member after
+serde = { workspace = true, features = ["derive"], optional = true }
+```
+
+The workspace entry receives the shared source:
+
+```toml
+[workspace.dependencies]
+serde = "1.0"
+```
+
+The tool is conservative:
+
+- Compatible simple version requirements are merged by raising the lower bound,
+  for example `1.0` and `1.2` become `1.2`.
+- Incompatible major versions, different paths, different git sources, and
+  different `package` aliases are skipped.
+- Mixed `default-features` values are skipped, because Cargo cannot represent
+  both values without editing member attributes.
+- Custom registries are skipped.
+- Dependencies already declared in `[workspace.dependencies]` are not modified.
+- Target-specific dependency tables are supported.
+- Comments and unrelated formatting are preserved through `toml_edit`.
+
+Skipped dependencies are listed with the reason, but do not prevent other
+dependencies from being hoisted.
 
 ## What counts as used
 
@@ -187,7 +282,10 @@ explicitly. Untracked files also make the work tree dirty.
   treated as usage.
 - The commented-out dependency heuristic is intentionally conservative: a
   comment such as `# note = "text"` is also preserved.
-- The tool modifies the workspace root `Cargo.toml` only.
+- Without `--hoist`, only the workspace root `Cargo.toml` is modified. Hoisting
+  may also update member manifests.
+- Hoisting does not modify existing `[workspace.dependencies]` entries and does
+  not merge dependencies with incompatible sources or mixed `default-features`.
 
 ## Development
 
