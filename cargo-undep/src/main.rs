@@ -17,7 +17,8 @@ mod hoist;
 mod workspace;
 
 use std::fs;
-use std::process::ExitCode;
+use std::path::Path;
+use std::process::{Command, ExitCode};
 
 #[cfg(not(feature = "clap-cli"))]
 use cli::{Args, Mode};
@@ -37,10 +38,11 @@ fn main() -> ExitCode {
 fn run() -> Result<(), String> {
     let args = Args::parse()?;
 
+    let current_dir = std::env::current_dir()
+        .map_err(|error| format!("failed to get current directory: {error}"))?;
     let start = match &args.manifest_path {
         Some(path) => path.clone(),
-        None => std::env::current_dir()
-            .map_err(|error| format!("failed to get current directory: {error}"))?,
+        None => current_dir.clone(),
     };
 
     let manifest_path = workspace::find_workspace_manifest(&start)?;
@@ -48,9 +50,31 @@ fn run() -> Result<(), String> {
 
     match args.mode {
         None => report_all(&workspace),
-        Some(Mode::Clean) => run_clean(&workspace, args.fix, args.allow_dirty),
-        Some(Mode::Hoist) => run_hoist(&workspace, args.fix, args.allow_dirty),
+        Some(Mode::Clean) => run_clean(
+            &workspace,
+            args.fix,
+            args.build,
+            args.allow_dirty,
+            &manifest_path,
+        ),
+        Some(Mode::Hoist) => {
+            let scope = hoist_scope(&workspace, &current_dir);
+            run_hoist(
+                &workspace,
+                args.fix,
+                args.build,
+                args.allow_dirty,
+                &manifest_path,
+                scope,
+            )
+        }
     }
+}
+
+/// Limit `hoist` to the current directory when it is not the workspace root.
+fn hoist_scope<'a>(workspace: &workspace::Workspace, current_dir: &'a Path) -> Option<&'a Path> {
+    (current_dir != workspace.root_dir && current_dir.starts_with(&workspace.root_dir))
+        .then_some(current_dir)
 }
 
 fn report_all(workspace: &workspace::Workspace) -> Result<(), String> {
@@ -70,7 +94,13 @@ fn report_all(workspace: &workspace::Workspace) -> Result<(), String> {
     Ok(())
 }
 
-fn run_clean(workspace: &workspace::Workspace, fix: bool, allow_dirty: bool) -> Result<(), String> {
+fn run_clean(
+    workspace: &workspace::Workspace,
+    fix: bool,
+    build: bool,
+    allow_dirty: bool,
+    manifest_path: &Path,
+) -> Result<(), String> {
     let unused = workspace.unused_dependencies()?;
     print_unused(workspace, &unused);
 
@@ -101,11 +131,22 @@ fn run_clean(workspace: &workspace::Workspace, fix: bool, allow_dirty: bool) -> 
         workspace.manifest_path.display()
     );
 
+    if build {
+        run_cargo_build(manifest_path)?;
+    }
+
     Ok(())
 }
 
-fn run_hoist(workspace: &workspace::Workspace, fix: bool, allow_dirty: bool) -> Result<(), String> {
-    let plan = hoist::plan(workspace)?;
+fn run_hoist(
+    workspace: &workspace::Workspace,
+    fix: bool,
+    build: bool,
+    allow_dirty: bool,
+    manifest_path: &Path,
+    scope: Option<&Path>,
+) -> Result<(), String> {
+    let plan = hoist::plan_scoped(workspace, scope)?;
     print_hoist_plan(&plan);
 
     if !fix {
@@ -134,6 +175,26 @@ fn run_hoist(workspace: &workspace::Workspace, fix: bool, allow_dirty: bool) -> 
         plan.hoisted.len()
     );
 
+    if build && !plan.changes.is_empty() {
+        run_cargo_build(manifest_path)?;
+    }
+
+    Ok(())
+}
+
+fn run_cargo_build(manifest_path: &Path) -> Result<(), String> {
+    let workspace_root = manifest_path.parent().ok_or("manifest has no parent")?;
+    println!();
+    println!("Running `cargo build --all-targets` to verify...");
+    let status = Command::new("cargo")
+        .args(["build", "--all-targets"])
+        .current_dir(workspace_root)
+        .status()
+        .map_err(|e| format!("failed to run cargo build: {e}"))?;
+    if !status.success() {
+        return Err("cargo build failed".to_string());
+    }
+    println!("Build successful.");
     Ok(())
 }
 
@@ -155,11 +216,25 @@ fn print_unused(workspace: &workspace::Workspace, unused: &[&workspace::Workspac
 }
 
 fn print_hoist_plan(plan: &hoist::HoistPlan) {
-    if plan.hoisted.is_empty() {
-        println!("No hoistable workspace dependencies found.");
-    } else {
+    if !plan.hoisted.is_empty() {
         println!("Hoistable workspace dependencies ({}):", plan.hoisted.len());
         for dependency in &plan.hoisted {
+            println!(
+                "  - {} ({}; {} declarations)",
+                dependency.name, dependency.source, dependency.declarations
+            );
+            for manifest in &dependency.manifests {
+                println!("      {}", manifest.display());
+            }
+        }
+    }
+
+    if !plan.enforced.is_empty() {
+        if !plan.hoisted.is_empty() {
+            println!();
+        }
+        println!("Enforced inheritance ({}):", plan.enforced.len());
+        for dependency in &plan.enforced {
             println!(
                 "  - {} ({}; {} declarations)",
                 dependency.name, dependency.source, dependency.declarations
@@ -174,7 +249,13 @@ fn print_hoist_plan(plan: &hoist::HoistPlan) {
         println!();
         println!("Skipped dependencies ({}):", plan.skipped.len());
         for dependency in &plan.skipped {
-            println!("  - {}: {}", dependency.name, dependency.reason);
+            let category = match dependency.conflict_type {
+                hoist::ConflictType::VersionConflict => "[version conflict] ",
+                hoist::ConflictType::DefaultFeaturesConflict => "[default-features conflict] ",
+                hoist::ConflictType::AlreadyInWorkspace => "",
+                hoist::ConflictType::Other => "",
+            };
+            println!("  - {}{}: {}", category, dependency.name, dependency.reason);
         }
     }
 }

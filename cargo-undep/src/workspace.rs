@@ -106,6 +106,51 @@ impl Workspace {
         })
     }
 
+    /// Members to process when the command is scoped to `scope`.
+    ///
+    /// If `scope` is the workspace root, every member is returned. If `scope`
+    /// is inside a member crate, that crate is returned. Otherwise, members
+    /// whose directories are under `scope` are returned.
+    pub fn members_in_scope(&self, scope: &Path) -> Vec<PathBuf> {
+        let scope = normalize_path(scope);
+        if scope == normalize_path(&self.root_dir) {
+            return self.member_manifests.clone();
+        }
+
+        let mut containing: Option<(&PathBuf, usize)> = None;
+        for manifest in &self.member_manifests {
+            let Some(directory) = manifest.parent() else {
+                continue;
+            };
+            let directory = normalize_path(directory);
+            if scope.starts_with(&directory) {
+                let depth = directory.components().count();
+                let is_deeper = match containing {
+                    None => true,
+                    Some((_, best_depth)) => depth > best_depth,
+                };
+                if is_deeper {
+                    containing = Some((manifest, depth));
+                }
+            }
+        }
+
+        if let Some((manifest, _)) = containing {
+            return vec![manifest.clone()];
+        }
+
+        self.member_manifests
+            .iter()
+            .filter(|manifest| {
+                manifest
+                    .parent()
+                    .map(|directory| normalize_path(directory).starts_with(&scope))
+                    .unwrap_or(false)
+            })
+            .cloned()
+            .collect()
+    }
+
     /// Returns workspace dependencies that no member crate inherits.
     pub fn unused_dependencies(&self) -> Result<Vec<&WorkspaceDependency>, String> {
         let mut used = HashSet::new();
@@ -597,6 +642,29 @@ unused-a = { workspace = true }
             manifests
                 .iter()
                 .any(|path| path.ends_with("helper/Cargo.toml"))
+        );
+    }
+
+    #[test]
+    fn scopes_members_to_current_directory() {
+        let root = fixture_workspace("scope");
+        let workspace = Workspace::load(&root.join("Cargo.toml")).unwrap();
+
+        let app = workspace.members_in_scope(&root.join("app"));
+        assert_eq!(app, vec![normalize_path(&root.join("app/Cargo.toml"))]);
+
+        let nested = workspace.members_in_scope(&root.join("app/src"));
+        assert_eq!(nested, vec![normalize_path(&root.join("app/Cargo.toml"))]);
+
+        let tools = workspace.members_in_scope(&root.join("tools"));
+        assert_eq!(
+            tools,
+            vec![normalize_path(&root.join("tools/build-helper/Cargo.toml"))]
+        );
+
+        assert_eq!(
+            workspace.members_in_scope(&root),
+            workspace.member_manifests
         );
     }
 

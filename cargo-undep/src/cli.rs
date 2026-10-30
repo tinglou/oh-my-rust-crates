@@ -23,6 +23,8 @@ pub struct Args {
     pub mode: Option<Mode>,
     /// Apply changes instead of only reporting them.
     pub fix: bool,
+    /// After a successful --fix with changes, run `cargo build --all-targets` to verify.
+    pub build: bool,
     /// Allow `--fix` to run with uncommitted git changes or without git.
     pub allow_dirty: bool,
     /// Optional path to a workspace root `Cargo.toml`.
@@ -61,6 +63,7 @@ impl Args {
                 "clean" => set_mode(&mut args, Mode::Clean)?,
                 "hoist" => set_mode(&mut args, Mode::Hoist)?,
                 "--fix" => args.fix = true,
+                "--build" => args.build = true,
                 "--allow-dirty" => args.allow_dirty = true,
                 "--manifest-path" => {
                     let value = iter
@@ -121,6 +124,7 @@ COMMANDS:
 
 OPTIONS:
     --fix                  Apply changes for the selected command
+    --build                After --fix with changes, run `cargo build --all-targets` to verify
     --allow-dirty          Allow --fix with uncommitted git changes or no git
     --manifest-path PATH   Path to the workspace root Cargo.toml
     -h, --help             Print help
@@ -128,6 +132,8 @@ OPTIONS:
 
 Without COMMAND, the tool reports both unused workspace dependencies and
 hoistable member dependencies. --fix requires `clean` or `hoist`.
+When run from a member directory, `hoist` only processes crates under the
+current directory.
 ";
 
 #[cfg(test)]

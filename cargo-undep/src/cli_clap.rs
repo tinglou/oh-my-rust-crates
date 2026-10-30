@@ -25,7 +25,7 @@ pub enum Mode {
     bin_name = "cargo undep",
     version,
     about = "Find unused workspace dependencies or hoist member dependencies",
-    after_help = "Without COMMAND, the tool reports both unused workspace dependencies and hoistable member dependencies. --fix requires `clean` or `hoist`."
+    after_help = "Without COMMAND, the tool reports both unused workspace dependencies and hoistable member dependencies. --fix requires `clean` or `hoist`. When run from a member directory, `hoist` only processes crates under the current directory."
 )]
 pub struct Args {
     /// Command to run
@@ -34,6 +34,9 @@ pub struct Args {
     /// Apply changes for the selected command
     #[arg(long, global = true)]
     pub fix: bool,
+    /// After --fix with changes, run `cargo build --all-targets` to verify
+    #[arg(long, global = true)]
+    pub build: bool,
     /// Allow --fix with uncommitted git changes or no git
     #[arg(long, global = true)]
     pub allow_dirty: bool,

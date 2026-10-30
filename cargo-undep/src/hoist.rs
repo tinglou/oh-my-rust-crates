@@ -22,6 +22,7 @@ const SOURCE_KEYS: &[&str] = &[
 
 pub struct HoistPlan {
     pub hoisted: Vec<HoistedDependency>,
+    pub enforced: Vec<HoistedDependency>,
     pub skipped: Vec<SkippedDependency>,
     pub changes: Vec<FileChange>,
 }
@@ -42,6 +43,15 @@ pub struct HoistedDependency {
 pub struct SkippedDependency {
     pub name: String,
     pub reason: String,
+    pub conflict_type: ConflictType,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConflictType {
+    VersionConflict,
+    DefaultFeaturesConflict,
+    AlreadyInWorkspace,
+    Other,
 }
 
 pub struct FileChange {
@@ -157,7 +167,15 @@ impl Group {
 }
 
 pub fn plan(workspace: &Workspace) -> Result<HoistPlan, String> {
-    let mut documents = load_documents(workspace)?;
+    plan_scoped(workspace, None)
+}
+
+pub fn plan_scoped(workspace: &Workspace, scope: Option<&Path>) -> Result<HoistPlan, String> {
+    let members = match scope {
+        Some(scope) => workspace.members_in_scope(scope),
+        None => workspace.member_manifests.clone(),
+    };
+    let mut documents = load_documents(workspace, &members)?;
     let root_names: BTreeSet<String> = workspace
         .dependencies
         .iter()
@@ -165,10 +183,10 @@ pub fn plan(workspace: &Workspace) -> Result<HoistPlan, String> {
         .collect();
 
     let mut groups: BTreeMap<String, Result<Group, String>> = BTreeMap::new();
-    let mut skipped: BTreeMap<String, String> = BTreeMap::new();
+    let mut skipped: BTreeMap<String, (String, ConflictType)> = BTreeMap::new();
     let mut modified = BTreeSet::new();
 
-    for manifest in &workspace.member_manifests {
+    for manifest in &members {
         let Some((_, document)) = documents.get(manifest) else {
             continue;
         };
@@ -201,35 +219,60 @@ pub fn plan(workspace: &Workspace) -> Result<HoistPlan, String> {
                 }
                 Ok(ParseResult::Inherited) => {}
                 Ok(ParseResult::Skip(reason)) => {
-                    skipped.entry(name.to_string()).or_insert(reason);
+                    skipped
+                        .entry(name.to_string())
+                        .or_insert((reason, ConflictType::Other));
                 }
                 Err(reason) => {
-                    skipped.entry(name.to_string()).or_insert(reason);
+                    let conflict_type = if reason.contains("incompatible version") {
+                        ConflictType::VersionConflict
+                    } else if reason.contains("default-features") {
+                        ConflictType::DefaultFeaturesConflict
+                    } else if reason.contains("already declared") {
+                        ConflictType::AlreadyInWorkspace
+                    } else {
+                        ConflictType::Other
+                    };
+                    skipped
+                        .entry(name.to_string())
+                        .or_insert((reason, conflict_type));
                 }
             },
         );
     }
 
     let mut hoisted_groups = Vec::new();
+    let mut enforced_groups = Vec::new();
     for (name, group) in groups {
         if skipped.contains_key(&name) {
             continue;
         }
         if root_names.contains(&name) {
-            skipped
-                .entry(name)
-                .or_insert_with(|| "already declared in [workspace.dependencies]".to_string());
-            continue;
-        }
-        match group {
-            Ok(group) if group.default_features_conflict => {
-                skipped
-                    .entry(name)
-                    .or_insert_with(|| "mixed default-features".to_string());
+            match group {
+                Ok(group) => enforced_groups.push(group),
+                Err(reason) => {
+                    skipped.entry(name).or_insert((reason, ConflictType::Other));
+                }
             }
-            Ok(group) => hoisted_groups.push(group),
-            Err(reason) => {
-                skipped.entry(name).or_insert(reason);
+        } else {
+            match group {
+                Ok(group) if group.default_features_conflict => {
+                    skipped.entry(name).or_insert_with(|| {
+                        (
+                            "mixed default-features".to_string(),
+                            ConflictType::DefaultFeaturesConflict,
+                        )
+                    });
+                }
+                Ok(group) => hoisted_groups.push(group),
+                Err(reason) => {
+                    let conflict_type = if reason.contains("incompatible version") {
+                        ConflictType::VersionConflict
+                    } else {
+                        ConflictType::Other
+                    };
+                    skipped.entry(name).or_insert((reason, conflict_type));
+                }
             }
         }
     }
@@ -270,6 +313,28 @@ pub fn plan(workspace: &Workspace) -> Result<HoistPlan, String> {
         for group in &hoisted_groups {
             let _ = dependencies_table
                 .insert(&group.name, workspace_item_for(group, &workspace.root_dir));
+        }
+    }
+
+    // Process enforced groups (already in workspace.dependencies) - rewrite member deps to workspace = true
+    for group in &enforced_groups {
+        for declaration in &group.declarations {
+            modified.insert(declaration.location.manifest.clone());
+            let document = documents
+                .get_mut(&declaration.location.manifest)
+                .ok_or_else(|| {
+                    format!("failed to load {}", declaration.location.manifest.display())
+                })?
+                .1
+                .as_table_mut();
+            let item = dependency_item_mut(document, &declaration.location).ok_or_else(|| {
+                format!(
+                    "failed to locate dependency `{}` in {}",
+                    declaration.location.name,
+                    declaration.location.manifest.display()
+                )
+            })?;
+            rewrite_member_dependency(item)?;
         }
     }
 
@@ -323,11 +388,30 @@ pub fn plan(workspace: &Workspace) -> Result<HoistPlan, String> {
 
     let skipped = skipped
         .into_iter()
-        .map(|(name, reason)| SkippedDependency { name, reason })
+        .map(|(name, (reason, conflict_type))| SkippedDependency {
+            name,
+            reason,
+            conflict_type,
+        })
         .collect();
 
     Ok(HoistPlan {
         hoisted,
+        enforced: enforced_groups
+            .iter()
+            .map(|group| HoistedDependency {
+                name: group.name.clone(),
+                source: describe_source(&group.source, &workspace.root_dir),
+                declarations: group.declarations.len(),
+                manifests: group
+                    .declarations
+                    .iter()
+                    .map(|declaration| declaration.location.manifest.clone())
+                    .collect::<BTreeSet<_>>()
+                    .into_iter()
+                    .collect(),
+            })
+            .collect(),
         skipped,
         changes,
     })
@@ -335,11 +419,12 @@ pub fn plan(workspace: &Workspace) -> Result<HoistPlan, String> {
 
 fn load_documents(
     workspace: &Workspace,
+    members: &[PathBuf],
 ) -> Result<BTreeMap<PathBuf, (String, DocumentMut)>, String> {
     let mut documents = BTreeMap::new();
-    let mut paths = Vec::with_capacity(workspace.member_manifests.len() + 1);
+    let mut paths = Vec::with_capacity(members.len() + 1);
     paths.push(workspace.manifest_path.clone());
-    paths.extend(workspace.member_manifests.iter().cloned());
+    paths.extend(members.iter().cloned());
 
     for path in paths {
         if documents.contains_key(&path) {
@@ -985,7 +1070,7 @@ helper = { path = "../helper", version = "0.1", default-features = false }
     }
 
     #[test]
-    fn skips_dependencies_already_declared_in_workspace() {
+    fn enforces_inheritance_for_dependencies_already_in_workspace() {
         let root = temp_dir("already-declared");
         write(
             &root.join("Cargo.toml"),
@@ -1000,9 +1085,10 @@ helper = { path = "../helper", version = "0.1", default-features = false }
         let plan = plan(&workspace).unwrap();
 
         assert!(plan.hoisted.is_empty());
-        assert!(plan.changes.is_empty());
-        assert_eq!(plan.skipped[0].name, "anyhow");
-        assert!(plan.skipped[0].reason.contains("already declared"));
+        assert_eq!(plan.enforced.len(), 1);
+        assert_eq!(plan.enforced[0].name, "anyhow");
+        assert!(!plan.changes.is_empty()); // member rewritten to workspace = true
+        assert!(plan.skipped.is_empty());
     }
 
     #[test]
@@ -1068,6 +1154,39 @@ new-dep = "1"
         let a_text = changed_ending(&plan, "a/Cargo.toml");
         assert!(a_text.contains("# keep this comment"));
         assert!(a_text.contains("new-dep = { workspace = true }"));
+    }
+
+    #[test]
+    fn scopes_hoist_to_current_directory() {
+        let root = temp_dir("scoped");
+        write(
+            &root.join("Cargo.toml"),
+            "[workspace]\nmembers = [\"a\", \"b\"]\n\n[workspace.dependencies]\n",
+        );
+        write(
+            &root.join("a/Cargo.toml"),
+            "[package]\nname = \"a\"\nversion = \"0.1.0\"\n\n[dependencies]\nserde = \"1\"\n",
+        );
+        write(
+            &root.join("b/Cargo.toml"),
+            "[package]\nname = \"b\"\nversion = \"0.1.0\"\n\n[dependencies]\nanyhow = \"1\"\n",
+        );
+
+        let workspace = workspace(&root);
+        let plan = plan_scoped(&workspace, Some(&root.join("a"))).unwrap();
+
+        assert_eq!(plan.hoisted.len(), 1);
+        assert_eq!(plan.hoisted[0].name, "serde");
+        assert!(
+            plan.changes
+                .iter()
+                .all(|change| !change.path.ends_with("b/Cargo.toml"))
+        );
+
+        let root_text = changed(&plan, &workspace.manifest_path);
+        assert!(root_text.contains(r#"serde = "1""#));
+        assert!(!root_text.contains("anyhow"));
+        assert!(changed_ending(&plan, "a/Cargo.toml").contains("serde = { workspace = true }"));
     }
 
     #[test]
