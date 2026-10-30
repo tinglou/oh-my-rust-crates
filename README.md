@@ -2,56 +2,73 @@
 
 [:us: English](README.md) | [:cn: 中文](README-cn.md)
 
-A collection of Rust crates for common utilities and tools.
+A collection of focused Rust crates for diagnostics, networking, native build integration, and workspace tooling.
+
+## Key capabilities
+
+| Crate | What it gives you |
+|-------|-------------------|
+| [backerror](backerror-rs/backerror/README.md) | Java-style error locations and stack traces built on `thiserror` |
+| [macaddr-ouidb](mac-oui/macaddr-ouidb/README.md) | Fast, embedded MAC OUI lookup with region data, virtual NIC detection, and `no_std` support |
+| [conan2-rs](conan2-rs/README.md) | Conan 2 integration for Cargo build scripts and FFI projects |
+| [hypervectorscan](hypervectorscan-rs/hypervectorscan/README.md) | Safe, high-level Rust bindings for Hyperscan / Vectorscan multi-pattern matching |
+| [init-log4rs](init-log4rs/README.md) | Zero-config `log4rs` discovery, creation, and initialization |
+| [cargo-undep](cargo-undep/README.md) | Find unused workspace dependencies and hoist member dependency sources safely |
 
 ## Crates
 
-This workspace contains the following crates:
+### backerror
 
-### 1. backerror
+**Java-style backtraces for Rust errors**
 
-**Java-style backtrace for Rust**
+`backerror` captures source locations and optional stack traces when errors are created. It integrates with [thiserror](https://github.com/dtolnay/thiserror), preserving the original error type while making propagation easier to debug.
 
-`backerror` enhances error handling by automatically capturing location information and stack traces for errors. It provides seamless integration with [thiserror](https://github.com/dtolnay/thiserror) to improve debugging capabilities by tracking where errors originate in your code.
+See [backerror-rs/backerror/README.md](backerror-rs/backerror/README.md) for usage, feature flags, and output examples.
 
-See [backerror-rs/backerror/README.md](backerror-rs/backerror/README.md) for more details.
+### macaddr-ouidb
 
-### 2. macaddr-ouidb
+**High-performance MAC address OUI lookup**
 
-**High-performance MAC Address OUI Lookup**
+`macaddr-ouidb` performs fast MAC-to-manufacturer lookups from a precompiled database. It includes region information, virtual NIC detection, multiple MAC formats, and `no_std` support.
 
-`macaddr-ouidb` provides fast MAC address to manufacturer (OUI - Organizationally Unique Identifier) lookup with a pre-compiled database, plus region info, virtual NIC detection, and no_std support.
+See [mac-oui/macaddr-ouidb/README.md](mac-oui/macaddr-ouidb/README.md) for the API, feature flags, and data coverage.
 
-See [mac-oui/macaddr-ouidb/README.md](mac-oui/macaddr-ouidb/README.md) for more details.
-
-### 3. conan2-rs
+### conan2-rs
 
 **Conan 2 integration for Cargo build scripts**
 
-`conan2-rs` provides a Rust interface to the [Conan 2](https://docs.conan.io/2/) C/C++ package manager, making it easy to manage native C/C++ dependencies directly from `build.rs` in FFI projects.
+`conan2-rs` provides a Rust interface to the [Conan 2](https://docs.conan.io/2/) package manager, so FFI crates can install native C/C++ dependencies directly from `build.rs`.
 
-See [conan2-rs/README.md](conan2-rs/README.md) for more details.
+See [conan2-rs/README.md](conan2-rs/README.md) for a complete `build.rs` example and API overview.
 
-### 4. hypervectorscan
+### hypervectorscan
 
 **Safe Rust wrapper for Hyperscan / Vectorscan**
 
-`hypervectorscan` provides a safe, high-level Rust API for [Hyperscan](https://github.com/intel/hyperscan) / [Vectorscan](https://github.com/VectorCamp/vectorscan) — a high-performance multi-pattern regex matching engine. Supports block, streaming, and vectored scanning modes with automatic C library detection via conan, vcpkg, system, or vendored builds.
+`hypervectorscan` exposes a safe, high-level API for [Hyperscan](https://github.com/intel/hyperscan) / [Vectorscan](https://github.com/VectorCamp/vectorscan). It supports block, streaming, and vectored scanning, with automatic C library detection through conan, vcpkg, the system, or vendored builds.
 
-See [hypervectorscan-rs/hypervectorscan/README.md](hypervectorscan-rs/hypervectorscan/README.md) for more details.
+See [hypervectorscan-rs/hypervectorscan/README.md](hypervectorscan-rs/hypervectorscan/README.md) for examples, features, and linking notes.
 
-### 5. init-log4rs
+### init-log4rs
 
 **Zero-config log4rs initialization**
 
-`init-log4rs` automatically discovers and initializes log4rs configuration, enabling logging for Rust applications without manual setup.
+`init-log4rs` discovers an existing `log4rs` configuration or creates a sensible default, including console output and rotating file logs. Optional `tracing` support bridges spans and events into the same pipeline.
 
-See [init-log4rs/README.md](init-log4rs/README.md) for more details.
+See [init-log4rs/README.md](init-log4rs/README.md) for setup and configuration details.
+
+### cargo-undep
+
+**Workspace dependency cleanup and hoisting**
+
+`cargo-undep` reports and removes unused `[workspace.dependencies]`, and can hoist compatible member dependency sources into the workspace while preserving member-level attributes such as `features`, `optional`, and `default-features`.
+
+See [cargo-undep/README.md](cargo-undep/README.md) for commands, examples, and safety rules.
+
+## Development
+
+Build, test, and release instructions live in [DEVELOPMENT.md](DEVELOPMENT.md). Contributions are welcome.
 
 ## License
 
 All crates in this workspace are licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
-
-## Contributing
-
-Issues and Pull Requests are welcome!
