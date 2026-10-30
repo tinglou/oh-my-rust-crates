@@ -4,12 +4,14 @@
 
 查找并清理 Cargo 工作区 `[workspace.dependencies]` 中未被引用的依赖，并将成员 crate 中可安全共享的依赖来源提升到 `[workspace.dependencies]`。
 
-## 两大功能
+## 主要功能
 
 ### `clean` — 查找并删除无用的工作区依赖
+
 扫描所有工作区成员的 `workspace = true` 继承关系。未被任何成员引用的 `[workspace.dependencies]` 条目视为无用。使用 `--fix` 时，连同紧邻上方的注释一起从根 `Cargo.toml` 删除。
 
 ### `hoist` — 将成员依赖来源提升到工作区依赖
+
 查找可以安全地在 `[workspace.dependencies]` 中只声明一次、并由成员 crate 继承的依赖。**只把来源（`version`、`path`、`git`）移到工作区层**；成员级属性（`features`、`optional`、`default-features`）保留在成员 manifest。使用 `--fix` 时，也会对已在 `[workspace.dependencies]` 中的依赖强制把成员改为 `workspace = true`（强制继承）。
 
 ## 安装
@@ -45,7 +47,7 @@ cargo undep hoist --fix
 
 ## 命令行参数
 
-```
+```bash
 cargo undep [clean|hoist] [--fix] [--build] [--allow-dirty] [--manifest-path PATH]
 ```
 
@@ -156,6 +158,7 @@ serde = "1.0"
 ## 策略
 
 ### 引用判定规则
+
 当工作区成员在以下任意表中以 `workspace = true` 声明同名依赖时，该 `[workspace.dependencies]` 条目视为被引用：
 
 - `[dependencies]`
@@ -168,6 +171,7 @@ serde = "1.0"
 同时支持 inline table 和 `[dependencies.foo]` 子表写法。工作区内的 path 依赖会自动纳入成员继续扫描。支持 `[workspace].members` glob 和 `[workspace].exclude`。
 
 ### 注释处理规则
+
 删除依赖时，紧邻上方的连续注释也会被删除；如果中间存在空行，则不会删除：
 
 ```toml
@@ -200,6 +204,7 @@ unused = "1.0"
 当一行满足 `# name = value` 形式，其中 key 是合法依赖名，value 看起来像依赖值（字符串、inline table 或裸数字）时，会被视为“被注释的依赖”。这类行同时作为扫描边界：它以及它上方的注释都不会被删除。
 
 ### 版本兼容判定
+
 可兼容的简单版本要求会合并，并提高最低版本（caret 语义）：
 
 - `1.0` + `1.2` → `1.2`
@@ -211,6 +216,7 @@ unused = "1.0"
 被跳过的依赖会列出原因，但不会阻止其他依赖被提升。
 
 ### Git 安全策略
+
 `--fix` 会修改文件，因此默认要求 git 工作区干净：
 
 1. 必须存在 `git`。

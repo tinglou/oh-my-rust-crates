@@ -4,12 +4,14 @@
 
 Find and remove unused `[workspace.dependencies]` from a Cargo workspace, and hoist compatible member dependency sources into `[workspace.dependencies]`.
 
-## Two features
+## Key capabilities
 
 ### `clean` — Find and remove unused workspace dependencies
+
 Scans every workspace member for `workspace = true` inheritance. A workspace dependency that no member inherits is reported as unused. With `--fix`, it is removed from the root `Cargo.toml` together with its directly attached comments.
 
 ### `hoist` — Hoist member dependency sources into workspace dependencies
+
 Finds dependencies that can safely be declared once in `[workspace.dependencies]` and inherited by their member crates. Moves only the source (`version`, `path`, `git`) to the workspace level; member-level attributes (`features`, `optional`, `default-features`) stay in the member crate. With `--fix`, also enforces inheritance for dependencies already declared in `[workspace.dependencies]`.
 
 ## Installation
@@ -45,7 +47,7 @@ cargo undep hoist --fix
 
 ## Command line options
 
-```
+```bash
 cargo undep [clean|hoist] [--fix] [--build] [--allow-dirty] [--manifest-path PATH]
 ```
 
@@ -146,6 +148,7 @@ serde = "1.0"
 ## Strategies
 
 ### Reference detection
+
 A `[workspace.dependencies]` entry is considered used when a workspace member declares the same dependency key with `workspace = true` in any of these tables:
 
 - `[dependencies]`
@@ -158,6 +161,7 @@ A `[workspace.dependencies]` entry is considered used when a workspace member de
 Both inline tables and `[dependencies.foo]` sub-tables are supported. Path dependencies within the workspace are automatically followed. `[workspace].members` glob patterns and `[workspace].exclude` are respected.
 
 ### Comment handling
+
 When a dependency is removed, comments directly above it are removed too, as long as they are contiguous and not separated by a blank line:
 
 ```toml
@@ -190,6 +194,7 @@ After `--fix`, the commented-out dependency remains:
 A line is treated as a commented-out dependency when it has the form `# name = value`, where the key is a valid dependency name and the value looks like a dependency value (string, inline table, or bare number). Such a line also acts as a boundary: comments above it are not removed.
 
 ### Version compatibility
+
 Compatible simple version requirements are merged by raising the lower bound (caret semantics):
 
 - `1.0` + `1.2` → `1.2`
@@ -201,6 +206,7 @@ Compatible simple version requirements are merged by raising the lower bound (ca
 Skipped dependencies are listed with the reason, but do not prevent other dependencies from being hoisted.
 
 ### Git safety
+
 `--fix` is destructive, so it requires a clean git work tree by default:
 
 1. `git` must be available.
