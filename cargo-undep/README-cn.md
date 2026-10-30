@@ -46,7 +46,7 @@ cargo undep hoist --fix
 ## 命令行参数
 
 ```
-cargo undep [clean|hoist] [--fix] [--allow-dirty] [--manifest-path PATH]
+cargo undep [clean|hoist] [--fix] [--build] [--allow-dirty] [--manifest-path PATH]
 ```
 
 | 参数 | 说明 |
@@ -66,74 +66,75 @@ cargo undep [clean|hoist] [--fix] [--allow-dirty] [--manifest-path PATH]
 
 ### 同时报告无用依赖和可提升依赖
 
+以下输出保留工具实际的英文输出。
+
 ```text
 $ cargo undep
-无用工作区依赖 (0):
-未发现无用工作区依赖。
-可提升工作区依赖 (24):
-  - anyhow (version = "1.0.102"; 3 声明)
+No unused workspace dependencies found.
+Hoistable workspace dependencies (24):
+  - anyhow (version = "1.0.102"; 3 declarations)
       /path/to/conan2-rs/Cargo.toml
       /path/to/hypervectorscan-rs/hypervectorscan-sys/Cargo.toml
       /path/to/init-log4rs/Cargo.toml
   ...
 
-已跳过依赖 (3):
-  - macaddr-ouidb-support: default-features 不一致
-  - serde: default-features 不一致
-  - thiserror: 不兼容的版本要求 `2.0.18` 和 `1.0.26`
+Skipped dependencies (3):
+  - [default-features conflict] macaddr-ouidb-support: mixed default-features
+  - [default-features conflict] serde: mixed default-features
+  - [version conflict] thiserror: incompatible version requirements `2.0.18` and `1.0.26`
 
-请运行 `cargo undep clean --fix` 删除无用依赖，或运行 `cargo undep hoist --fix` 提升依赖。
+Run `cargo undep clean --fix` to remove unused dependencies or `cargo undep hoist --fix` to hoist dependencies.
 ```
 
 ### 只检测无用依赖
 
 ```text
 $ cargo undep clean
-无用工作区依赖 (2):
+Unused workspace dependencies (2):
   - snmp-parser (/path/to/Cargo.toml:42)
   - unused-helper (/path/to/Cargo.toml:45)
 
-请运行 `cargo undep clean --fix` 删除它们。
+Run `cargo undep clean --fix` to remove them.
 ```
 
 ### 清理无用依赖
 
 ```text
 $ cargo undep clean --fix
-无用工作区依赖 (2):
+Unused workspace dependencies (2):
   - snmp-parser (/path/to/Cargo.toml:42)
   - unused-helper (/path/to/Cargo.toml:45)
 
-已从 /path/to/Cargo.toml 中删除 2 个无用工作区依赖。
+Removed 2 unused workspace dependencies from /path/to/Cargo.toml.
 ```
 
 ### 只检测可提升依赖
 
 ```text
 $ cargo undep hoist
-可提升工作区依赖 (24):
-  - anyhow (version = "1.0.102"; 3 声明)
+Hoistable workspace dependencies (24):
+  - anyhow (version = "1.0.102"; 3 declarations)
       /path/to/conan2-rs/Cargo.toml
       /path/to/hypervectorscan-rs/hypervectorscan-sys/Cargo.toml
       /path/to/init-log4rs/Cargo.toml
   ...
 
-已跳过依赖 (3):
-  - macaddr-ouidb-support: default-features 不一致
-  - serde: default-features 不一致
-  - thiserror: 不兼容的版本要求 `2.0.18` 和 `1.0.26`
+Skipped dependencies (3):
+  - [default-features conflict] macaddr-ouidb-support: mixed default-features
+  - [default-features conflict] serde: mixed default-features
+  - [version conflict] thiserror: incompatible version requirements `2.0.18` and `1.0.26`
 
-请运行 `cargo undep hoist --fix` 应用这些变更。
+Run `cargo undep hoist --fix` to apply these changes.
 ```
 
 ### 提升依赖
 
 ```text
 $ cargo undep hoist --fix
-可提升工作区依赖 (24):
+Hoistable workspace dependencies (24):
   ...
 
-已更新 15 个文件，提升了 24 个工作区依赖。
+Updated 15 files and hoisted 24 workspace dependencies.
 ```
 
 ### 提升前后对比

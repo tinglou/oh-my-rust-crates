@@ -46,7 +46,7 @@ cargo undep hoist --fix
 ## Command line options
 
 ```
-cargo undep [clean|hoist] [--fix] [--allow-dirty] [--manifest-path PATH]
+cargo undep [clean|hoist] [--fix] [--build] [--allow-dirty] [--manifest-path PATH]
 ```
 
 | Option | Description |
@@ -68,7 +68,6 @@ Without a command, the tool reports both unused workspace dependencies and hoist
 
 ```text
 $ cargo undep
-Unused workspace dependencies (0):
 No unused workspace dependencies found.
 Hoistable workspace dependencies (24):
   - anyhow (version = "1.0.102"; 3 declarations)
@@ -78,9 +77,9 @@ Hoistable workspace dependencies (24):
   ...
 
 Skipped dependencies (3):
-  - macaddr-ouidb-support: mixed default-features
-  - serde: mixed default-features
-  - thiserror: incompatible version requirements `2.0.18` and `1.0.26`
+  - [default-features conflict] macaddr-ouidb-support: mixed default-features
+  - [default-features conflict] serde: mixed default-features
+  - [version conflict] thiserror: incompatible version requirements `2.0.18` and `1.0.26`
 
 Run `cargo undep clean --fix` to remove unused dependencies or `cargo undep hoist --fix` to hoist dependencies.
 ```
@@ -115,9 +114,9 @@ Hoistable workspace dependencies (24):
   ...
 
 Skipped dependencies (3):
-  - macaddr-ouidb-support: mixed default-features
-  - serde: mixed default-features
-  - thiserror: incompatible version requirements `2.0.18` and `1.0.26`
+  - [default-features conflict] macaddr-ouidb-support: mixed default-features
+  - [default-features conflict] serde: mixed default-features
+  - [version conflict] thiserror: incompatible version requirements `2.0.18` and `1.0.26`
 
 Run `cargo undep hoist --fix` to apply these changes.
 
