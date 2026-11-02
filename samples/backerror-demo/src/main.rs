@@ -34,10 +34,25 @@ fn throw_error3() -> Result<(), MyError3> {
 }
 
 fn main() {
-    if let Err(err) = throw_error3() {
+    if let Err(err3) = throw_error3() {
+        println!("===========================================");
         println!("Display output:");
-        println!("{}", err);
+        println!("{}", err3);
         println!("\nDebug output:");
-        println!("{:?}", err);
+        println!("{:?}", err3);
+
+        println!("===========================================");
+        let MyError3::MyError2(err2) = err3;
+        println!("Display output:");
+        println!("{}", err2);
+        println!("\nDebug output:");
+        println!("{:?}", err2);
+
+        println!("===========================================");
+        let MyError2::MyError1(err1) = &*err2;
+        println!("Display output:");
+        println!("{}", err1);
+        println!("\nDebug output:");
+        println!("{:?}", err1);
     }
 }

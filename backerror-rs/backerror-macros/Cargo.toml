@@ -9,7 +9,7 @@ categories = [
 documentation = "https://docs.rs/backerror/"
 keywords = ["error", "error-handling", "backtrace", "stacktrace", "thiserror"]
 
-version = "0.1.8"
+version = "0.2.0"
 authors.workspace = true
 license.workspace = true
 edition.workspace = true
@@ -18,13 +18,11 @@ repository.workspace = true
 [lib]
 proc-macro = true
 
-[features]
-release_off = []
 
 [dependencies]
 proc-macro2 = "1.0"
 quote = "1.0"
-syn = { version = "2.0", features = ["full"] }
+syn = { version = "3.0", features = ["full"] }
 
 [dev-dependencies]
 thiserror = "2.0.18"

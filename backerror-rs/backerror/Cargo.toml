@@ -9,7 +9,7 @@ categories = [
 documentation = "https://docs.rs/backerror/"
 keywords = ["error", "error-handling", "backtrace", "stacktrace", "thiserror"]
 
-version = "0.1.8"
+version = "0.2.0"
 authors.workspace = true
 license.workspace = true
 edition.workspace = true
@@ -17,7 +17,7 @@ repository.workspace = true
 
 
 [dependencies]
-backerror-macros = { path = "../backerror-macros", version = "0.1.8" }
+backerror-macros = { path = "../backerror-macros", version = "0.2.0" }
 
 
 [dev-dependencies]
@@ -26,13 +26,13 @@ thiserror = "2"
 [features]
 default = ["force_backtrace", "release_off"]
 
-# only if environment variable RUST_BACKTRACE or RUST_LIB_BACKTRACE is set
-backtrace = ["std"]
-
 # force backtrace even if environment variable is not set
 force_backtrace = ["backtrace"]
 
+# only if environment variable RUST_BACKTRACE or RUST_LIB_BACKTRACE is set
+backtrace = ["std"]
+
 # turn off attribute macro in release mode
-release_off = ["backerror-macros/release_off"]
+release_off = []
 
 std = []
