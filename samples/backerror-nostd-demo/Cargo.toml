@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-backerror = { version = "0.1.8", default-features = false }
+backerror = { path = "../../backerror-rs/backerror", version = "0.1.8", default-features = false }
 thiserror = "2.0"
