@@ -5,8 +5,8 @@
 # MA-S(36 bits): https://standards-oui.ieee.org/oui36/oui36.csv
 # IAB(36 bits): https://standards-oui.ieee.org/iab/iab.csv
 
-# Updated: 2026-10-19T07:29:54Z
-# Count: oui-24 = 40344, oui-28 = 6641, oui-36 = 11810, total = 58795
+# Updated: 2026-11-01 16:13:41.431729543 +0000 UTC m=+0.000431633
+# Count: oui-24 = 40423, oui-28 = 6664, oui-36 = 11828, total = 58915
 # Duplicate prefixes are deduplicated: the LAST occurrence (most recent
 # allocation) is kept. Dropped entries are logged to duplicate-prefix.log.
 #
@@ -8142,13 +8142,29 @@ D02791 US TP-Link Systems Inc.
 D8AC2D US Mellanox Technologies, Inc.
 E4C218 US Silicon Laboratories
 0071EA TW Qisda Corporation
-001EB8 KR ATLAS LINK INC.
-F4F032 US Ciena Corporation
-14AB7E US Ciena Corporation
-B4DB91 CA Celestica Platform and Cloud Solution Malaysia Sdn Bhd
-EC502A CN Funshion Online Technologies Co.,Ltd
 249123 CN SZ DJI Ronin Technology Co., Ltd.
 2051A5 US NetApp, Inc.
+B4DB91 CA Celestica Platform and Cloud Solution Malaysia Sdn Bhd
+EC502A CN Funshion Online Technologies Co.,Ltd
+F4F032 US Ciena Corporation
+14AB7E US Ciena Corporation
+001EB8 KR ATLAS LINK INC.
+441EB0 US Apple, Inc.
+0CFBCF US Apple, Inc.
+34E8CB US Apple, Inc.
+0CCE6B US Apple, Inc.
+748E9C CN Shenzhen Yingchen Technology Co., Ltd.
+ECE60E US Apple, Inc.
+404E9E US Apple, Inc.
+3C310A IN METRO ELECTRONICS
+A80FCA US Juniper Networks
+645647 CA Nokia
+241FBE CN Beijing Xiaomi Mobile Software Co., Ltd
+74BCBC CN PHOTONIC TECHNOLOGIES(SHANGHAI) CO.,LTD.
+5857F0 MY Celestica Platform and Cloud Solution Malaysia Sdn Bhd
+D0C216 IE Decawave Ltd
+4C5149 VN GSD VIET NAM TECHNOLOGY COMPANY LIMITED
+FCF684 US MatX
 00749C CN Ruijie Networks Co.,LTD
 000FEA TW GIGA-BYTE TECHNOLOGY CO.,LTD.
 38AD2B TW Hitron Technologies. Inc
@@ -16139,6 +16155,20 @@ A4E972 VG Espressif Inc.
 481318 CN zte corporation
 4053B3 CN SUNITEC TECHNOLOGY CO.,LIMITED
 1CCCCD HK TECNO MOBILE LIMITED
+14168C MY IoTronix Technologies Sdn. Bhd.
+B4FEB5 SG Espressif Systems (Singapore) Pte. Ltd
+34C934 VG Espressif Inc.
+4C091B US Apple, Inc.
+402F53 US Apple, Inc.
+5CA12E US Apple, Inc.
+D4C9D7 US Apple, Inc.
+BC2A51 US Apple, Inc.
+BC1409 US Arista Networks
+3C6F75 US Juniper Networks
+585016 US Juniper Networks
+849A10 CN Kingtype Technologies corp.,Ltd.
+10018C CN Beijing Xiaomi Mobile Software Co., Ltd
+402364 GB Serage
 6C8720 CN New H3C Technologies Co., Ltd
 0C8D7A IL RADiflow
 FCA9F5 CN Xiaomi Communications Co Ltd
@@ -24184,9 +24214,25 @@ CC5EFF IN Nokia Solutions and Network India Private Limited
 08E491 CN Shenzhen Jingxun Technology Co., Ltd.
 3C6314 TR Gespant
 6CC4AF SG Espressif Systems (Singapore) Pte. Ltd
-00E0EC MY Celestica Platform and Cloud Solution Malaysia Sdn Bhd
+407803 CN Guangzhou Shiyuan Electronic Technology Company Limited
+BC1656 CN Guangzhou Shiyuan Electronic Technology Company Limited
 7C86F3 CN zte corporation
 989891 CN zte corporation
+00E0EC MY Celestica Platform and Cloud Solution Malaysia Sdn Bhd
+AC2FE5 JP CANON INC.
+685370 CN Chipsea Technologies (Shenzhen) Corp.
+E89DEA US Silicon Laboratories
+A06025 SG Espressif Systems (Singapore) Pte. Ltd
+E4FD9D CN Shenzhen Skyworth Display Technologies Co.,Ltd
+F80C4E VG Espressif Inc.
+6C2FA0 VG Espressif Inc.
+206D9A CN GUANGDONG OPPO MOBILE TELECOMMUNICATIONS CORP.,LTD
+D48E83 US Apple, Inc.
+80C327 US Apple, Inc.
+EC43C4 TW MitraStar Technology Corp.
+28BC82 CZ AMiT Automation
+9CADE0 MY Intel Corporate
+94FC9A US Google, Inc.
 B00C9D CN Quectel Wireless Solutions Co.,Ltd.
 F0AB1F CN zte corporation
 7CB30A CN zte corporation
@@ -32314,12 +32360,29 @@ C02897 US Cisco Systems, Inc
 AC8E63 CN CHINA DRAGON TECHNOLOGY LIMITED
 74E517 US Microsoft Corporation
 0C37F7 US HP Inc.
-08F78C JP Nintendo Co.,Ltd
-D04341 CN Sichuan AI-Link Technology Co., Ltd.
-D849BF MY Celestica Platform and Cloud Solution Malaysia Sdn Bhd
 64F64D MY Celestica Platform and Cloud Solution Malaysia Sdn Bhd
 5CAAA2 MY Celestica Platform and Cloud Solution Malaysia Sdn Bhd
+D04341 CN Sichuan AI-Link Technology Co., Ltd.
+90DB77 US Arista Networks
+94AA7E NZ Inveya Limited
+D849BF MY Celestica Platform and Cloud Solution Malaysia Sdn Bhd
+08F78C JP Nintendo Co.,Ltd
 5CAB22 US IEEE Registration Authority
+2C1719 US Motorola Mobility LLC, a Lenovo Company
+482B75 US Apple, Inc.
+88039E US Apple, Inc.
+D440CF US Apple, Inc.
+449D76 US Apple, Inc.
+709620 US Hewlett Packard Enterprise
+94EA36 US Telink Micro LLC
+A8756A US Juniper Networks
+D40CFD US Apple, Inc.
+8CF4F5 US Apple, Inc.
+5830AC CN Quectel Wireless Solutions Co.,Ltd.
+BCD810 US Amazon Technologies Inc.
+888AF5 MY Intel Corporate
+B8F453 US IEEE Registration Authority
+60415A US Google, Inc.
 C85CE2 US IEEE Registration Authority
 DCEE14 CN ADT Technology
 10FFE0 TW GIGA-BYTE TECHNOLOGY CO.,LTD.
@@ -40355,7 +40418,23 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 14CCE7 US Vizio, Inc
 101201 US AMD
 0090DD JP FURUKAWA MIHARU SOLUTIONS CORPORATION
+347D53 US Juniper Networks
+60C807 US Apple, Inc.
+58B145 SG Espressif Systems (Singapore) Pte. Ltd
+CCE732 VG Espressif Inc.
 0C48C6 MY Celestica Platform and Cloud Solution Malaysia Sdn Bhd
+F02E7A US Motorola Mobility LLC, a Lenovo Company
+08299E CA Nokia
+6CC51F TW WNC Corporation
+542B88 SG Espressif Systems (Singapore) Pte. Ltd
+70C3BE FR INGRAM MICRO SERVICES
+145CDA CN GUANGDONG OPPO MOBILE TELECOMMUNICATIONS CORP.,LTD
+C08009 US Vantiva USA LLC
+2C0C88 US Silicon Laboratories
+948580 US Amazon Technologies Inc.
+245D5B CN Bouffalo Lab (Nanjing) Co., Ltd.
+1CFC4E CN EFORT Intelligent Robot Co., Ltd. Copyright
+D40511 CN TCL King Electrical Appliances(Huizhou)Co.,Ltd
 40D8550D7 PR Avant Technologies
 0050C2F71 US RF Code
 0050C29CC JP Hirotech inc.
@@ -46030,7 +46109,6 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F64E00 IT DVB-TECH S.R.L.
 8C1F64F1D DE MB connect line GmbH Fernwartungssysteme
 8C1F64881 HU Flextronics International Kft
-8C1F6481F US ViewSonic Corp
 8C1F64487 DE TECHKON GmbH
 8C1F64042 DE HEITEC AG
 70B3D5695 DE Televic Rail GmbH
@@ -46072,7 +46150,6 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F6456B US Avida, Inc.
 8C1F6448B US Monnit Corporation
 8C1F64ED6 GB PowTechnology Limited
-8C1F645B9 US ViewSonic Corp
 8C1F64364 IN TILAK INTERNATIONAL
 8C1F641C9 IT Pneumax Spa
 8C1F64B18 CH Grossenbacher Systeme AG
@@ -46372,7 +46449,12 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F64E7F DE Automata GmbH & Co. KG
 8C1F6401B JP Fujitsu Defense & National Security Limited
 8C1F64B87 IL ELBIT- ROKAR
+8C1F64302 DE Brandmaier Messen, Steuern, Software
 8C1F64532 KR SEONGWON ENG CO.,LTD
+8C1F64C5F NL Unitron Systems b.v.
+8C1F64D2E IT Logital S.R.L.
+8C1F645B9 US ViewSonic Corp
+8C1F6481F US ViewSonic Corp
 8C1F64A98 US Jacobs Technology, Inc.
 8C1F644A9 IT Martec Marine S.p.a.
 8C1F64DE5 US Gogo Business Aviation
@@ -47507,7 +47589,6 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F645DF DE Roesch Walter Industrie-Elektronik GmbH
 70B3D5C45 DE STIEBEL ELTRON GMBH & CO. KG
 8C1F64203 KR ENTOSS Co.,Ltd
-8C1F646DD US ViewSonic Corp
 8C1F64F68 JP YUYAMA MFG Co.,Ltd
 001BC5042 GB Chamsys Ltd
 8C1F64D99 CA INVIXIUM ACCESS INC
@@ -47831,6 +47912,8 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F64B0B CH Zumbach Electronic AG
 8C1F642B5 SG XTEC Industries Pte Ltd
 8C1F64FAD IN LOOKMAN DISTRIBUTION PVT.LTD
+8C1F64B11 AU RFTEQ PTY LTD
+8C1F646DD US ViewSonic Corp
 8C1F64E6F FR Vision Systems Safety Tech
 70B3D5119 KR YPP Corporation
 70B3D5159 IT RCH SPA
@@ -48929,7 +49012,6 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F64C2D CA iENSO Inc.
 8C1F64B9F US Lithion Battery Inc
 8C1F646DC US Intrinsic Innovation, LLC
-8C1F64C1A US ViewSonic Corp
 8C1F64332 US NEXET LLC
 8C1F64E68 ZA LHA Systems (Pty) Ltd
 8C1F645A9 SE Aktiebolag Solask Energi
@@ -49287,6 +49369,9 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F64FF1 JP KODENSHI CORP.
 8C1F643EC DE SPEKTRA Schwingungstechnik und Akustik GmbH Dresden
 8C1F64DA9 US AllLinkX inc
+8C1F64405 FR Digital Way
+8C1F64C1A US ViewSonic Corp
+8C1F64282 PT LIVTC Portugal, Lda
 8C1F6482B AU Flow Power
 8C1F645A7 IT RCH SPA
 8C1F64049 FR NUANCES ORG
@@ -50417,7 +50502,6 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F64876 SG fmad engineering
 8C1F64149 BE Clock-O-Matic
 8C1F64608 VN CONG TY CO PHAN KY THUAT MOI TRUONG VIET AN
-8C1F6462E US ViewSonic Corp
 8C1F64060 US Zadar Labs Inc
 8C1F64987 DE Peter Huber Kaeltemaschinenbau SE
 8C1F64FF8 GB Chamsys Ltd
@@ -50734,6 +50818,10 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F64137 AU Altronics Distributors Pty Ltd
 8C1F64829 US Potter Electric Signal Company
 8C1F649B0 US Karman
+8C1F64C47 GB Season Electronics Ltd
+8C1F649ED IN Sotech Development Pvt. Ltd.
+8C1F6462E US ViewSonic Corp
+8C1F64E6C GB Fuse Energy
 8C1F64D63 IL Mobileye
 8C1F643C8 SE BTG Instruments AB
 70B3D590E IL Maytronics Ltd.
@@ -50761,7 +50849,6 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F64B68 AU All-Systems Electronics Pty Ltd
 8C1F64C4A CA SGi Technology Group Ltd.
 8C1F64C0D NO Abbott Diagnostics Technologies AS
-8C1F64A3F US ViewSonic Corp
 70B3D54DA IL RADA Electronics Industries Ltd.
 8C1F64501 DE QUISS GmbH
 8C1F64D24 GB R3 IoT Ltd.
@@ -51860,7 +51947,6 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F64945 TW Deqin Showcase
 8C1F64F49 US CenterClick LLC
 8C1F642B1 TW U -MEI-DAH INT'L ENTERPRISE CO.,LTD.
-8C1F6436B US ViewSonic Corp
 8C1F64D9E DE Wagner Group GmbH
 8C1F64D5D IN Genius Vision Digital Private Limited
 8C1F64CEC CN Zhuhai Huaya machinery Technology Co., LTD
@@ -52165,7 +52251,18 @@ F43E46 AT Xenox IT & Kommunikations GmbH
 8C1F64A68 IT AvMap srlu
 8C1F64B4D FR OTODO
 8C1F643F0 HR Supracontrol d.o.o.
+8C1F64EA3 CN Newtouch Electronics (Shanghai) Co., LTD.
+8C1F645BB US Powell Electronics Inc.
 8C1F64860 US Gogo BA
+8C1F64679 CN Guangdong Gospower Electric Technology Co., Ltd.
+8C1F6495F CA INVIXIUM ACCESS INC
+8C1F64ADD KR Intermobility Co., Ltd.
+8C1F6484F US Rouchon Industries Inc.
+8C1F6446F DE inomatic GmbH
+8C1F64A3F US ViewSonic Corp
+8C1F6436B US ViewSonic Corp
+8C1F6411C KR WITCON Co., Ltd.
+8C1F64C9C ES IDNEO TECHNOLOGIES,S.A.U.
 C85CE27 IN SYNERGY SYSTEMS AND SOLUTIONS
 741AE09 -- Private
 C85CE2A IN San Telequip (P) Ltd.
@@ -53330,7 +53427,6 @@ BCDFE1C US XY Sense, Inc.
 6C27C84 HU PickUp Kft.
 F82BE61 US Coastal Source
 F82BE64 TW Wistron Corporation
-F82BE60 US ViewSonic Corp
 F82BE62 CN Flextronics Computing(SuZhou)Co.,LTD.
 04C98B6 IL Annapurna labs
 04C98B2 US Moog Inc
@@ -53509,8 +53605,17 @@ A0C5F2A US e2ip Technologies
 4C81BE6 CN Shenzhen Ultra Meta Industrial Control Technology Co.,Ltd.
 4C81BE8 GB Port Of London Authority
 CCF7225 DE Foritec GmbH
-CCF7229 DE deutherm cooling GmbH
+5CAB229 US KIWEE BROADBAND
 CCF7222 GB Everfox Ltd
+CCF7229 DE deutherm cooling GmbH
+5CAB224 DK Comet Technologies Denmark A/S
+5CAB22C CN Link-Card Tech Co.Ltd.
+B8F4531 CN GANZHOU DEHUIDA TECHNOLOGY CO., LTD
+5CAB22E -- Private
+F82BE60 US ViewSonic Corp
+B8F4534 US Ontic Engineering & Manufacturing
+B8F453A EE Skeleton Technologies OÜ
+B8F453D KR Withusnet Co., Ltd
 B84C873 CN Shenzhen Link-all Technology Co., Ltd
 B84C87C US SOND
 B84C87B CN Beijing Yunji Technology Co., Ltd.
@@ -54772,6 +54877,13 @@ C8F10A8 HK BWELL TECHNOLOGY INTERNATIONAL LIMITED
 CCF7228 IN 75F Engineering Services India Private Ltd
 CCF722A KR WIWORLD CO.,LTD
 5CAB223 CN Xiamen Joint Tech. CO.,Ltd.
+5CAB22D NL Stadium Grow Lighting B.V
+5CAB22B US Digicare Biomedical Technology, Inc.
+B8F4532 JP Hamamatsu Photonics K.K.
+5CAB221 GB MDA SatConn UK
+B8F4538 US ViewSonic Corp
+B8F4530 IT ELS Instruments
+B8F4537 CZ Valthor, s.r.o.
 B84C87A US Altronix, Corp
 8CC8F47 US TableSafe
 58E8760 CN Zhuhai Raysharp Technology Co.,Ltd
@@ -56137,6 +56249,8 @@ CCF722B KR SEP
 CCF7223 CN InfiMaker(Shenzhen)Limited
 CCF7227 AU Electronic Security Wholesalers Pty Ltd
 CCF722E US ASML US, LP
+5CAB222 US Santiam Labs
+B8F453B GB SDMT Limited
 D014111 IT P.B. Elettronica srl
 B84C876 CN HORIBA Precision Instruments (Beijing) Co.,Ltd
 C022F13 IN Spectra Technologies India Private Limited
@@ -57144,7 +57258,6 @@ D0A011E IL Annapurna labs
 78E996A CN Shenzhen Farben Information Technology CO.,Ltd.
 78E996B CN CelAudio (Beijing) Technology Inc
 34C8D6A CN Shenzhen Jooan Technology Co., Ltd
-80A579A US ViewSonic Corp
 80A5796 CN Xiamen Pinnacle Electrical Co., Ltd
 80A579B GB Ground Control Technologies UK Ltd.
 80A5790 TW Benano Inc.
@@ -57456,9 +57569,14 @@ C8F10AD IN I2V Systems Pvt. Ltd.
 C8F10AA DE FSG Fernsteuergeräte Mess- und Regeltechnik GmbH
 4C81BEE JP Nidec corporation
 4C81BE7 BE Renson NV
+5CAB226 CN Shanghai Jiweijiu Intelligent Technology Co., Ltd.
 CCF722C IN Walnut Medical Private Limited
 CCF7224 KR Menuit inc.
-5CAB226 CN Shanghai Jiweijiu Intelligent Technology Co., Ltd.
+5CAB227 FR Chubb France
+5CAB228 US FEEL Group LLC
+80A579A US ViewSonic Corp
+5CAB225 IN Cyngrox Private Limited
+B8F4539 GB PA Technology Solutions Ltd
 C85CE20 CH Fela Management AG
 B84C87E -- Private
 B84C871 GB em-trak
@@ -58807,3 +58925,5 @@ C8F10A2 FR E2 Invest
 CCF722D AU KONEC SOLUTIONS PTY LTD
 CCF7220 FR OP CORE
 CCF7226 IN RIVERSIDE SOLUTIONS PRIVATE LIMITED
+5CAB22A CN Wuxi Bravechip Technologies Co.,Ltd
+5CAB220 US InfraShield Inc.
