@@ -17,7 +17,7 @@ repository.workspace = true
 
 
 [dependencies]
-backerror-macros = { workspace = true }
+backerror-macros = { path = "../backerror-macros", version = "0.1.8" }
 
 
 [dev-dependencies]

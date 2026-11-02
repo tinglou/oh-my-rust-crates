@@ -24,7 +24,7 @@ avx512 = ["hypervectorscan-sys/avx512"]
 avxvnni = ["hypervectorscan-sys/avxvnni"]
 
 [dependencies]
-hypervectorscan-sys = { workspace = true }
+hypervectorscan-sys = { path = "../hypervectorscan-sys", version = "0.1.15" }
 
 thiserror = "1.0.26"
 bitflags = "2.0"

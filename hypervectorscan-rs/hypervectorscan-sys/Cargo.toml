@@ -19,8 +19,8 @@ doctest = false
 [dependencies]
 
 [build-dependencies]
-hyperscan-src = { workspace = true, optional = true }
-vectorscan-src = { workspace = true, optional = true }
+hyperscan-src = { path = "../hyperscan-src", version = "5.4.2-2", optional = true }
+vectorscan-src = { path = "../vectorscan-src", version = "5.4.13", optional = true }
 
 anyhow = "1"
 conan2-rs = { version = "0.1", optional = true }
