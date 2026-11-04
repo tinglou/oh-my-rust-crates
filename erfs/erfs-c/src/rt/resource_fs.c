@@ -3,15 +3,17 @@
 
 #define CHECK_NULL(V)       if(V == 0) {return ERFS_INVALID_INPUT;}
 
-/// read a regular file
-///@param fs the file system
-///@param path the file name to read
-///@param out pointer to the content
-///@param size file size
-///@return ERFS_OK for success; other for notfound
+static inline const ErfsEntry* erfs_entry_at(const ErfsRoot fs, uint16_t index) {
+    return (const ErfsEntry*)(fs->data + (uint32_t)index * sizeof(ErfsEntry));
+}
+
+static inline const ErfsEntry* erfs_dir_children_at(const ErfsRoot fs, const ErfsHandle dir) {
+    return (const ErfsEntry*)(fs->data + dir->data_offset);
+}
+
 int erfs_read(const ErfsRoot fs, const uint8_t *path, uint32_t path_len, const uint8_t **out, uint32_t *size) {
     ErfsHandle handle;
-    int result = erfs_open (fs, path, path_len, &handle, size);
+    int result = erfs_open(fs, path, path_len, &handle, size);
     if (result != 0) {
         return result;
     }
@@ -19,21 +21,19 @@ int erfs_read(const ErfsRoot fs, const uint8_t *path, uint32_t path_len, const u
         return ERFS_NOT_FILE;
     }
     *out = fs->data + handle->data_offset;
-    // *size = handle->data_size;
     return ERFS_OK;
 }
 
-
-static int strcmp_withlength (const int8_t *s1, int l1, const int8_t *s2, int l2) {
-    int minlen = (l1 < l2)? l1 : l2;
-    for(int i = 0; i < minlen; i++, s1++, s2++){
-        if(*s1 < *s2) {
+static int strcmp_withlength(const int8_t *s1, int l1, const int8_t *s2, int l2) {
+    int minlen = (l1 < l2) ? l1 : l2;
+    for (int i = 0; i < minlen; i++, s1++, s2++) {
+        if (*s1 < *s2) {
             return -1;
-        } else if(*s1 > *s2){
+        } else if (*s1 > *s2) {
             return 1;
         }
     }
-    if(l1 < l2) {
+    if (l1 < l2) {
         return -1;
     } else if (l1 > l2) {
         return 1;
@@ -41,14 +41,14 @@ static int strcmp_withlength (const int8_t *s1, int l1, const int8_t *s2, int l2
     return 0;
 }
 
-static int erfs_binarysearch(const ErfsRoot fs, const ErfsHandle handle, const uint8_t *name, int len, ErfsHandle *out) {
-    ErfsHandle A = fs->entries + handle->data_offset;
+static int erfs_binarysearch(const ErfsRoot fs, const ErfsHandle dir, const uint8_t *name, int len, ErfsHandle *out) {
+    const ErfsEntry* A = erfs_dir_children_at(fs, dir);
     int L = 0;
-    int R = (handle->data_size - 1);
+    int R = (int)dir->data_size - 1;
     int m;
 
-    ErfsHandle mentry;
-    uint8_t *mname;
+    const ErfsEntry* mentry;
+    const uint8_t* mname;
     int mlen;
     int cmp;
     while (L <= R) {
@@ -57,7 +57,7 @@ static int erfs_binarysearch(const ErfsRoot fs, const ErfsHandle handle, const u
         mname = fs->data + mentry->name_offset;
         mlen = mentry->name_size;
 
-        cmp = strcmp_withlength((const int8_t *)mname, mlen, (const int8_t *)name, len);
+        cmp = strcmp_withlength((const int8_t*)mname, mlen, (const int8_t*)name, len);
         if (cmp < 0) {
             L = m + 1;
         } else if (cmp > 0) {
@@ -67,18 +67,10 @@ static int erfs_binarysearch(const ErfsRoot fs, const ErfsHandle handle, const u
             return ERFS_OK;
         }
     }
-    out = 0;
+    *out = 0;
     return ERFS_NOT_FOUND;
 }
 
-
-/// open a FS entry
-/// don't support "/../" or "/./"
-///@param fs the file system
-///@param path the file name to read
-///@param out handle
-///@param size file size or entries in the directory
-///@return ERFS_OK for success; other for notfound
 int erfs_open(const ErfsRoot fs, const uint8_t *path, uint32_t path_len, ErfsHandle *out, uint32_t *size) {
     CHECK_NULL(fs);
     CHECK_NULL(path);
@@ -86,26 +78,24 @@ int erfs_open(const ErfsRoot fs, const uint8_t *path, uint32_t path_len, ErfsHan
     CHECK_NULL(size);
     const uint8_t *path_end = path + path_len;
 
-    // if first character is '/', ignore
     const uint8_t *pos = path;
     if (path_len > 0 && *pos == '/') {
         pos++;
     }
 
-    // open root dir
-    ErfsHandle dir = fs->entries;
-    if(pos == path_end){
+    const ErfsEntry* dir = erfs_entry_at(fs, 0);
+    if (pos == path_end) {
         *out = dir;
         *size = dir->data_size;
         return ERFS_OK;
     }
 
     int result;
-    ErfsHandle entry = 0;
+    const ErfsEntry* entry = 0;
     const uint8_t *start = pos;
     int len;
     while (pos != path_end) {
-        while(*pos != '/' && pos != path_end) pos++;
+        while (*pos != '/' && pos != path_end) pos++;
         len = pos - start;
 
         result = erfs_binarysearch(fs, dir, start, len, &entry);
@@ -113,11 +103,9 @@ int erfs_open(const ErfsRoot fs, const uint8_t *path, uint32_t path_len, ErfsHan
             return result;
         }
         if (pos == path_end) {
-            // path end
             break;
         }
         if ((entry->flags & ERFS_DIRECTORY) == 0) {
-            // path isn't end but reach a regular file
             return ERFS_NOT_FOUND;
         }
         dir = entry;
@@ -130,31 +118,18 @@ int erfs_open(const ErfsRoot fs, const uint8_t *path, uint32_t path_len, ErfsHan
     return ERFS_OK;
 }
 
-/// get flags of an entry (directry or file)
-///@param entry entry (directry or file)
-///@return ERFS_OK for success
 int erfs_entryflags(const ErfsHandle handle, uint32_t *flags) {
     CHECK_NULL(handle);
     *flags = handle->flags;
     return ERFS_OK;
 }
 
-/// get flags of an entry (directry or file)
-///@param handle entry (directry or file)
-///@param flags [out] size
-///@return size of file or dirctory
 int erfs_entrysize(const ErfsHandle handle, uint32_t *size) {
     CHECK_NULL(handle);
     *size = handle->data_size;
-    return ERFS_OK;    
+    return ERFS_OK;
 }
 
-/// get name of an entry (directry or file)
-///@param fs the file system
-///@param handle entry (directry or file)
-///@param out pointer to the content
-///@param size file size
-///@return ERFS_OK for success; other for notfound
 int erfs_entryname(const ErfsRoot fs, const ErfsHandle handle, const uint8_t **out, uint32_t *size) {
     CHECK_NULL(fs);
     CHECK_NULL(handle);
@@ -165,12 +140,6 @@ int erfs_entryname(const ErfsRoot fs, const ErfsHandle handle, const uint8_t **o
     return ERFS_OK;
 }
 
-/// read a regular file
-///@param fs the file system
-///@param handle the file name
-///@param out pointer to the content
-///@param size file size
-///@return ERFS_OK for success; other for notfound
 int erfs_readfile(const ErfsRoot fs, const ErfsHandle handle, const uint8_t **out, uint32_t *size) {
     CHECK_NULL(fs);
     CHECK_NULL(handle);
@@ -184,13 +153,7 @@ int erfs_readfile(const ErfsRoot fs, const ErfsHandle handle, const uint8_t **ou
     return ERFS_OK;
 }
 
-/// get flags of an entry (directry or file)
-///@param fs the file system
-///@param handle directory to read
-///@param index entry index
-///@param out out entry
-///@return ERFS_OK for success; other for notfound
-int erfs_readdir(const ErfsRoot fs, const ErfsHandle handle, uint32_t index, ErfsHandle *out){
+int erfs_readdir(const ErfsRoot fs, const ErfsHandle handle, uint32_t index, ErfsHandle *out) {
     CHECK_NULL(fs);
     CHECK_NULL(handle);
     CHECK_NULL(out);
@@ -200,12 +163,11 @@ int erfs_readdir(const ErfsRoot fs, const ErfsHandle handle, uint32_t index, Erf
     if (index >= handle->data_size) {
         return ERFS_OUTOF_BOUND;
     }
-    *out = fs->entries + handle->data_offset;
+    *out = erfs_dir_children_at(fs, handle) + index;
     return ERFS_OK;
 }
 
-
-static int erfs_travel_itr(const ErfsRoot fs, ErfsHandle handle, ErfsVisitFn func, void* ctx) {
+static int erfs_travel_itr(const ErfsRoot fs, const ErfsEntry* handle, ErfsVisitFn func, void* ctx) {
     int result = 0;
 
     if ((handle->flags & ERFS_DIRECTORY) != 0) {
@@ -214,10 +176,10 @@ static int erfs_travel_itr(const ErfsRoot fs, ErfsHandle handle, ErfsVisitFn fun
             return result;
         }
 
-        // directory entries
-        int size = handle->data_size;
-        for (int i = 0; i < size; i++) {
-            result = erfs_travel_itr(fs, fs->entries + (handle->data_offset + i), func, ctx);
+        const ErfsEntry* children = erfs_dir_children_at(fs, handle);
+        uint32_t count = handle->data_size;
+        for (uint32_t i = 0; i < count; i++) {
+            result = erfs_travel_itr(fs, children + i, func, ctx);
             if (result) {
                 return result;
             }
@@ -236,17 +198,26 @@ static int erfs_travel_itr(const ErfsRoot fs, ErfsHandle handle, ErfsVisitFn fun
     return result;
 }
 
-/// travel the resource filesystem
-///@param fs the file system
-///@param func callback function
-///@param ctx context
-///@return ERFS_OK for success; other for notfound
 int erfs_travel(const ErfsRoot fs, ErfsVisitFn func, void* ctx) {
     CHECK_NULL(fs);
     CHECK_NULL(func);
 
-    ErfsHandle dir = fs->entries;
+    const ErfsEntry* dir = erfs_entry_at(fs, 0);
     CHECK_NULL(dir);
 
     return erfs_travel_itr(fs, dir, func, ctx);
+}
+
+ErfsRoot erfs_from_buffer(const void* buffer, uint32_t size) {
+    if (!buffer || size < sizeof(ErfsFileSystem)) {
+        return 0;
+    }
+    const ErfsFileSystem* fs = (const ErfsFileSystem*)buffer;
+    if (fs->magic != ERFS_MAGIC) {
+        return 0;
+    }
+    if (fs->total_size != size) {
+        return 0;
+    }
+    return fs;
 }

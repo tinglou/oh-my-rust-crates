@@ -5,10 +5,31 @@ set(CMAKE_CXX_STANDARD 17)
 
 # ERFS C runtime library
 add_library(erfsrt STATIC src/rt/resource_fs.c)
-
-# PUBLIC 表示：ERFS 自己编译时需要这个路径，且依赖 mylib 的目标（如 myapp）也需要这个路径
 target_include_directories(erfsrt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rt)
 
-# ERFS 构建工具可执行文件
+# ERFS generator executable
 add_executable(erfsgen src/gen/main.cpp src/gen/erfs_generator.cpp)
 
+# Test: generate resources from src/ into build/test_gen/, then compile test
+set(TEST_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/test_gen)
+file(MAKE_DIRECTORY ${TEST_GEN_DIR})
+
+add_custom_command(
+    OUTPUT ${TEST_GEN_DIR}/erfs_test.c ${TEST_GEN_DIR}/erfs_test.h ${TEST_GEN_DIR}/erfs_test.img
+    COMMAND $<TARGET_FILE:erfsgen> --image ${CMAKE_CURRENT_SOURCE_DIR}/src test ${TEST_GEN_DIR}
+    DEPENDS erfsgen
+    COMMENT "Generating test resources from src/"
+)
+
+add_executable(erfs_test
+    test/test_erfs.c
+    src/rt/resource_fs.c
+    ${TEST_GEN_DIR}/erfs_test.c
+)
+target_include_directories(erfs_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/rt ${TEST_GEN_DIR})
+add_dependencies(erfs_test erfsgen)
+
+add_custom_command(TARGET erfs_test POST_BUILD
+    COMMAND $<TARGET_FILE:erfs_test> ${TEST_GEN_DIR}/erfs_test.img
+    COMMENT "Running ERFS tests..."
+)

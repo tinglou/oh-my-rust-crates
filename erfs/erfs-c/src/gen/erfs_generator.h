@@ -5,13 +5,9 @@ extern "C" {
 #endif
 
 enum ErfsGenOption {
-    ERFS_GEN_RUST             = 4,
+    ERFS_GEN_IMAGE            = 8,
 };
 
-
-///
-/// status code of access api
-///
 enum ErfsGenStatusCode {
     ERFS_GEN_OK                  = 0,
     ERFS_INVALID_INPUT           = -1,
@@ -26,14 +22,7 @@ enum ErfsGenStatusCode {
     ERFS_INVALID_OPTION          = -103,
 };
 
-///
-/// generate ERFS source file
-///@param path the directory or file to be embedded
-///@param id identity of the FS, format: [a-z][a-z_0-9]*
-///@param option e.g. generate rust binding
-///@param target_dir target directory 
 int erfs_generate(const char *path, const char *id, int options, const char *target_dir);
-
 
 #if defined(__cplusplus)
 }
