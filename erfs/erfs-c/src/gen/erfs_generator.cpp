@@ -6,12 +6,8 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
-#include <set>
 
 #define ERFS_MAX_SIZE                (1024 * 1024 * 100)
-
-// compress file when size > 512
-#define GZIP_FILE_SIZE_THRESHOLD    512
 
 #define ERFS_GENERATED_PREFIX       "erfs_gen_"
 
@@ -22,7 +18,6 @@
 ///
 enum ErfsEntryFlags {
     ERFS_DIRECTORY       = 1,
-    ERFS_GZIPPED         = 2, 
 };
 /// ================== copy  from resource.h =========================
 
@@ -114,13 +109,12 @@ typedef int (*rfsgen_visit) (std::shared_ptr<RfsGenEntry>& entry, enum RfsGenTra
 static int callback_data_entry_name(std::shared_ptr<RfsGenEntry>& entry, enum RfsGenTravelType type, void* ctx);
 static int callback_data_file_content (std::shared_ptr<RfsGenEntry>& entry, enum RfsGenTravelType type, void* ctx);
 static int callback_directory_entry (std::shared_ptr<RfsGenEntry>& entry, enum RfsGenTravelType type, void* ctx);
-static int rfs_gzip_file(const char* source_path, const char* dest_path);
 
 ///
 /// generate ERFS .c source file
 ///@param path the directory or file to be embedded
 ///@param id identity of the FS, format: [a-z][a-z_0-9]*
-///@param option e.g. gzip text files
+///@param option e.g. generate rust binding
 ///@param target_dir target directory 
 int erfs_generate(const char *path, const char *id, int options, const char *target_dir) {
     int result = 0;
@@ -256,11 +250,9 @@ static int rfsgen_travel_tree(std::shared_ptr<RfsGenEntry>& entry, rfsgen_visit 
 }
 
 
-
 struct CodegenContext {
     // config
     std::ostream& os;
-    bool gzip;
     
     // state, updated by the callback functions.
     int ordinal;
@@ -349,7 +341,7 @@ static int generate_source (std::ostream& os, std::shared_ptr<RfsGenDirectory>& 
     // 2. file contents
     //
     os << "  .data = (uint8_t *)" << std::endl;
-    CodegenContext ctx = {os, (options & ERFS_GEN_GZIPPED) != 0, 0, 0, 0, true};
+    CodegenContext ctx = {os, 0, 0, 0, true};
     std::shared_ptr<RfsGenEntry> entry = std::dynamic_pointer_cast<RfsGenEntry> (dir);
     
     os << "  // entry names" << std::endl;
@@ -388,7 +380,6 @@ static int generate_source (std::ostream& os, std::shared_ptr<RfsGenDirectory>& 
     os  << "};" << std::endl;
     return 0;
 }
-
 
 
 /// https://en.cppreference.com/w/cpp/string/byte/isprint
@@ -451,7 +442,6 @@ static int callback_data_entry_name(std::shared_ptr<RfsGenEntry>& entry, enum Rf
     return 0;
 }
 
-#include "gzip_file.h"
 static int callback_data_file_content (std::shared_ptr<RfsGenEntry>& entry, enum RfsGenTravelType type, void* ctx) {
     if (ERFS_GEN_TRAVEL_ENTRY != type || entry->is_directory()) {
         return 0;
@@ -460,34 +450,13 @@ static int callback_data_file_content (std::shared_ptr<RfsGenEntry>& entry, enum
     CodegenContext* c = reinterpret_cast<CodegenContext*>(ctx);
     c->os << "  // [" << entry->ordinal() << "]: "  << entry->path() << std::endl;
 
-    fs::path pack_file;
-
     fs::path source = entry->path();
-    bool gzipped = false;
-
-    if(c->gzip) {
-        std::string gzname = source.filename();
-        gzname += ".gz";
-        fs::path dest = fs::temp_directory_path() / gzname;
-
-        int ret = rfs_gzip_file(source.c_str(), dest.c_str());
-        if (ret == 0) {
-            gzipped = true;
-            pack_file = dest;
-            entry->flags(ERFS_GZIPPED);
-        } else {
-            pack_file = source;
-        }
-    } else {
-        pack_file = source;
-    }
-
 
     entry->data_offset(c->offset);
-    entry->size(fs::file_size(pack_file));
+    entry->size(fs::file_size(source));
     c->offset += entry->size();
 
-    std::ifstream ifs(pack_file, std::ios::binary);
+    std::ifstream ifs(source, std::ios::binary);
     unsigned char buf[128];
     int len;
     while (true) {
@@ -498,12 +467,6 @@ static int callback_data_file_content (std::shared_ptr<RfsGenEntry>& entry, enum
         }
         c->os << "  ";
         output_line(c->os, buf, len, *c);
-    }
-
-    if(gzipped) {
-        std::cout << "Compress file " << source << ", original size: " << fs::file_size(source) << ", gzipped size: " << entry->size() << std::endl;
-        // remove temp .gz file.
-        fs::remove(pack_file);
     }
     return 0;
 }
@@ -542,103 +505,9 @@ static int callback_directory_entry (std::shared_ptr<RfsGenEntry>& entry, enum R
             << entry->name_offset() << ", " << entry->name().length()
             // content
             << ", " << entry->data_offset() << ", " << entry->size();
-        // flags
-        if ((entry->flags() & ERFS_GZIPPED) != 0) {
-            c->os<< ", ERFS_GZIPPED";
-        } else {
-            c->os<< ", 0";
-        }
+        // flags - always 0 for files (no gzip support)
+        c->os<< ", 0";
         c->os<< "}";
     }
     return 0;
 }
-
-/// http://www.iana.org/assignments/media-types/media-types.xhtml
-static const std::set<std::string> gzip_blacklist = {
-    // compressed file
-    "arc",
-    "bz",
-    "bz2",
-    "epub",
-    "zip",
-    "jar",
-    "war",
-    "gz",
-    "tgz",
-    "rar",
-    "7z",
-    "apk",
-    
-    // media audio
-    "aac",
-    "flac",
-    "mp3",
-    "ogg",
-    "oga",
-    "weba",
-    
-    // media video
-    "avi",
-    "mpeg",
-    "webm",
-    "3gp",
-    "3g2",
-    "mp4",
-    "mkv",
-    
-    // media image
-    "bmp",
-    "jpg",
-    "jpeg",
-    "heic",
-    "ogv",
-    "ogx",
-    "png",
-    "tif",
-    "tiff",
-    "webp",
-    "gif"
-};
-
-
-///
-/// @return 0:success, -1:failed to open file to read; -2: failed to open file to write; -3: compress fail; -4: needn't compress
-///
-static int rfs_gzip_file(const char* source_path, const char* dest_path) {
-    int ret = 0;
-
-    fs::path source(source_path);
-    fs::path dest(dest_path);
-    int source_size = fs::file_size(source);
-
-    if (source_size < GZIP_FILE_SIZE_THRESHOLD) {
-        ret = ERFS_GZIP_COMPRESS_RATIO;
-        return ret;
-    }
-
-    auto ext = source.extension().string();
-    if (ext.length() > 0) {
-        // remove the leading '.'
-        ext = ext.substr(1);
-    }
-
-    if (gzip_blacklist.find(ext) != gzip_blacklist.end()) {
-        ret = ERFS_GZIP_COMPRESS_RATIO;
-        return ret;
-    } 
-
-    ret = gzip_file(source_path, dest_path);
-    if (ret != 0) {
-        return ret;
-    }
-    
-    int dest_size = fs::file_size(dest);
-    if (((float)dest_size) / ((float)source_size) > 0.8) {
-        ret = ERFS_GZIP_COMPRESS_RATIO;
-        fs::remove(dest);
-    }
-
-    return ret;
-}
-
-

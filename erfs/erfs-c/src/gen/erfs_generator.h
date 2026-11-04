@@ -5,7 +5,6 @@ extern "C" {
 #endif
 
 enum ErfsGenOption {
-    ERFS_GEN_GZIPPED          = 2,   // must be same as ERFS_GZIPPED
     ERFS_GEN_RUST             = 4,
 };
 
@@ -31,7 +30,7 @@ enum ErfsGenStatusCode {
 /// generate ERFS source file
 ///@param path the directory or file to be embedded
 ///@param id identity of the FS, format: [a-z][a-z_0-9]*
-///@param option e.g. gzip text files
+///@param option e.g. generate rust binding
 ///@param target_dir target directory 
 int erfs_generate(const char *path, const char *id, int options, const char *target_dir);
 

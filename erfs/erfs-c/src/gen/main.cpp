@@ -1,11 +1,11 @@
 #include "erfs_generator.h"
 #include <iostream>
 #include <string>
+#include <cstring>
 
 void usage(const char* prog) {
     std::cout << "Usage: " << prog << " [options] <src_dir> <id> <dest_dir>" << std::endl;
     std::cout << "Options:" << std::endl;
-    std::cout << "  --gzip      compress file if needed." << std::endl;   
     std::cout << "  --rust      generate rust binding codes." << std::endl; 
 }
 
@@ -22,9 +22,7 @@ int main(int argc, char** argv) {
         char* arg = argv[i];
         if(*arg == '-') {
             // options
-            if (strcmp("--gzip", arg) == 0) {
-                option |= ERFS_GEN_GZIPPED;
-            } else if (strcmp("--rust", arg) == 0) {
+            if (strcmp("--rust", arg) == 0) {
                 option |= ERFS_GEN_RUST;            
             } else {
                 std::cout << "Unknown option: " << arg << std::endl << std::endl;

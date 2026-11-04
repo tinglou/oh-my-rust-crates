@@ -10,5 +10,5 @@ add_library(erfsrt STATIC src/rt/resource_fs.c)
 target_include_directories(erfsrt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rt)
 
 # ERFS 构建工具可执行文件
-add_executable(erfsgen src/gen/main.cpp src/gen/gzip_file.cpp src/gen/erfs_generator.cpp)
+add_executable(erfsgen src/gen/main.cpp src/gen/erfs_generator.cpp)
 
