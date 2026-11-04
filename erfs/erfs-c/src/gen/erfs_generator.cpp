@@ -314,7 +314,10 @@ static int generate_source(std::ostream& os, const std::string& id, const std::v
        << "#include \"erfs_" << id << ".h\"" << std::endl
        << std::endl;
 
-    os << "static const uint8_t erfs_" << id << "_data[] =" << std::endl;
+    os << "static const union {" << std::endl
+       << "  uint32_t _align;" << std::endl
+       << "  uint8_t _data[" << image.size() << "];" << std::endl
+       << "} erfs_" << id << "_raw = { ._data = {" << std::endl;
 
     size_t header_size = ERFS_HEADER_SIZE;
 
@@ -361,11 +364,11 @@ static int generate_source(std::ostream& os, const std::string& id, const std::v
         remaining -= len;
     }
 
-    os << "  ;" << std::endl;
+    os << "}};" << std::endl;
     os << std::endl;
 
     os << "ErfsRoot erfs_" << id << "(void) {" << std::endl
-       << "  return (ErfsRoot)erfs_" << id << "_data;" << std::endl
+       << "  return (ErfsRoot)erfs_" << id << "_raw._data;" << std::endl
        << "}" << std::endl;
 
     return 0;

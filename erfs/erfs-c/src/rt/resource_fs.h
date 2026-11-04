@@ -8,8 +8,6 @@ extern "C" {
 
 #define ERFS_MAGIC 0x45524653
 
-#pragma pack(1)
-
 typedef struct {
     uint32_t data_offset;
     uint32_t data_size;
@@ -29,7 +27,6 @@ typedef struct {
 } ErfsFileSystem;
 
 typedef const ErfsFileSystem* ErfsRoot;
-#pragma pack()
 
 #if defined(__cplusplus)
 }
