@@ -39,6 +39,7 @@
 #
 #already existing elements are commented out
 
-/target
+target
+build
 **/*.rs.bk
 Cargo.lock
