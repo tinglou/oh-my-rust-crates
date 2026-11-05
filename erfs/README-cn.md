@@ -10,7 +10,8 @@ ERFS 将目录树打包为紧凑的只读镜像，使应用可以直接从自身
 | ------------------------------ | ------------------------------------------------------------------- |
 | [`erfs-rt`](erfs-rt)           | `no_std` 运行时，支持借用（`&[u8]`）与拥有（`Vec<u8>`）两种模式。    |
 | [`erfs-gen`](erfs-gen)         | 镜像生成器：供 `build.rs` 使用的库，以及 `erfs-gen` 命令行工具。    |
-| [`erfs-example`](erfs-example) | 完整的镜像嵌入与读取示例。                                          |
+| [`samples/erfs-demo`](../samples/erfs-demo) | 使用默认（`std` + `alloc`）特性的完整示例。          |
+| [`samples/erfs-nostd-demo`](../samples/erfs-nostd-demo) | 使用 `default-features = false` 的示例。 |
 
 [`erfs-c`](erfs-c) 中的 C 实现保留为二进制格式的参考；本仓库生成的镜像与
 `erfs-c` 逐字节一致（见 [`erfs-c/layout.md`](erfs-c/layout.md)）。
@@ -137,6 +138,8 @@ let data: &[u8] = fs.read("/dir/file.txt")?;
 ```sh
 cargo test --workspace
 cargo run -p erfs-gen -- --both resources myres /tmp/out
+cargo run --manifest-path samples/erfs-demo/Cargo.toml
+cargo run --manifest-path samples/erfs-nostd-demo/Cargo.toml
 ```
 
 `erfs-rt` 与 `erfs-gen` 的测试套件包含黄金测试：当存在 `erfs-c` 参考镜像时，
@@ -148,4 +151,4 @@ cargo run -p erfs-gen -- --both resources myres /tmp/out
 
 ## 许可证
 
-MIT OR Apache-2.0
+Apache-2.0

@@ -2,7 +2,7 @@
 
 [:us: English](README.md) | [:cn: 中文](README-cn.md)
 
-A collection of focused Rust crates for diagnostics, networking, native build integration, and workspace tooling.
+A collection of focused Rust crates for diagnostics, networking, embedded resources, native build integration, and workspace tooling.
 
 ## Key capabilities
 
@@ -13,6 +13,8 @@ A collection of focused Rust crates for diagnostics, networking, native build in
 | [conan2-rs](conan2-rs/README.md) | Conan 2 integration for Cargo build scripts and FFI projects |
 | [hypervectorscan](hypervectorscan-rs/hypervectorscan/README.md) | Safe, high-level Rust bindings for Hyperscan / Vectorscan multi-pattern matching |
 | [init-log4rs](init-log4rs/README.md) | Zero-config `log4rs` discovery, creation, and initialization |
+| [erfs-rt](erfs/README.md) | `no_std` runtime for zero-copy access to embedded ERFS resource images |
+| [erfs-gen](erfs/README.md) | Build-time ERFS image generator and command-line tool |
 | [cargo-undep](cargo-undep/README.md) | Find unused workspace dependencies and hoist member dependency sources safely |
 
 ## Crates
@@ -56,6 +58,14 @@ See [hypervectorscan-rs/hypervectorscan/README.md](hypervectorscan-rs/hypervecto
 `init-log4rs` discovers an existing `log4rs` configuration or creates a sensible default, including console output and rotating file logs. Optional `tracing` support bridges spans and events into the same pipeline.
 
 See [init-log4rs/README.md](init-log4rs/README.md) for setup and configuration details.
+
+### ERFS
+
+**Embedded Resource Filesystem**
+
+`erfs-rt` is a `no_std` runtime for reading compact, read-only ERFS images embedded with `include_bytes!` or loaded at runtime. `erfs-gen` packs a directory tree into those images and is usable from `build.rs` or the command line.
+
+See [erfs/README.md](erfs/README.md) for usage, the image format, and the sample projects.
 
 ### cargo-undep
 

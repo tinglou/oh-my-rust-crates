@@ -1,16 +1,20 @@
 [package]
 name = "erfs-gen"
-version = "0.2.0"
-edition = "2021"
-rust-version = "1.81"
-authors = ["Lou, Ting <ting.lou@gmail.com>"]
-license = "MIT OR Apache-2.0"
-readme = "../README.md"
-repository = "https://github.com/tinglou/erfs"
-homepage = "https://github.com/tinglou/erfs"
-description = "Embedded Resource Filesystem: library and command line tool to generate ERFS images."
+description = "Embedded Resource Filesystem: library and command line tool to generate ERFS images"
+
+categories = [
+    "development-tools::build-utils",
+    "command-line-utilities",
+] # https://crates.io/category_slugs
+documentation = "https://docs.rs/erfs-gen/"
 keywords = ["embedded", "resources", "filesystem", "codegen"]
-categories = ["development-tools::build-utils", "command-line-utilities"]
+
+version = "0.2.0"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+readme = "../README.md"
 
 [lib]
 name = "erfs_gen"

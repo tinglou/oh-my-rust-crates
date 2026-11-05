@@ -1,0 +1,11 @@
+[package]
+name = "erfs-nostd-demo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Build erfs-rt without std or alloc: only the borrowed `Fs` API is available.
+erfs-rt = { path = "../../erfs/erfs-rt", version = "0.2.0", default-features = false }
+
+[build-dependencies]
+erfs-gen = { path = "../../erfs/erfs-gen", version = "0.2.0" }

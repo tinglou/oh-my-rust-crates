@@ -12,7 +12,8 @@ This workspace contains the pure-Rust implementation:
 | --------------------------- | ------------------------------------------------------------------ |
 | [`erfs-rt`](erfs-rt)        | `no_std` runtime with borrowed (`&[u8]`) and owned (`Vec<u8>`) modes. |
 | [`erfs-gen`](erfs-gen)      | Image generator: library for `build.rs` plus the `erfs-gen` CLI.   |
-| [`erfs-example`](erfs-example) | Complete example of embedding and reading an image.             |
+| [`samples/erfs-demo`](../samples/erfs-demo) | Complete example with the default (`std` + `alloc`) features. |
+| [`samples/erfs-nostd-demo`](../samples/erfs-nostd-demo) | Example using `default-features = false`. |
 
 The C implementation in [`erfs-c`](erfs-c) is kept as the reference for the
 binary format; images generated here are byte-for-byte identical to the ones
@@ -143,6 +144,8 @@ by default). For bare-metal targets use `default-features = false`.
 ```sh
 cargo test --workspace
 cargo run -p erfs-gen -- --both resources myres /tmp/out
+cargo run --manifest-path samples/erfs-demo/Cargo.toml
+cargo run --manifest-path samples/erfs-nostd-demo/Cargo.toml
 ```
 
 `erfs-rt` and `erfs-gen` test suites include a golden test that compares the
@@ -154,4 +157,4 @@ generated images against the `erfs-c` reference images, when they are present.
 
 ## License
 
-MIT OR Apache-2.0
+Apache-2.0

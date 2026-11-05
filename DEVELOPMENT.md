@@ -16,11 +16,12 @@ The Cargo workspace includes:
 - `backerror-rs/backerror` and `backerror-rs/backerror-macros`
 - `mac-oui/macaddr-ouidb` and `mac-oui/macaddr-ouidb-support`
 - `conan2-rs`
+- `erfs/erfs-rt` and `erfs/erfs-gen`
 - `hypervectorscan-rs/hypervectorscan`, `hypervectorscan-sys`, `hyperscan-src`, and `vectorscan-src`
 - `init-log4rs`
 - `cargo-undep`
 
-The `samples` and `erfs` directories are excluded from the workspace.
+The `samples` directory is excluded from the workspace.
 
 ## Build and test
 

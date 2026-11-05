@@ -1,0 +1,10 @@
+[package]
+name = "erfs-demo"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+erfs-rt = { path = "../../erfs/erfs-rt", version = "0.2.0" }
+
+[build-dependencies]
+erfs-gen = { path = "../../erfs/erfs-gen", version = "0.2.0" }

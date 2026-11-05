@@ -8,6 +8,8 @@ members = [
     "mac-oui/macaddr-ouidb",
     "mac-oui/macaddr-ouidb-support",
     "conan2-rs",
+    "erfs/erfs-rt",
+    "erfs/erfs-gen",
 
     "hypervectorscan-rs/hypervectorscan",
     "hypervectorscan-rs/hypervectorscan-sys",
@@ -17,7 +19,7 @@ members = [
 ]
 
 # Exclude sample projects from workspace
-exclude = ["samples", "erfs"]
+exclude = ["samples"]
 
 [workspace.package]
 authors = ["Ting Lou <ting.lou@gmail.com>"]
