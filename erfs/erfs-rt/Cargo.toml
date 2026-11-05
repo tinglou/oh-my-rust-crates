@@ -25,4 +25,4 @@ alloc = []
 [dependencies]
 
 [dev-dependencies]
-erfs-gen = { path = "../erfs-gen" }
+erfs-gen = { path = "../erfs-gen", version = "0.2.0"}
