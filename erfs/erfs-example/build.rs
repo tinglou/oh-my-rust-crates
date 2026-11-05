@@ -1,32 +1,16 @@
-
-extern crate cc;
 use std::env;
-
-fn generate_rfs_ut() {
-    use erfs_gen::erfs_generate;
-    {
-        erfs_generate("../erfs-gen", "gensrc", 6, &env::var("OUT_DIR").unwrap());
-    }
-}
-
-fn compile_rfs_source() {
-    let mut file = env::var("OUT_DIR").unwrap();
-    file += "/erfs_gensrc.c";
-    let src = [
-        &file,
-    ];
-    let mut builder = cc::Build::new();
-    let build = builder
-        .files(src.iter())
-        .include(&env::var("OUT_DIR").unwrap())
-        .include("../erfs-rt/src")
-        ;
-    build.compile("rfs_gensrc");  
-}
+use std::path::PathBuf;
 
 fn main() {
-    // generate ERFS source files
-    generate_rfs_ut();
-    // compile ERFS c source files
-    compile_rfs_source();
+    let manifest_dir = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
+    let assets = manifest_dir.join("assets");
+    let out_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+
+    println!("cargo:rerun-if-changed={}", assets.display());
+
+    let options = erfs_gen::Options::new().both_endians().rust_binding(true);
+
+    if let Err(err) = erfs_gen::generate(&assets, "gensrc", &out_dir, &options) {
+        panic!("erfs-gen failed: {err}");
+    }
 }

@@ -1,66 +1,138 @@
-# Embedded Resource Filesystem (C/Rust)
+# Embedded Resource Filesystem (ERFS)
 
-This project allow application written in C/C++ or rust to embed required resource files into executable binaries.
+ERFS packs a directory tree into a compact, read-only image and lets an
+application read those resources straight from its own binary, without a
+filesystem and without copying data.
 
-There are 2 components:
+This workspace contains the pure-Rust implementation:
 
-* A command-line tool named `erfs_gen` can travel a resource directory and generate .c/.h source file which should be added into your project.
-* A runtime library in pure C or Rust lib crate to access the content of resources.
+| Crate                       | Description                                                        |
+| --------------------------- | ------------------------------------------------------------------ |
+| [`erfs-rt`](erfs-rt)        | `no_std`, allocation-free runtime. No dependencies.                |
+| [`erfs-gen`](erfs-gen)      | Image generator: library for `build.rs` plus the `erfs-gen` CLI.   |
+| [`erfs-example`](erfs-example) | Complete example of embedding and reading an image.             |
 
-# Usage
+The C implementation in [`erfs-c`](erfs-c) is kept as the reference for the
+binary format; images generated here are byte-for-byte identical to the ones
+produced by `erfs-c` (see [`erfs-c/layout.md`](erfs-c/layout.md)).
 
-## Command-Line Interface
+## How it works
 
-Usage is described as below:
+```
+ resources/ ──erfs-gen──▶ erfs_le_app.img ──include_bytes!──▶ erfs-rt::Fs
+```
 
-```txt
-$./erfs-gen
-Usage: ./erfs-gen [options] <src_dir> <id> <dest_dir>
+1. `erfs-gen` scans the resource directory and writes an ERFS image.
+2. The image is embedded with `include_bytes!` (directly or via the generated
+   Rust binding).
+3. `erfs-rt` validates the image once and provides zero-copy access.
+
+Both little-endian and big-endian images are supported; the byte order is
+detected from the magic, so an image works on any target.
+
+## Command line
+
+```text
+Usage: erfs-gen [options] <src_dir> <id> <dest_dir>
+
+Arguments:
+  <src_dir>   directory (or single file) to embed
+  <id>        resource id, matching [a-z][a-z0-9_]*
+  <dest_dir>  existing directory receiving the generated files
+
 Options:
-  --gzip      compress file if needed.
-  --rust      generate rust binding codes.
-
-where,
-<src_dir>: point to the top level directory contains resources.
-<id>: the identity of the resource file system, and a executable may have multiple ERFS instances.
-<dest_dir>: to specify where the source files are generated 
+  --image        generate a binary image (default)
+  --rust         generate a Rust binding source (default)
+  --no-rust      do not generate the Rust binding source
+  --le           generate a little-endian image
+  --be           generate a big-endian image
+  --both         generate both little-endian and big-endian images
+  -h, --help     print this help
+  -V, --version  print the version
 ```
 
-## C developer
+Generated files use the same names as `erfs-c`:
 
-### Code generation
+* `erfs_le_<id>.img`, `erfs_be_<id>.img` — binary images.
+* `erfs_<id>.rs` — Rust binding exposing `IMAGE`, `IMAGE_LE`, `IMAGE_BE`
+  and `ID` constants that use `include_bytes!`.
 
-A cmake function is useful to generate the files duration building time.
+## Using the library from `build.rs`
 
-```cmake
-function(gen_erfs_source sourcedir id target)
-    add_custom_command(
-        OUTPUT ${target}/erfs_${id}.c ${target}/erfs_${id}.h
-        COMMAND ${ERFS_GEN} --gzip --rust ${sourcedir} ${id} ${target}
-        COMMENT "Generating ERFS source file from: ${sourcedir}"
-    )
-endfunction()
+```rust,no_run
+// build.rs
+use std::env;
+use std::path::PathBuf;
 
-gen_erfs_source("${CMAKE_CURRENT_SOURCE_DIR}/erfs-rt" "rfsrc" "${CMAKE_CURRENT_BINARY_DIR}")
+fn main() {
+    let out_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+    let options = erfs_gen::Options::new()
+        .both_endians()
+        .rust_binding(true);
+
+    erfs_gen::generate("resources", "app", &out_dir, &options).unwrap();
+    println!("cargo:rerun-if-changed=resources");
+}
 ```
 
-Please refer to the `CMakeList.txt` for detail.
+Then embed the generated binding:
 
-### C API
+```rust,ignore
+pub mod erfs_gensrc {
+    include!(concat!(env!("OUT_DIR"), "/erfs_app.rs"));
+}
+```
 
-Please refer to the header file (`erfs-rt/src/resource_fs.h`) and UT example(`erfs-rt/tests/erfs_test.cpp`) for detail.
+## Runtime API
 
-## Rust developer
+```rust,ignore
+use erfs_rt::{Fs, Visit};
 
-### Rust code generation
+const IMAGE: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/erfs_le_app.img"));
 
-A build.rs is required to generate the .c/.h/.rs files and compile the c files. Please refer to `erfs-example/build.rs` for detail.
+let fs = Fs::parse(IMAGE)?;
 
-### Rust API
+// zero-copy file access
+let data: &[u8] = fs.read("/dir/file.txt")?;
 
-Please refer to rust wrapper (`erfs-rt/src/lib.rs`) and UT example(`erfs-example/src/main.rs`) for detail.
+// open and inspect an entry
+let entry = fs.open("/dir")?;
+for child in entry.children()? {
+    println!("{} ({} bytes)", child.name_str()?, child.size());
+}
 
-# TODO
+// depth-first traversal
+fs.walk(|visit| {
+    if let Visit::File(entry) = visit {
+        println!("{}", entry.name_str()?);
+    }
+    Ok(())
+})?;
+```
+
+The `erfs_rt::fs!` macro combines embedding and parsing:
+
+```rust,ignore
+let fs = erfs_rt::fs!(concat!(env!("OUT_DIR"), "/erfs_le_app.img"));
+```
+
+`erfs-rt` is `#![no_std]` and never allocates; the only API dependency is the
+`&'static [u8]` image itself.
+
+## Examples and tests
+
+```sh
+cargo test --workspace
+cargo run -p erfs-gen -- --both resources myres /tmp/out
+```
+
+`erfs-rt` and `erfs-gen` test suites include a golden test that compares the
+generated images against the `erfs-c` reference images, when they are present.
+
+## TODO
 
 * symbolic/hard link support
-* pure Rust implementation for runtime library and code generator.
+
+## License
+
+MIT OR Apache-2.0

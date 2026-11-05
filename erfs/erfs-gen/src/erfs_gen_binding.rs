@@ -1,1 +1,0 @@
-include!(concat!(env!("OUT_DIR"), "/erfs_gen_binding.rs"));

@@ -1,18 +1,18 @@
 [package]
 name = "erfs-rt"
-build = "build.rs"
-version = "0.1.1"
+version = "0.2.0"
+edition = "2021"
+rust-version = "1.81"
 authors = ["Lou, Ting <ting.lou@gmail.com>"]
-edition = "2018"
 license = "MIT OR Apache-2.0"
 readme = "../README.md"
 repository = "https://github.com/tinglou/erfs"
 homepage = "https://github.com/tinglou/erfs"
-description = "Embedded resource file system(C/Rust): runtime api to access embedded resources."
+description = "Embedded Resource Filesystem: no_std, allocation-free runtime to read ERFS images."
+keywords = ["embedded", "resources", "filesystem", "no-std"]
+categories = ["no-std", "filesystem", "embedded"]
 
 [dependencies]
 
-[build-dependencies]
-cc = { version = "1.0.50", features = ["parallel"] }
-bindgen = "0.49.4"
-
+[dev-dependencies]
+erfs-gen = { path = "../erfs-gen" }
