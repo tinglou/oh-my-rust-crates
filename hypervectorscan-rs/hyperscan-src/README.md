@@ -1,6 +1,6 @@
 # hyperscan-src
 
-Bundled source of [intel/hyperscan](https://github.com/intel/hyperscan) v5.4.2 (BSD-3-Clause).
+Bundled source of [intel/hyperscan](https://github.com/intel/hyperscan) v5.4.2.1 (BSD-3-Clause).
 
 ## Import source
 

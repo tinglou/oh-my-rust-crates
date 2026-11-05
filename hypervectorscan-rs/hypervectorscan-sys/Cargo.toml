@@ -7,7 +7,7 @@ categories = ["text-processing", "parsing"]             # https://crates.io/cate
 documentation = "https://docs.rs/hypervectorscan-sys/"
 keywords = ["hyperscan", "regexp", "vectorscan", "ffi"]
 
-version = "0.1.15"
+version = "0.1.16"
 authors.workspace = true
 license.workspace = true
 edition.workspace = true
@@ -19,7 +19,7 @@ doctest = false
 [dependencies]
 
 [build-dependencies]
-hyperscan-src = { path = "../hyperscan-src", version = "5.4.2-2", optional = true }
+hyperscan-src = { path = "../hyperscan-src", version = "5.4.2-3", optional = true }
 vectorscan-src = { path = "../vectorscan-src", version = "5.4.13", optional = true }
 
 anyhow = "1"

@@ -2,7 +2,10 @@
 
 [:us: English](README.md) | :cn: 中文
 
-Raw FFI bindings to [Hyperscan](https://github.com/intel/hyperscan) / [Vectorscan](https://github.com/VectorCamp/vectorscan).
+Raw FFI bindings to:
+
+* [Hyperscan](https://github.com/intel/hyperscan) v5.4.2.1
+* [Vectorscan](https://github.com/VectorCamp/vectorscan) v5.4.13
 
 ## Build modes
 
