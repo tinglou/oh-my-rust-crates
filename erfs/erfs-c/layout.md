@@ -6,12 +6,25 @@ This document describes the binary format of ERFS filesystem images.
 
 The ERFS format is a compact, self-describing binary format for embedding filesystem resources. All offsets are relative to the `data[]` flexible array member of the header.
 
+## Byte Order
+
+The format supports both little-endian (LE) and big-endian (BE) images. The magic number distinguishes between them:
+
+- **LE image**: magic bytes are `ERFS` (0x45 0x52 0x46 0x53)
+- **BE image**: magic bytes are `SFRE` (0x53 0x46 0x52 0x45)
+
+When read as a uint32 on the native machine:
+- LE machine reading LE image: `0x53465245` = `ERFS_MAGIC_LE`
+- BE machine reading BE image: `0x45524653` = `ERFS_MAGIC_BE`
+
+The generated C source uses conditional compilation (`#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__`) to select the appropriate header and entry table at compile time, while sharing the names and file data sections.
+
 ## Header Structure
 
 ```
 Offset  Size  Field         Description
 ------  ----  -----         -----------
-0       4     magic         Magic number: 0x45524653 ("ERFS" in little-endian)
+0       4     magic         Magic number (see Byte Order above)
 4       4     total_size    Total size of the image in bytes
 8       2     entry_count   Number of entries (files + directories)
 10      2     _reserved     Reserved for future use (set to 0)

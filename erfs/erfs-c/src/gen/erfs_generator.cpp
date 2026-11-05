@@ -9,7 +9,8 @@
 #include <cstring>
 #include <cstdint>
 
-#define ERFS_MAGIC 0x45524653
+#define ERFS_MAGIC_LE_BYTES 'E','R','F','S'
+#define ERFS_MAGIC_BE_BYTES 'S','F','R','E'
 #define ERFS_HEADER_SIZE 12
 #define ERFS_ENTRY_SIZE 16
 
@@ -47,8 +48,9 @@ public:
 
 static int build_tree(std::shared_ptr<RfsGenDirectory>& dir);
 static void flatten_directory(std::shared_ptr<RfsGenDirectory>& dir, std::vector<FlatEntry>& flat, int dir_ordinal);
-static std::vector<uint8_t> build_image(std::vector<FlatEntry>& entries);
-static int generate_source(std::ostream& os, const std::string& id, const std::vector<uint8_t>& image);
+static std::vector<uint8_t> build_image(std::vector<FlatEntry>& entries, bool big_endian);
+static int generate_source(std::ostream& os, const std::string& id,
+                           const std::vector<uint8_t>& le_image, const std::vector<uint8_t>& be_image);
 static int generate_header(std::ostream& os, const std::string& id);
 static int generate_image_file(const std::string& path, const std::vector<uint8_t>& image);
 
@@ -64,12 +66,32 @@ static void write_u32(std::vector<uint8_t>& buf, uint32_t val) {
     buf.push_back((val >> 24) & 0xFF);
 }
 
-static void write_entry(std::vector<uint8_t>& buf, const FlatEntry& e) {
-    write_u32(buf, e.data_offset);
-    write_u32(buf, e.data_size);
-    write_u32(buf, e.name_offset);
-    write_u16(buf, e.name_size);
-    write_u16(buf, e.flags);
+static void write_u16_be(std::vector<uint8_t>& buf, uint16_t val) {
+    buf.push_back((val >> 8) & 0xFF);
+    buf.push_back(val & 0xFF);
+}
+
+static void write_u32_be(std::vector<uint8_t>& buf, uint32_t val) {
+    buf.push_back((val >> 24) & 0xFF);
+    buf.push_back((val >> 16) & 0xFF);
+    buf.push_back((val >> 8) & 0xFF);
+    buf.push_back(val & 0xFF);
+}
+
+static void write_entry(std::vector<uint8_t>& buf, const FlatEntry& e, bool big_endian) {
+    if (big_endian) {
+        write_u32_be(buf, e.data_offset);
+        write_u32_be(buf, e.data_size);
+        write_u32_be(buf, e.name_offset);
+        write_u16_be(buf, e.name_size);
+        write_u16_be(buf, e.flags);
+    } else {
+        write_u32(buf, e.data_offset);
+        write_u32(buf, e.data_size);
+        write_u32(buf, e.name_offset);
+        write_u16(buf, e.name_size);
+        write_u16(buf, e.flags);
+    }
 }
 
 int erfs_generate(const char *path, const char *id, int options, const char *target_dir) {
@@ -81,6 +103,20 @@ int erfs_generate(const char *path, const char *id, int options, const char *tar
     fs::path target(target_dir);
     if (!fs::exists(target) || !fs::is_directory(target)) {
         return ERFS_TARGET_NOT_EXIST;
+    }
+
+    bool gen_c = (options & ERFS_GEN_C) != 0;
+    bool gen_image = (options & ERFS_GEN_IMAGE) != 0;
+    if (!gen_c && !gen_image) gen_c = true;
+
+    bool gen_le = (options & ERFS_GEN_LE) != 0;
+    bool gen_be = (options & ERFS_GEN_BE) != 0;
+    if (gen_image && !gen_le && !gen_be) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+        gen_be = true;
+#else
+        gen_le = true;
+#endif
     }
 
     auto root = std::make_shared<RfsGenDirectory>();
@@ -112,14 +148,20 @@ int erfs_generate(const char *path, const char *id, int options, const char *tar
 
     flatten_directory(root, flat_entries, 0);
 
-    std::vector<uint8_t> image = build_image(flat_entries);
+    std::vector<uint8_t> le_image, be_image;
+    if (gen_c || gen_le) {
+        le_image = build_image(flat_entries, false);
+    }
+    if (gen_c || gen_be) {
+        be_image = build_image(flat_entries, true);
+    }
 
-    {
+    if (gen_c) {
         std::string name = std::string("erfs_") + std::string(id) + std::string(".c");
         fs::path rfsfile = target / name;
         std::ofstream ofs(rfsfile);
         std::cout << "Packaging: " << source << " to " << rfsfile << std::endl;
-        generate_source(ofs, id, image);
+        generate_source(ofs, id, le_image, be_image);
     }
     {
         std::string name = std::string("erfs_") + std::string(id) + std::string(".h");
@@ -128,11 +170,17 @@ int erfs_generate(const char *path, const char *id, int options, const char *tar
         std::cout << "Generating header: " << rfsfile << std::endl;
         generate_header(ofs, id);
     }
-    if ((options & ERFS_GEN_IMAGE) != 0) {
-        std::string name = std::string("erfs_") + std::string(id) + std::string(".img");
+    if (gen_le) {
+        std::string name = std::string("erfs_le_") + std::string(id) + std::string(".img");
         fs::path rfsfile = target / name;
-        std::cout << "Generating image: " << rfsfile << std::endl;
-        generate_image_file(rfsfile.string(), image);
+        std::cout << "Generating LE image: " << rfsfile << std::endl;
+        generate_image_file(rfsfile.string(), le_image);
+    }
+    if (gen_be) {
+        std::string name = std::string("erfs_be_") + std::string(id) + std::string(".img");
+        fs::path rfsfile = target / name;
+        std::cout << "Generating BE image: " << rfsfile << std::endl;
+        generate_image_file(rfsfile.string(), be_image);
     }
 
     return 0;
@@ -191,7 +239,7 @@ static void flatten_directory(std::shared_ptr<RfsGenDirectory>& dir, std::vector
     }
 }
 
-static std::vector<uint8_t> build_image(std::vector<FlatEntry>& entries) {
+static std::vector<uint8_t> build_image(std::vector<FlatEntry>& entries, bool big_endian) {
     std::vector<uint8_t> image;
 
     uint16_t entry_count = (uint16_t)entries.size();
@@ -224,13 +272,20 @@ static std::vector<uint8_t> build_image(std::vector<FlatEntry>& entries) {
     uint32_t total_data_size = file_cursor;
     uint32_t total_size = ERFS_HEADER_SIZE + total_data_size;
 
-    write_u32(image, ERFS_MAGIC);
-    write_u32(image, total_size);
-    write_u16(image, entry_count);
-    write_u16(image, 0);
+    if (big_endian) {
+        write_u32_be(image, 0x45524653);
+        write_u32_be(image, total_size);
+        write_u16_be(image, entry_count);
+        write_u16_be(image, 0);
+    } else {
+        write_u32(image, 0x45524653);
+        write_u32(image, total_size);
+        write_u16(image, entry_count);
+        write_u16(image, 0);
+    }
 
     for (auto& e : entries) {
-        write_entry(image, e);
+        write_entry(image, e, big_endian);
     }
 
     for (auto& e : entries) {
@@ -303,7 +358,23 @@ static void output_bytes_as_string(std::ostream& os, const uint8_t* data, size_t
     os << "\"" << std::endl;
 }
 
-static int generate_source(std::ostream& os, const std::string& id, const std::vector<uint8_t>& image) {
+static void output_header_and_entries(std::ostream& os, const std::vector<uint8_t>& image,
+                                      uint16_t entry_count, const char* endian_label) {
+    os << "  // " << endian_label << ": header (" << ERFS_HEADER_SIZE << " bytes)" << std::endl;
+    os << "  ";
+    output_bytes_as_string(os, image.data(), ERFS_HEADER_SIZE);
+
+    os << "  // entry table (" << entry_count << " entries, " << entry_count * ERFS_ENTRY_SIZE << " bytes)" << std::endl;
+    for (uint16_t i = 0; i < entry_count; i++) {
+        size_t offset = ERFS_HEADER_SIZE + i * ERFS_ENTRY_SIZE;
+        os << "  // [" << i << "]" << std::endl;
+        os << "  ";
+        output_bytes_as_string(os, image.data() + offset, ERFS_ENTRY_SIZE);
+    }
+}
+
+static int generate_source(std::ostream& os, const std::string& id,
+                           const std::vector<uint8_t>& le_image, const std::vector<uint8_t>& be_image) {
     os << "/**" << std::endl
        << " automatically generated by erfs_gen." << std::endl
        << " https://github.com/tinglou/erfs ." << std::endl
@@ -316,50 +387,30 @@ static int generate_source(std::ostream& os, const std::string& id, const std::v
 
     os << "static const union {" << std::endl
        << "  uint32_t _align;" << std::endl
-       << "  uint8_t _data[" << image.size() << "];" << std::endl
+       << "  uint8_t _data[" << le_image.size() << "];" << std::endl
        << "} erfs_" << id << "_raw = { ._data = {" << std::endl;
 
-    size_t header_size = ERFS_HEADER_SIZE;
-
-    {
-        uint32_t magic;
-        memcpy(&magic, &image[0], 4);
-        uint32_t total_size;
-        memcpy(&total_size, &image[4], 4);
-        uint16_t entry_count;
-        memcpy(&entry_count, &image[8], 2);
-
-        os << "  // magic: 0x" << std::hex << magic << std::dec << std::endl;
-        os << "  // total_size: " << total_size << std::endl;
-        os << "  // entry_count: " << entry_count << std::endl;
-    }
-
-    os << "  // header (" << header_size << " bytes)" << std::endl;
-    os << "  ";
-    output_bytes_as_string(os, image.data(), header_size);
-
     uint16_t entry_count;
-    memcpy(&entry_count, &image[8], 2);
+    memcpy(&entry_count, &le_image[8], 2);
 
-    os << "  // entry table (" << entry_count << " entries, " << entry_count * ERFS_ENTRY_SIZE << " bytes)" << std::endl;
-    for (uint16_t i = 0; i < entry_count; i++) {
-        size_t offset = header_size + i * ERFS_ENTRY_SIZE;
-        os << "  // [" << i << "]" << std::endl;
-        os << "  ";
-        output_bytes_as_string(os, image.data() + offset, ERFS_ENTRY_SIZE);
-    }
+    os << "  // entry_count: " << entry_count << std::endl;
+    os << "  // total_size: " << le_image.size() << std::endl;
 
-    size_t data_section_start = header_size + entry_count * ERFS_ENTRY_SIZE;
-    size_t data_section_size = image.size() - data_section_start;
+    os << "#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__" << std::endl;
+    output_header_and_entries(os, be_image, entry_count, "BE");
+    os << "#else" << std::endl;
+    output_header_and_entries(os, le_image, entry_count, "LE");
+    os << "#endif" << std::endl;
 
+    size_t data_section_start = ERFS_HEADER_SIZE + entry_count * ERFS_ENTRY_SIZE;
+    size_t data_section_size = le_image.size() - data_section_start;
     os << "  // names + file data (" << data_section_size << " bytes)" << std::endl;
-
     size_t pos = data_section_start;
-    size_t remaining = image.size() - pos;
+    size_t remaining = le_image.size() - pos;
     while (remaining > 0) {
         size_t len = remaining > 80 ? 80 : remaining;
         os << "  ";
-        output_bytes_as_string(os, image.data() + pos, len);
+        output_bytes_as_string(os, le_image.data() + pos, len);
         pos += len;
         remaining -= len;
     }

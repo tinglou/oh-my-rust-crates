@@ -1,12 +1,31 @@
+/**
+ * @file resource_fs.c
+ * @brief ERFS 运行时库实现
+ */
 #define __ERFS_IMPL__
 #include "resource_fs.h"
 
+/** @brief 空指针检查宏 */
 #define CHECK_NULL(V)       if(V == 0) {return ERFS_INVALID_INPUT;}
 
+/**
+ * @brief 根据索引获取条目指针
+ *
+ * @param fs    文件系统根句柄
+ * @param index 条目索引
+ * @return 条目指针
+ */
 static inline const ErfsEntry* erfs_entry_at(const ErfsRoot fs, uint16_t index) {
     return (const ErfsEntry*)(fs->data + (uint32_t)index * sizeof(ErfsEntry));
 }
 
+/**
+ * @brief 获取目录的子条目指针
+ *
+ * @param fs  文件系统根句柄
+ * @param dir 目录条目句柄
+ * @return 首个子条目指针
+ */
 static inline const ErfsEntry* erfs_dir_children_at(const ErfsRoot fs, const ErfsHandle dir) {
     return (const ErfsEntry*)(fs->data + dir->data_offset);
 }
@@ -24,6 +43,15 @@ int erfs_read(const ErfsRoot fs, const uint8_t *path, uint32_t path_len, const u
     return ERFS_OK;
 }
 
+/**
+ * @brief 带长度限制的字符串比较
+ *
+ * @param s1  第一个字符串
+ * @param l1  第一个字符串长度
+ * @param s2  第二个字符串
+ * @param l2  第二个字符串长度
+ * @return <0: s1<s2, 0: 相等, >0: s1>s2
+ */
 static int strcmp_withlength(const int8_t *s1, int l1, const int8_t *s2, int l2) {
     int minlen = (l1 < l2) ? l1 : l2;
     for (int i = 0; i < minlen; i++, s1++, s2++) {
@@ -41,6 +69,18 @@ static int strcmp_withlength(const int8_t *s1, int l1, const int8_t *s2, int l2)
     return 0;
 }
 
+/**
+ * @brief 在目录中二分查找指定名称的条目
+ *
+ * 目录内条目按名称排序，使用二分查找提高效率。
+ *
+ * @param fs   文件系统根句柄
+ * @param dir  目录条目句柄
+ * @param name 要查找的名称
+ * @param len  名称长度
+ * @param out  [out] 找到的条目句柄
+ * @return @ref ERFS_OK 成功，@ref ERFS_NOT_FOUND 未找到
+ */
 static int erfs_binarysearch(const ErfsRoot fs, const ErfsHandle dir, const uint8_t *name, int len, ErfsHandle *out) {
     const ErfsEntry* A = erfs_dir_children_at(fs, dir);
     int L = 0;
@@ -167,6 +207,15 @@ int erfs_readdir(const ErfsRoot fs, const ErfsHandle handle, uint32_t index, Erf
     return ERFS_OK;
 }
 
+/**
+ * @brief 递归遍历文件系统 (内部实现)
+ *
+ * @param fs     文件系统根句柄
+ * @param handle 当前条目
+ * @param func   回调函数
+ * @param ctx    用户上下文
+ * @return 0 继续，非 0 中止
+ */
 static int erfs_travel_itr(const ErfsRoot fs, const ErfsEntry* handle, ErfsVisitFn func, void* ctx) {
     int result = 0;
 
@@ -213,7 +262,11 @@ ErfsRoot erfs_from_buffer(const void* buffer, uint32_t size) {
         return 0;
     }
     const ErfsFileSystem* fs = (const ErfsFileSystem*)buffer;
-    if (fs->magic != ERFS_MAGIC) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    if (fs->magic != ERFS_MAGIC_BE) {
+#else
+    if (fs->magic != ERFS_MAGIC_LE) {
+#endif
         return 0;
     }
     if (fs->total_size != size) {

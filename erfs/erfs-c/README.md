@@ -171,8 +171,13 @@ gcc -Ipath/to/erfs-c/src/rt -I./generated main.c generated/erfs_myapp.c path/to/
 erfsgen [options] <src_dir> <id> <dest_dir>
 ```
 
-Options:
-- `--image` - Generate standalone binary image file (`.img`)
+Output format options (default: `--c`):
+- `--c` - Generate C source file
+- `--image` - Generate binary image file
+
+Byte order options (image only, default: native):
+- `--le` - Generate little-endian image
+- `--be` - Generate big-endian image
 
 The `id` must match regex `[a-z][a-z_0-9]*`.
 
@@ -184,7 +189,8 @@ For `id = "myapp"`:
 |------|---------|
 | `erfs_myapp.h` | Header with `ErfsRoot erfs_myapp(void);` |
 | `erfs_myapp.c` | Embedded filesystem data + accessor |
-| `erfs_myapp.img` | Standalone binary image (with `--image`) |
+| `erfs_le_myapp.img` | Little-endian binary image (with `--image --le`) |
+| `erfs_be_myapp.img` | Big-endian binary image (with `--image --be`) |
 
 ## File Format
 

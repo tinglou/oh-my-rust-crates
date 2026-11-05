@@ -171,8 +171,13 @@ gcc -Ipath/to/erfs-c/src/rt -I./generated main.c generated/erfs_myapp.c path/to/
 erfsgen [options] <src_dir> <id> <dest_dir>
 ```
 
-选项：
-- `--image` - 生成独立二进制镜像文件（`.img`）
+输出格式选项 (默认: `--c`):
+- `--c` - 生成 C 源文件
+- `--image` - 生成二进制镜像文件
+
+字节序选项 (仅对镜像生效，默认: 本机字节序):
+- `--le` - 生成小端序镜像
+- `--be` - 生成大端序镜像
 
 `id` 必须匹配正则 `[a-z][a-z_0-9]*`。
 
@@ -184,7 +189,8 @@ erfsgen [options] <src_dir> <id> <dest_dir>
 |------|------|
 | `erfs_myapp.h` | 头文件，声明 `ErfsRoot erfs_myapp(void);` |
 | `erfs_myapp.c` | 嵌入式文件系统数据 + 访问器函数 |
-| `erfs_myapp.img` | 独立二进制镜像（使用 `--image` 选项时生成） |
+| `erfs_le_myapp.img` | 小端序二进制镜像 (使用 `--image --le`) |
+| `erfs_be_myapp.img` | 大端序二进制镜像 (使用 `--image --be`) |
 
 ## 文件格式
 

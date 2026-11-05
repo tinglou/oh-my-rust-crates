@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 static int test_count = 0;
 static int pass_count = 0;
@@ -75,33 +76,58 @@ static void test_fs(const ErfsRoot fs, const char* label) {
     printf("  traveled %d entries\n", travel_count);
 }
 
+static void test_image_file(const char* img_path) {
+    FILE* f = fopen(img_path, "rb");
+    if (!f) {
+        printf("SKIP: %s not found\n", img_path);
+        return;
+    }
+    fseek(f, 0, SEEK_END);
+    long fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    void* buf = malloc(fsize);
+    fread(buf, 1, fsize, f);
+    fclose(f);
+
+    uint8_t* mb = (uint8_t*)buf;
+    bool bytes_erfs = (mb[0] == 'E' && mb[1] == 'R' && mb[2] == 'F' && mb[3] == 'S');
+    bool bytes_sfre = (mb[0] == 'S' && mb[1] == 'F' && mb[2] == 'R' && mb[3] == 'E');
+
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    bool is_native = bytes_erfs;
+    const char* native_name = "BE";
+#else
+    bool is_native = bytes_sfre;
+    const char* native_name = "LE";
+#endif
+
+    char label[128];
+
+    if (!is_native) {
+        const char* img_endian = bytes_erfs ? "BE" : "LE";
+        snprintf(label, sizeof(label), "From %s image (cross-endian, skipped): %s", img_endian, img_path);
+        printf("\n=== %s ===\n", label);
+        free(buf);
+        return;
+    }
+
+    snprintf(label, sizeof(label), "From %s image: %s", native_name, img_path);
+
+    ErfsRoot from_file = erfs_from_buffer(buf, (uint32_t)fsize);
+    if (from_file) {
+        test_fs(from_file, label);
+    } else {
+        printf("FAIL: erfs_from_buffer returned NULL for %s\n", img_path);
+    }
+    free(buf);
+}
+
 int main(int argc, char** argv) {
     ErfsRoot embedded = erfs_test();
     test_fs(embedded, "Embedded (from generated .c)");
 
-    const char* img_path = "erfs_test.img";
-    if (argc > 1) {
-        img_path = argv[1];
-    }
-
-    FILE* f = fopen(img_path, "rb");
-    if (f) {
-        fseek(f, 0, SEEK_END);
-        long fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);
-        void* buf = malloc(fsize);
-        fread(buf, 1, fsize, f);
-        fclose(f);
-
-        ErfsRoot from_file = erfs_from_buffer(buf, (uint32_t)fsize);
-        if (from_file) {
-            test_fs(from_file, "From .img file (erfs_from_buffer)");
-        } else {
-            printf("FAIL: erfs_from_buffer returned NULL\n");
-        }
-        free(buf);
-    } else {
-        printf("SKIP: %s not found (run with --image to generate)\n", img_path);
+    for (int i = 1; i < argc; i++) {
+        test_image_file(argv[i]);
     }
 
     printf("\n%d/%d tests passed\n", pass_count, test_count);
