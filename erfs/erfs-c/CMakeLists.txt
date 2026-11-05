@@ -10,6 +10,10 @@ target_include_directories(erfsrt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rt)
 # ERFS generator executable
 add_executable(erfsgen src/gen/main.cpp src/gen/erfs_generator.cpp)
 
+# ERFS image inspection tool
+add_executable(erfstool src/tool/erfs_tool.c)
+target_link_libraries(erfstool erfsrt)
+
 # Test: generate resources from src/ into build/test_gen/, then compile test
 set(TEST_GEN_DIR ${CMAKE_CURRENT_BINARY_DIR}/test_gen)
 file(MAKE_DIRECTORY ${TEST_GEN_DIR})
