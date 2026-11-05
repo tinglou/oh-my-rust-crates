@@ -116,7 +116,7 @@ For a filesystem with structure:
 ├── gen/
 │   └── main.cpp
 └── rt/
-    └── resource_fs.h
+    └── erfs_runtime.h
 ```
 
 The entry table would be:
@@ -127,7 +127,7 @@ The entry table would be:
 | 1 | gen | dir | 48 | 1 | 1 | 3 | 1 |
 | 2 | rt | dir | 64 | 1 | 4 | 2 | 1 |
 | 3 | main.cpp | file | 100 | 1234 | 7 | 8 | 0 |
-| 4 | resource_fs.h | file | 1334 | 567 | 15 | 13 | 0 |
+| 4 | erfs_runtime.h | file | 1334 | 567 | 15 | 13 | 0 |
 
 Where:
 - Entry[0] (root) has children at Entry[1] and Entry[2]

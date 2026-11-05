@@ -1,9 +1,9 @@
 /**
- * @file resource_fs.c
+ * @file erfs_runtime.c
  * @brief ERFS 运行时库实现
  */
 #define __ERFS_IMPL__
-#include "resource_fs.h"
+#include "erfs_runtime.h"
 
 /** @brief 空指针检查宏 */
 #define CHECK_NULL(V)       if(V == 0) {return ERFS_INVALID_INPUT;}

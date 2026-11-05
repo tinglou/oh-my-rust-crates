@@ -116,7 +116,7 @@ data[]
 ├── gen/
 │   └── main.cpp
 └── rt/
-    └── resource_fs.h
+    └── erfs_runtime.h
 ```
 
 条目表将是:
@@ -127,7 +127,7 @@ data[]
 | 1 | gen | 目录 | 48 | 1 | 1 | 3 | 1 |
 | 2 | rt | 目录 | 64 | 1 | 4 | 2 | 1 |
 | 3 | main.cpp | 文件 | 100 | 1234 | 7 | 8 | 0 |
-| 4 | resource_fs.h | 文件 | 1334 | 567 | 15 | 13 | 0 |
+| 4 | erfs_runtime.h | 文件 | 1334 | 567 | 15 | 13 | 0 |
 
 其中:
 - Entry[0] (根目录) 的子条目在 Entry[1] 和 Entry[2]

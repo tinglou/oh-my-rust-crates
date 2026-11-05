@@ -1,5 +1,5 @@
 #define __ERFS_IMPL__
-#include "resource_fs.h"
+#include "erfs_runtime.h"
 #include "erfs_test.h"
 #include <stdio.h>
 #include <stdlib.h>

@@ -6,6 +6,7 @@ ERFS-C is a lightweight C library for embedding filesystem resources directly in
 
 - **erfsrt** - A minimal C runtime library for reading embedded resources
 - **erfsgen** - A C++17 code generator that packages a directory tree into C source files and/or binary images
+- **erfstool** - A command-line tool for inspecting ERFS image files
 
 ## Features
 
@@ -28,6 +29,7 @@ make
 This produces:
 - `liberfsrt.a` - Static library for the runtime
 - `erfsgen` - Code generator executable
+- `erfstool` - Image inspection tool
 - `erfs_test` - Test executable (validates both loading modes)
 
 ## Quick Start
@@ -65,7 +67,7 @@ This additionally creates:
 
 **CMakeLists.txt:**
 ```cmake
-add_library(erfsrt STATIC path/to/erfs-c/src/rt/resource_fs.c)
+add_library(erfsrt STATIC path/to/erfs-c/src/rt/erfs_runtime.c)
 target_include_directories(erfsrt PUBLIC path/to/erfs-c/src/rt)
 
 add_executable(myapp main.c generated/erfs_myapp.c)
@@ -76,7 +78,7 @@ target_link_libraries(myapp erfsrt)
 ```c
 #define __ERFS_IMPL__
 #include "erfs_myapp.h"
-#include "resource_fs.h"
+#include "erfs_runtime.h"
 #include <stdio.h>
 
 int main() {
@@ -112,7 +114,7 @@ int main() {
 
 ```c
 #define __ERFS_IMPL__
-#include "resource_fs.h"
+#include "erfs_runtime.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -145,13 +147,13 @@ int main() {
 ### 5. Build and run
 
 ```bash
-gcc -Ipath/to/erfs-c/src/rt -I./generated main.c generated/erfs_myapp.c path/to/erfs-c/src/rt/resource_fs.c -o myapp
+gcc -Ipath/to/erfs-c/src/rt -I./generated main.c generated/erfs_myapp.c path/to/erfs-c/src/rt/erfs_runtime.c -o myapp
 ./myapp
 ```
 
 ## API Reference
 
-### Runtime (resource_fs.h)
+### Runtime (erfs_runtime.h)
 
 | Function | Description |
 |----------|-------------|
@@ -195,6 +197,34 @@ For `id = "myapp"`:
 ## File Format
 
 See [layout.md](layout.md) for detailed documentation of the binary format.
+
+## Image Inspection Tool
+
+The `erfstool` utility provides commands to inspect ERFS image files:
+
+```bash
+erfstool ls <dir> <img>      - list directory entries
+erfstool cat <path> <img>    - print file content
+erfstool tree <dir> <img>    - print directory tree
+```
+
+Examples:
+
+```bash
+# List root directory
+./erfstool ls / resources.img
+
+# List subdirectory
+./erfstool ls /images resources.img
+
+# Print file content
+./erfstool cat /index.html resources.img
+
+# Show directory tree
+./erfstool tree / resources.img
+```
+
+Output format for `ls` and `tree`: `<name> <type> <size>` where type is `F` (file) or `D` (directory).
 
 ## License
 

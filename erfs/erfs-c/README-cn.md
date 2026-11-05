@@ -6,6 +6,7 @@ ERFS-C 是一个轻量级的 C 库，用于将文件系统资源直接嵌入到�
 
 - **erfsrt** - 用于读取嵌入式资源的最小 C 运行时库
 - **erfsgen** - 一个 C++17 代码生成器，将目录树打包为 C 源文件和/或二进制镜像
+- **erfstool** - 用于查看 ERFS 镜像文件的命令行工具
 
 ## 特性
 
@@ -28,6 +29,7 @@ make
 这将产生：
 - `liberfsrt.a` - 运行时静态库
 - `erfsgen` - 代码生成器可执行文件
+- `erfstool` - 镜像查看工具
 - `erfs_test` - 测试可执行文件（验证两种加载模式）
 
 ## 快速开始
@@ -65,7 +67,7 @@ my_resources/
 
 **CMakeLists.txt:**
 ```cmake
-add_library(erfsrt STATIC path/to/erfs-c/src/rt/resource_fs.c)
+add_library(erfsrt STATIC path/to/erfs-c/src/rt/erfs_runtime.c)
 target_include_directories(erfsrt PUBLIC path/to/erfs-c/src/rt)
 
 add_executable(myapp main.c generated/erfs_myapp.c)
@@ -76,7 +78,7 @@ target_link_libraries(myapp erfsrt)
 ```c
 #define __ERFS_IMPL__
 #include "erfs_myapp.h"
-#include "resource_fs.h"
+#include "erfs_runtime.h"
 #include <stdio.h>
 
 int main() {
@@ -112,7 +114,7 @@ int main() {
 
 ```c
 #define __ERFS_IMPL__
-#include "resource_fs.h"
+#include "erfs_runtime.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -145,13 +147,13 @@ int main() {
 ### 5. 构建并运行
 
 ```bash
-gcc -Ipath/to/erfs-c/src/rt -I./generated main.c generated/erfs_myapp.c path/to/erfs-c/src/rt/resource_fs.c -o myapp
+gcc -Ipath/to/erfs-c/src/rt -I./generated main.c generated/erfs_myapp.c path/to/erfs-c/src/rt/erfs_runtime.c -o myapp
 ./myapp
 ```
 
 ## API 参考
 
-### 运行时 (resource_fs.h)
+### 运行时 (erfs_runtime.h)
 
 | 函数 | 说明 |
 |------|------|
@@ -195,6 +197,34 @@ erfsgen [options] <src_dir> <id> <dest_dir>
 ## 文件格式
 
 详见 [layout.md](layout.md) 了解二进制格式的详细文档。
+
+## 镜像查看工具
+
+`erfstool` 工具用于查看 ERFS 镜像文件内容：
+
+```bash
+erfstool ls <dir> <img>      - 列出目录条目
+erfstool cat <path> <img>    - 打印文件内容
+erfstool tree <dir> <img>    - 打印目录树
+```
+
+示例：
+
+```bash
+# 列出根目录
+./erfstool ls / resources.img
+
+# 列出子目录
+./erfstool ls /images resources.img
+
+# 打印文件内容
+./erfstool cat /index.html resources.img
+
+# 显示目录树
+./erfstool tree / resources.img
+```
+
+`ls` 和 `tree` 的输出格式：`<名称> <类型> <大小>`，其中类型为 `F`（文件）或 `D`（目录）。
 
 ## 许可证
 

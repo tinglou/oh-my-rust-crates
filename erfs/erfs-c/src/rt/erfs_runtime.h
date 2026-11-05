@@ -1,5 +1,5 @@
 /**
- * @file resource_fs.h
+ * @file erfs_runtime.h
  * @brief ERFS (Embedded Resource File System) 运行时库
  *
  * ERFS 是一个轻量级的嵌入式文件系统库，用于将目录树打包为只读文件系统，

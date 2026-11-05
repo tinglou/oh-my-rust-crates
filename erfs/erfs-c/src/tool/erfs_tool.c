@@ -5,7 +5,7 @@
  * 提供 ls、cat、tree 三个子命令，用于查看镜像文件内容。
  */
 #define __ERFS_IMPL__
-#include "resource_fs.h"
+#include "erfs_runtime.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

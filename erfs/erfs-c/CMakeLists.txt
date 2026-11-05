@@ -4,7 +4,7 @@ project(ERFS_C)
 set(CMAKE_CXX_STANDARD 17)
 
 # ERFS C runtime library
-add_library(erfsrt STATIC src/rt/resource_fs.c)
+add_library(erfsrt STATIC src/rt/erfs_runtime.c)
 target_include_directories(erfsrt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rt)
 
 # ERFS generator executable
@@ -27,7 +27,7 @@ add_custom_command(
 
 add_executable(erfs_test
     test/test_erfs.c
-    src/rt/resource_fs.c
+    src/rt/erfs_runtime.c
     ${TEST_GEN_DIR}/erfs_test.c
 )
 target_include_directories(erfs_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/rt ${TEST_GEN_DIR})
