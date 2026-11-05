@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2019, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -927,8 +927,14 @@ void runTestUnit(ostream &out, GroundTruth &ground, GraphTruth &graph,
 
     // run NFA if PCRE failed (or wasn't run), or if we don't run UE2
     if (unit.cngi && (use_NFA && !gt_done)) {
+        auto it = exprMap.find(unit.id);
+        if (it == exprMap.end()) {
+            std::cerr << "Error: unit.id " << unit.id << " not found in exprMap\n";
+            unit.result = TEST_NO_GROUND_TRUTH;
+            return;
+        }
         gt_done = getGraphTruth(out, *unit.cngi, graph, unit, gt_results,
-                                summary, exprMap.find(unit.id)->second);
+                                summary, it->second);
     }
 
     // both ground truth methods either failed or didn't run
@@ -969,7 +975,7 @@ void runTestUnit(ostream &out, GroundTruth &ground, GraphTruth &graph,
     debug_stage = STAGE_UNDEFINED;
 }
 
-/* Used for testing the graph truth agains PCE */
+/* Used for testing the graph truth against PCRE */
 static
 void runGroundCompTestUnit(ostream &out, GroundTruth &ground, GraphTruth &graph,
                            TestUnit &unit, TestSummary &summary,
@@ -1003,8 +1009,13 @@ void runGroundCompTestUnit(ostream &out, GroundTruth &ground, GraphTruth &graph,
     }
 
     if (unit.cngi) {
+        auto it = exprMap.find(unit.id);
+        if (it == exprMap.end()) {
+            std::cerr << "Error: unit.id " << unit.id << " not found in exprMap\n";
+            return;
+        }
         graphResult = getGraphTruth(out, *unit.cngi, graph, unit, ngw_results,
-                                    summary, exprMap.find(unit.id)->second);
+                                    summary, it->second);
     }
 
     // no ground truth found either NFA or PCRE failed
@@ -1130,7 +1141,12 @@ public:
             }
 
             assert(unit);
-            assert(exprMap.find(unit->id) != exprMap.end());
+            auto it = exprMap.find(unit->id);
+            if (it == exprMap.end()) {
+                std::cerr << "Error: unit->id " << unit->id << " not found in exprMap\n";
+                unit->result = TEST_NO_GROUND_TRUTH;
+                return;
+            }
 
             // Debug information is stored in TLS and (hopefully) printed out in
             // the event of a crash.
@@ -1138,7 +1154,7 @@ public:
             debug_corpus = unit->corpus_id;
             debug_corpus_ptr = unit->corpus.data.c_str();
             debug_corpus_len = unit->corpus.data.size();
-            debug_expr_ptr = exprMap.find(unit->id)->second.c_str();
+            debug_expr_ptr = it->second.c_str();
 
             if (use_UE2) {
                 runTestUnit(out, ground, graph, ultimate, *unit, summary,
@@ -1917,6 +1933,7 @@ bool runTests(CorporaSource &corpora_source, const ExpressionMap &exprMap,
 }
 
 int HS_CDECL main(int argc, char *argv[]) {
+    try {
     Grey grey;
     vector<string> corporaFiles;
 
@@ -2010,4 +2027,14 @@ int HS_CDECL main(int argc, char *argv[]) {
     }
 
     return 0;
+    } catch (const NGUnsupportedFailure &e) {
+        std::cerr << "NGUnsupportedFailure: " << e.msg << std::endl;
+        return 1;
+    } catch (const std::exception &e) {
+        std::cerr << "Unhandled exception: " << e.what() << std::endl;
+        return 1;
+    } catch (...) {
+        std::cerr << "Unknown exception occurred." << std::endl;
+        return 1;
+    }
 }

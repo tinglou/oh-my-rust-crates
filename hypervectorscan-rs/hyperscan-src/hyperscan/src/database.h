@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2020, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -43,8 +43,20 @@ extern "C"
 #include "ue2common.h"
 #include "util/arch.h"
 
+struct RoseEngine; /* forward declaration for validateStateLayout */
+
 #define HS_DB_VERSION HS_VERSION_32BIT
+
+/**
+ * Compile-time magic number used to identify a valid Hyperscan database.
+ * Override at build time (e.g. -DHS_DB_MAGIC=0xYOURVALU) to use a
+ * site-specific value.  A database compiled with one magic will be rejected
+ * by a runtime built with a different magic, adding an extra layer of
+ * protection against loading untrusted or mismatched databases.
+ */
+#ifndef HS_DB_MAGIC
 #define HS_DB_MAGIC   (0xdbdbdbdbU)
+#endif
 
 // Values in here cannot (easily) change - add new ones!
 
@@ -104,11 +116,12 @@ struct hs_database {
     u32 version;
     u32 length;
     u64a platform;
-    u32 crc32;
-    u32 reserved0;
-    u32 reserved1;
     u32 bytecode;    // offset relative to db start
-    u32 padding[16];
+    u8 hmac[32];     // HMAC-SHA256 over bytecode for content integrity
+    u8 hmac_hdr[32]; // HMAC-SHA256 over header fields for length auth
+    u32 padding[25]; // padding so bytes[] starts at offset 192; must be >= 63
+                     // bytes to prevent cacheline-alignment shift from placing
+                     // bytecode start inside hmac/hmac_hdr fields
     char bytes[];
 };
 
@@ -134,6 +147,25 @@ hs_error_t validDatabase(const hs_database_t *db) {
 }
 
 hs_error_t dbIsValid(const struct hs_database *db);
+
+/** Allocate page-aligned memory for a database via mmap. */
+void *hs_db_alloc(size_t size);
+
+/** Free mmap-allocated database memory. */
+void hs_db_free(void *ptr, size_t size);
+
+/** Mark database memory as read-only (PROT_READ) after HMAC computation. */
+void hs_db_protect(void *ptr, size_t size);
+
+/** Restore database memory to read-write before freeing. */
+void hs_db_unprotect(void *ptr, size_t size);
+
+/**
+ * Validate the RoseStateOffsets layout against field counts.
+ * Ensures every state region fits within stateOffsets.end and that sizes
+ * are consistent with their counts. Covers block, stream, and vectored.
+ */
+hs_error_t validateStateLayout(const struct RoseEngine *rose);
 
 #ifdef __cplusplus
 } /* extern "C" */

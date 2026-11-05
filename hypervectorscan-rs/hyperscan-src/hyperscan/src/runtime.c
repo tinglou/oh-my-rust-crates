@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2022, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -207,6 +207,10 @@ void pureLiteralBlockExec(const struct RoseEngine *rose,
     assert(scratch);
 
     const struct HWLM *ftable = getFLiteralMatcher(rose);
+    if (unlikely(!ftable)) {
+        scratch->core_info.status |= STATUS_ERROR;
+        return;
+    }
     initSomState(rose, scratch->core_info.state);
     const u8 *buffer = scratch->core_info.buf;
     size_t length = scratch->core_info.len;
@@ -220,9 +224,12 @@ void pureLiteralBlockExec(const struct RoseEngine *rose,
 }
 
 static really_inline
-void initOutfixQueue(struct mq *q, u32 qi, const struct RoseEngine *t,
+int initOutfixQueue(struct mq *q, u32 qi, const struct RoseEngine *t,
                      struct hs_scratch *scratch) {
     const struct NfaInfo *info = getNfaInfoByQueue(t, qi);
+    if (unlikely(!info)) {
+        return 0;
+    }
     q->nfa = getNfaByInfo(t, info);
     q->end = 0;
     q->cur = 0;
@@ -240,6 +247,7 @@ void initOutfixQueue(struct mq *q, u32 qi, const struct RoseEngine *t,
     DEBUG_PRINTF("qi=%u, offset=%llu, fullState=%u, streamState=%u, "
                  "state=%u\n", qi, q->offset, info->fullStateOffset,
                  info->stateOffset, *(u32 *)q->state);
+    return 1;
 }
 
 static never_inline
@@ -255,6 +263,9 @@ void soleOutfixBlockExec(const struct RoseEngine *t,
     assert(!t->fmatcherOffset);
 
     const struct NFA *nfa = getNfaByQueue(t, 0);
+    if (unlikely(!nfa)) {
+        return;
+    }
 
     size_t len = nfaRevAccelCheck(nfa, scratch->core_info.buf,
                                   scratch->core_info.len);
@@ -263,7 +274,9 @@ void soleOutfixBlockExec(const struct RoseEngine *t,
     }
 
     struct mq *q = scratch->queues;
-    initOutfixQueue(q, 0, t, scratch);
+    if (unlikely(!initOutfixQueue(q, 0, t, scratch))) {
+        return;
+    }
     q->length = len; /* adjust for rev_accel */
     nfaQueueInitState(nfa, q);
     pushQueueAt(q, 0, MQE_START, 0);
@@ -334,6 +347,7 @@ hs_error_t HS_CDECL hs_scan(const hs_database_t *db, const char *data,
     if (unlikely(rose->mode != HS_MODE_BLOCK)) {
         return HS_DB_MODE_ERROR;
     }
+
 
     if (unlikely(!validScratch(rose, scratch))) {
         return HS_INVALID;
@@ -553,6 +567,14 @@ hs_error_t HS_CDECL hs_open_stream(const hs_database_t *db,
         return err;
     }
 
+    // Validate bytecode offset is within the expected header region.
+    // db_copy_bytecode() sets it to offsetof(bytes) - shift (shift in 0..63),
+    // so valid offsets lie in [offsetof(padding), offsetof(bytes)].
+    if (unlikely(db->bytecode < offsetof(struct hs_database, padding) ||
+                 db->bytecode > offsetof(struct hs_database, bytes))) {
+        return HS_INVALID;
+    }
+
     const struct RoseEngine *rose = hs_get_bytecode(db);
     if (unlikely(!ISALIGNED_16(rose))) {
         return HS_INVALID;
@@ -560,6 +582,13 @@ hs_error_t HS_CDECL hs_open_stream(const hs_database_t *db,
 
     if (unlikely(rose->mode != HS_MODE_STREAM)) {
         return HS_DB_MODE_ERROR;
+    }
+
+    // Unified state layout validation (CWE-122). Covers all stateOffsets
+    // fields including somLocation, with proper offset+size bounds and
+    // size==mmbit_size(count) consistency checks.
+    if (unlikely(validateStateLayout(rose) != HS_SUCCESS)) {
+        return HS_INVALID;
     }
 
     size_t stateSize = rose->stateOffsets.end;
@@ -612,9 +641,14 @@ void soleOutfixEodExec(hs_stream_t *id, hs_scratch_t *scratch) {
     assert(!t->fmatcherOffset);
 
     const struct NFA *nfa = getNfaByQueue(t, 0);
+    if (unlikely(!nfa)) {
+        return;
+    }
 
     struct mq *q = scratch->queues;
-    initOutfixQueue(q, 0, t, scratch);
+    if (unlikely(!initOutfixQueue(q, 0, t, scratch))) {
+        return;
+    }
     if (!scratch->core_info.buf_offset) {
         DEBUG_PRINTF("buf_offset is zero\n");
         return; /* no vacuous engines */
@@ -844,9 +878,14 @@ void soleOutfixStreamExec(struct hs_stream *stream_state,
     assert(!t->fmatcherOffset);
 
     const struct NFA *nfa = getNfaByQueue(t, 0);
+    if (unlikely(!nfa)) {
+        return;
+    }
 
     struct mq *q = scratch->queues;
-    initOutfixQueue(q, 0, t, scratch);
+    if (unlikely(!initOutfixQueue(q, 0, t, scratch))) {
+        return;
+    }
     if (!scratch->core_info.buf_offset) {
         nfaQueueInitState(nfa, q);
         pushQueueAt(q, 0, MQE_START, 0);
@@ -1128,6 +1167,15 @@ hs_error_t HS_CDECL hs_scan_vector(const hs_database_t *db,
         return HS_DB_MODE_ERROR;
     }
 
+    /* Vectored mode uses init_stream() directly on scratch->bstate
+     * (sized sizeof(hs_stream) + stateOffsets.end) so we must validate the
+     * state layout before any writes through forged offsets. init_stream()
+     * writes to history, roseInitState() uses additional offsets, so use the
+     * comprehensive validateStateLayout() that covers all regions. */
+    if (unlikely(validateStateLayout(rose) != HS_SUCCESS)) {
+        return HS_INVALID;
+    }
+
     if (unlikely(!validScratch(rose, scratch))) {
         return HS_INVALID;
     }
@@ -1187,6 +1235,12 @@ hs_error_t HS_CDECL hs_compress_stream(const hs_stream_t *stream, char *buf,
     const struct RoseEngine *rose = stream->rose;
 
     size_t stream_size = size_compress_stream(rose, stream);
+
+    /* size_compress_stream returns 0 as a failure sentinel when structural
+     * validation of the bytecode detects an invalid/forged layout. */
+    if (unlikely(!stream_size)) {
+        return HS_INVALID;
+    }
 
     DEBUG_PRINTF("require %zu [orig %zu]\n", stream_size,
                  rose->stateOffsets.end + sizeof(struct hs_stream));

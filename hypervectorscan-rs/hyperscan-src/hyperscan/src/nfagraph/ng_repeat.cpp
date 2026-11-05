@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -1542,6 +1542,10 @@ NFAVertex walkStrawToCyclicRev(const NGHolder &g, NFAVertex v,
     const RevGraph revg(g);
 
     auto cyclic = StrawWalker<RevGraph>(g, revg, all_repeats).walk(v, straw);
+    if (cyclic == NGHolder::null_vertex()) {
+        straw.clear();
+        return NGHolder::null_vertex();
+    }
     reverse(begin(straw), end(straw)); // path comes from cyclic
     return cyclic;
 }

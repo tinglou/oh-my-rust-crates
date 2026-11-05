@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Intel Corporation
+ * Copyright (c) 2017-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -69,14 +69,13 @@ sqlite3 *initDB(const string &filename) {
                           "dbInfo TEXT, "
                           "exprCount INTEGER, "
                           "dbSize INTEGER,"
-                          "crc TEXT, "
+                          "hmac TEXT, "
                           "streaming TEXT, "
                           "streamSize INTEGER, "
                           "scratchSize INTEGER, "
                           "compileSecs DOUBLE, "
                           "peakMemory INTEGER"
                           ");");
-
     static const string s("CREATE TABLE Scan (id INTEGER PRIMARY KEY,"
                           "corpusFile TEXT, scan_id INTEGER, "
                           "totalSecs DOUBLE, bytesPerRun INTEGER, "
@@ -84,7 +83,6 @@ sqlite3 *initDB(const string &filename) {
                           "totalBytes INTEGER, totalBlocks INTEGER, "
                           "matchesPerRun INTEGER, "
                           "matchRate DOUBLE, overallTput DOUBLE);");
-
     static const string sr(
         "CREATE TABLE ScanResults ( id INTEGER PRIMARY KEY, "
         "scan_id INTEGER, thread INTEGER, scan INTEGER, throughput DOUBLE );");

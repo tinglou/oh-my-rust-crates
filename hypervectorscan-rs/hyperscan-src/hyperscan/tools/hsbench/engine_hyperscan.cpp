@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019, Intel Corporation
+ * Copyright (c) 2016-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -257,7 +257,8 @@ void EngineHyperscan::printStats() const {
     printf("Expression count:  %zu\n", compile_stats.expressionCount);
     printf("Bytecode size:     %zu bytes\n", compile_stats.compiledSize);
 #endif
-    printf("Database CRC:      0x%x\n", compile_stats.crc32);
+
+    printf("Database HMAC:     %s\n", compile_stats.hmac_hex.c_str());
     if (compile_stats.streaming) {
 #ifndef _WIN32
         printf("Stream state size: %'zu bytes\n", compile_stats.streamSize);
@@ -274,12 +275,13 @@ void EngineHyperscan::printStats() const {
     printf("Compile time:      %0.3Lf seconds\n", compile_stats.compileSecs);
     printf("Peak heap usage:   %u bytes\n", compile_stats.peakMemorySize);
 #endif
+
 }
 
 void EngineHyperscan::printCsvStats() const {
     printf(",\"%s\"", compile_stats.signatures.c_str());
     printf(",\"%zu\"", compile_stats.expressionCount);
-    printf(",\"0x%x\"", compile_stats.crc32);
+    printf(",\"%s\"", compile_stats.hmac_hex.c_str());
     printf(",\"%zu\"", compile_stats.compiledSize);
     printf(",\"%zu\"", compile_stats.streamSize);
     printf(",\"%zu\"", compile_stats.scratchSize);
@@ -288,18 +290,15 @@ void EngineHyperscan::printCsvStats() const {
 }
 
 void EngineHyperscan::sqlStats(SqlDB &sqldb) const {
-    ostringstream crc;
-    crc << "0x" << hex << compile_stats.crc32;
-
     static const std::string Q =
         "INSERT INTO Compile ("
-            "sigsName, signatures, dbInfo, exprCount, dbSize, crc, streaming,"
+            "sigsName, signatures, dbInfo, exprCount, dbSize, hmac, streaming,"
             "streamSize, scratchSize, compileSecs, peakMemory) "
         "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)";
 
     sqldb.insert_all(Q, compile_stats.sigs_name, compile_stats.signatures,
                      compile_stats.db_info, compile_stats.expressionCount,
-                     compile_stats.compiledSize, crc.str(),
+                     compile_stats.compiledSize, compile_stats.hmac_hex,
                      compile_stats.streaming ? "TRUE" : "FALSE",
                      compile_stats.streamSize, compile_stats.scratchSize,
                      compile_stats.compileSecs, compile_stats.peakMemorySize);
@@ -484,6 +483,7 @@ buildEngineHyperscan(const ExpressionMap &expressions, ScanMode scan_mode,
 
     // copy the db into huge pages (where available) to reduce TLB pressure
     db = get_huge(db);
+
     if (!db) {
         return nullptr;
     }
@@ -518,6 +518,9 @@ buildEngineHyperscan(const ExpressionMap &expressions, ScanMode scan_mode,
 
     // Allocate scratch temporarily to find its size: this is a good test
     // anyway.
+    if (!db || db->length == 0) {
+        return nullptr;
+    }
     hs_scratch_t *scratch = nullptr;
     err = hs_alloc_scratch(db, &scratch);
     if (err != HS_SUCCESS) {
@@ -542,7 +545,15 @@ buildEngineHyperscan(const ExpressionMap &expressions, ScanMode scan_mode,
     cs.db_info = db_info;
     cs.expressionCount = expressions.size();
     cs.compiledSize = compiledSize;
-    cs.crc32 = db->crc32;
+    // Convert HMAC to hex string for display
+    {
+        char hex[65];
+        for (int i = 0; i < 32; i++) {
+            snprintf(hex + 2 * i, 3, "%02x", db->hmac[i]);
+        }
+        hex[64] = '\0';
+        cs.hmac_hex = hex;
+    }
     cs.streaming = mode & HS_MODE_STREAM;
     cs.streamSize = streamSize;
     cs.scratchSize = scratchSize;

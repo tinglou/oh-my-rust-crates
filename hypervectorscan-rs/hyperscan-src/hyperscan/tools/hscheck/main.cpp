@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2019, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -661,6 +661,7 @@ void loadSignatureBuildSigs(const string &inFile,
 }
 
 int HS_CDECL main(int argc, char **argv) {
+    try {
     num_of_threads = max(1u, std::thread::hardware_concurrency());
 
 #if !defined(RELEASE_BUILD)
@@ -720,8 +721,13 @@ int HS_CDECL main(int argc, char **argv) {
     }
 
     if (!g_exprMap.empty() && !build_sigs) {
+        lock_guard<mutex> lock(lk_output);
         cout << "SUMMARY: " << countFailures << " of "
              << g_exprMap.size() << " failed." << endl;
     }
     return 0;
+    } catch (const std::exception &e) {
+        cerr << "Error: " << e.what() << endl;
+        return 1;
+    }
 }

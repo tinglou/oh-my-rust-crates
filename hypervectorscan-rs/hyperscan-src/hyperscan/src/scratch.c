@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2023, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,6 +32,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "allocator.h"
 #include "hs_internal.h"
@@ -43,6 +44,79 @@
 #include "nfa/nfa_api_queue.h"
 #include "rose/rose_internal.h"
 #include "util/fatbit.h"
+#include "util/multibit_internal.h"
+
+/**
+ * Validate that fatbit allocation sizes are consistent with their logical
+ * counts (CWE-122 / CWE-20).  This is the illustrative fix from the report
+ * plus additional pairs, applied as defense-in-depth before scratch trusts
+ * any RoseEngine sizing fields.
+ *
+ * Uses rt_fatbit_size() from multibit_internal.h — the shared runtime
+ * equivalent of the compile-time fatbit_size().
+ */
+static
+hs_error_t validate_queue_fatbits(const struct RoseEngine *rose) {
+    if (unlikely(rose->activeQueueArraySize < rt_fatbit_size(rose->queueCount))) {
+        DEBUG_PRINTF("activeQueueArraySize too small for queueCount: "
+                     "%u < %u (count=%u)\n",
+                     rose->activeQueueArraySize,
+                     rt_fatbit_size(rose->queueCount),
+                     rose->queueCount);
+        return HS_INVALID;
+    }
+
+    if (unlikely(rose->handledKeyFatbitSize < rt_fatbit_size(rose->handledKeyCount))) {
+        DEBUG_PRINTF("handledKeyFatbitSize too small for handledKeyCount: "
+                     "%u < %u (count=%u)\n",
+                     rose->handledKeyFatbitSize,
+                     rt_fatbit_size(rose->handledKeyCount),
+                     rose->handledKeyCount);
+        return HS_INVALID;
+    }
+
+    if (unlikely(rose->delay_fatbit_size < rt_fatbit_size(rose->delay_count))) {
+        DEBUG_PRINTF("delay_fatbit_size too small for delay_count: "
+                     "%u < %u (count=%u)\n",
+                     rose->delay_fatbit_size,
+                     rt_fatbit_size(rose->delay_count),
+                     rose->delay_count);
+        return HS_INVALID;
+    }
+
+    if (unlikely(rose->somLocationFatbitSize <
+                 rt_fatbit_size(rose->somLocationCount))) {
+        DEBUG_PRINTF("somLocationFatbitSize too small for somLocationCount: "
+                     "%u < %u (count=%u)\n",
+                     rose->somLocationFatbitSize,
+                     rt_fatbit_size(rose->somLocationCount),
+                     rose->somLocationCount);
+        return HS_INVALID;
+    }
+
+    if (rose->anchored_count &&
+        unlikely(rose->anchored_fatbit_size <
+                 rt_fatbit_size(rose->anchored_count))) {
+        DEBUG_PRINTF("anchored_fatbit_size too small for anchored_count: "
+                     "%u < %u (count=%u)\n",
+                     rose->anchored_fatbit_size,
+                     rt_fatbit_size(rose->anchored_count),
+                     rose->anchored_count);
+        return HS_INVALID;
+    }
+
+    if (rose->dkeyCount &&
+        unlikely(rose->dkeyLogSize < rt_fatbit_size(rose->dkeyCount))) {
+        DEBUG_PRINTF("dkeyLogSize too small for dkeyCount: "
+                     "%u < %u (count=%u)\n",
+                     rose->dkeyLogSize,
+                     rt_fatbit_size(rose->dkeyCount),
+                     rose->dkeyCount);
+        return HS_INVALID;
+    }
+
+    return HS_SUCCESS;
+}
 
 /**
  * Determine the space required for a correctly aligned array of fatbit
@@ -82,6 +156,32 @@ hs_error_t alloc_scratch(const hs_scratch_t *proto, hs_scratch_t **scratch) {
     u32 anchored_literal_region_len = proto->anchored_literal_region_len;
     u32 anchored_literal_fatbit_size = proto->anchored_literal_fatbit_size;
 
+    /* reject som_store_count values that would overflow u32
+     * when multiplied by sizeof(u64a). Without this check, a forged database
+     * with somLocationCount > UINT32_MAX/sizeof(u64a) causes the product to
+     * wrap, resulting in an undersized scratch allocation and subsequent
+     * heap-buffer-overflow WRITE during hs_scan(). */
+    if (unlikely(proto->som_store_count > UINT32_MAX / sizeof(u64a))) {
+        *scratch = NULL;
+        return HS_INVALID;
+    }
+
+    /* Reject deduperCount values that would cause
+     * integer overflow in scratch sizing (2 * sizeof(u64a) * deduperCount)
+     * and ensure deduperLogSize is consistent with deduperCount. */
+    if (unlikely(deduperCount > UINT32_MAX / (2 * sizeof(u64a)))) {
+        *scratch = NULL;
+        return HS_INVALID;
+    }
+    if (unlikely(deduperLogSize > UINT32_MAX / 2)) {
+        *scratch = NULL;
+        return HS_INVALID;
+    }
+    if (deduperCount > 0 &&
+        unlikely(deduperLogSize < rt_fatbit_size(deduperCount))) {
+        *scratch = NULL;
+        return HS_INVALID;
+    }
     u32 som_store_size = proto->som_store_count * sizeof(u64a);
     u32 som_attempted_store_size = proto->som_store_count * sizeof(u64a);
     u32 som_now_size = proto->som_fatbit_size;
@@ -272,6 +372,16 @@ hs_error_t HS_CDECL hs_alloc_scratch(const hs_database_t *db,
     }
 
     const struct RoseEngine *rose = hs_get_bytecode(db);
+
+    /* Defense-in-depth: reject databases whose fatbit sizes are inconsistent
+     * with their logical counts before we trust them for scratch sizing.
+     * This prevents heap buffer overflow via queueCount / activeQueueArraySize
+     * mismatch (CWE-122). */
+    rv = validate_queue_fatbits(rose);
+    if (rv != HS_SUCCESS) {
+        return rv;
+    }
+
     int resize = 0;
 
     hs_scratch_t *proto;
@@ -322,6 +432,18 @@ hs_error_t HS_CDECL hs_alloc_scratch(const hs_database_t *db,
     }
 
     u32 som_store_count = rose->somLocationCount;
+
+    /* reject somLocationCount that would overflow u32 when
+     * multiplied by sizeof(u64a) in alloc_scratch(). */
+    if (unlikely(som_store_count > UINT32_MAX / sizeof(u64a))) {
+        hs_scratch_free(proto_tmp);
+        if (*scratch) {
+            hs_scratch_free((*scratch)->scratch_alloc);
+        }
+        *scratch = NULL;
+        return HS_INVALID;
+    }
+
     if (som_store_count > proto->som_store_count) {
         resize = 1;
         proto->som_store_count = som_store_count;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018, Intel Corporation
+ * Copyright (c) 2016-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -37,14 +37,14 @@
 #include <string>
 #include <vector>
 
-/** Infomation about the database compile */
+/** Information about the database compile */
 struct CompileHSStats {
     std::string sigs_name;
     std::string signatures;
     std::string db_info;
     size_t expressionCount = 0;
     size_t compiledSize = 0;
-    uint32_t crc32 = 0;
+    std::string hmac_hex;
     bool streaming;
     size_t streamSize = 0;
     size_t scratchSize = 0;

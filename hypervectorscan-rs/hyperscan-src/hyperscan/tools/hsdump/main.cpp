@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2019, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -416,6 +416,7 @@ void prepareDumpLoc(string parent, string path, u32 flags, Grey &grey) {
     }
 
     // Append path to parent
+    parent.append(path);
     path = parent.append(path);
     if (stat(path.c_str(), &st)) {
         // Create dump location if not found
@@ -613,6 +614,7 @@ unsigned int dumpData(const ExpressionMap &exprMap, Grey &grey) {
 }
 
 int HS_CDECL main(int argc, char *argv[]) {
+    try {
     Grey grey;
     grey.dumpFlags = Grey::DUMP_BASICS;
 
@@ -638,4 +640,8 @@ int HS_CDECL main(int argc, char *argv[]) {
     }
 
     return dumpData(exprMap, grey);
+    } catch (const std::exception &e) {
+        fprintf(stderr, "Error: %s\n", e.what());
+        return 1;
+    }
 }

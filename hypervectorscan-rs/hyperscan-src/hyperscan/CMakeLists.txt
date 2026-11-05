@@ -69,6 +69,10 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR})
 include_directories(SYSTEM include)
 
+# OpenSSL is required for HMAC-SHA256 database integrity
+find_package(OpenSSL REQUIRED)
+include_directories(SYSTEM ${OPENSSL_INCLUDE_DIR})
+
 include (${CMAKE_MODULE_PATH}/boost.cmake)
 
 # -- make this work? set(python_ADDITIONAL_VERSIONS 2.7 2.6)
@@ -100,11 +104,16 @@ endif()
 option(OPTIMISE "Turns off compiler optimizations (on by default unless debug output enabled or coverage testing)" TRUE)
 
 option(DEBUG_OUTPUT "Enable debug output (warning: very verbose)" FALSE)
+option(VALIDATE_PATTERN_INPUT "Enable pattern input validation (default FALSE)" FALSE)
 
 if(DEBUG_OUTPUT)
     add_definitions(-DDEBUG)
     set(OPTIMISE FALSE)
 endif(DEBUG_OUTPUT)
+
+if(VALIDATE_PATTERN_INPUT)
+  add_definitions(-DVALIDATE_PATTERN_INPUT)
+endif()
 
 option(BUILD_SHARED_LIBS "Build shared libs instead of static" OFF)
 option(BUILD_STATIC_AND_SHARED "Build shared libs as well as static" OFF)
@@ -517,6 +526,7 @@ if (NOT WIN32)
             set(PRIVATE_LIBS "${PRIVATE_LIBS} -l${LIB}")
         endif()
     endforeach()
+    set(PRIVATE_LIBS "${PRIVATE_LIBS} -lcrypto")
 
     configure_file(libhs.pc.in libhs.pc @ONLY) # only replace @ quoted vars
     install(FILES ${CMAKE_BINARY_DIR}/libhs.pc
@@ -585,6 +595,7 @@ install(FILES ${hs_HEADERS} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/hs")
 
 set (hs_exec_common_SRCS
     src/alloc.c
+    src/db_protect.c
     src/scratch.c
     src/util/cpuid_flags.c
     src/util/cpuid_flags.h
@@ -596,8 +607,6 @@ set (hs_exec_SRCS
     src/hs_version.h.in
     src/ue2common.h
     src/allocator.h
-    src/crc32.c
-    src/crc32.h
     src/report.h
     src/runtime.c
     src/stream_compress.c
@@ -744,7 +753,6 @@ set (hs_exec_avx2_SRCS
 
 SET (hs_compile_SRCS
     ${hs_HEADERS}
-    src/crc32.h
     src/database.h
     src/grey.cpp
     src/grey.h
@@ -1341,6 +1349,12 @@ else (FAT_RUNTIME)
 
 endif (NOT FAT_RUNTIME)
 
+# Link OpenSSL to all library targets that need HMAC
+if (NOT BUILD_SHARED_LIBS)
+    target_link_libraries(hs_runtime OpenSSL::Crypto)
+    target_link_libraries(hs OpenSSL::Crypto)
+endif()
+
 if (NOT BUILD_SHARED_LIBS)
     install(TARGETS hs_runtime DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
@@ -1363,6 +1377,7 @@ if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
         OUTPUT_NAME hs_runtime
         MACOSX_RPATH ON
         LINKER_LANGUAGE C)
+    target_link_libraries(hs_runtime_shared OpenSSL::Crypto)
     install(TARGETS hs_runtime_shared
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -1404,6 +1419,7 @@ if (BUILD_STATIC_AND_SHARED OR BUILD_SHARED_LIBS)
     add_library(hs_shared SHARED ${hs_shared_SRCS} hs.def)
 
     add_dependencies(hs_shared ragel_Parser)
+    target_link_libraries(hs_shared OpenSSL::Crypto)
     set_target_properties(hs_shared PROPERTIES
         OUTPUT_NAME hs
         VERSION ${LIB_VERSION}
