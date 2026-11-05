@@ -8,9 +8,14 @@ license = "MIT OR Apache-2.0"
 readme = "../README.md"
 repository = "https://github.com/tinglou/erfs"
 homepage = "https://github.com/tinglou/erfs"
-description = "Embedded Resource Filesystem: no_std, allocation-free runtime to read ERFS images."
+description = "Embedded Resource Filesystem: no_std runtime to read embedded or owned ERFS images."
 keywords = ["embedded", "resources", "filesystem", "no-std"]
 categories = ["no-std", "filesystem", "embedded"]
+
+[features]
+default = ["std"]
+std = ["alloc"]
+alloc = []
 
 [dependencies]
 

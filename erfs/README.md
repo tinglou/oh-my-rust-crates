@@ -1,3 +1,5 @@
+English | [简体中文](README-cn.md)
+
 # Embedded Resource Filesystem (ERFS)
 
 ERFS packs a directory tree into a compact, read-only image and lets an
@@ -8,7 +10,7 @@ This workspace contains the pure-Rust implementation:
 
 | Crate                       | Description                                                        |
 | --------------------------- | ------------------------------------------------------------------ |
-| [`erfs-rt`](erfs-rt)        | `no_std`, allocation-free runtime. No dependencies.                |
+| [`erfs-rt`](erfs-rt)        | `no_std` runtime with borrowed (`&[u8]`) and owned (`Vec<u8>`) modes. |
 | [`erfs-gen`](erfs-gen)      | Image generator: library for `build.rs` plus the `erfs-gen` CLI.   |
 | [`erfs-example`](erfs-example) | Complete example of embedding and reading an image.             |
 
@@ -116,8 +118,25 @@ The `erfs_rt::fs!` macro combines embedding and parsing:
 let fs = erfs_rt::fs!(concat!(env!("OUT_DIR"), "/erfs_le_app.img"));
 ```
 
-`erfs-rt` is `#![no_std]` and never allocates; the only API dependency is the
-`&'static [u8]` image itself.
+### Owned mode
+
+When the image is loaded at runtime instead of embedded, `OwnedFs` stores it in
+a `Vec<u8>` and validates it once; it exposes the same lookup API and shares the
+implementation with `Fs` through `OwnedFs::as_fs`:
+
+```rust,no_run
+use erfs_rt::OwnedFs;
+
+let fs = OwnedFs::from_file("resources.img")?;
+let data: &[u8] = fs.read("/dir/file.txt")?;
+```
+
+`OwnedFs::from_bytes` takes a `Vec<u8>`, `from_slice` copies a slice, and
+`into_bytes` returns the owned image.
+
+`erfs-rt` is always `#![no_std]`. The borrowed `Fs` mode never allocates; the
+owned mode requires the `alloc` feature, and `from_file` requires `std` (both on
+by default). For bare-metal targets use `default-features = false`.
 
 ## Examples and tests
 

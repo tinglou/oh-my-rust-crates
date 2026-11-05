@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use erfs_gen::Endian;
-use erfs_rt::{Endian as ImageEndian, Error, Fs, Visit};
+use erfs_rt::{Endian as ImageEndian, Error, Fs, OpenError, OwnedFs, Visit};
 
 struct Fixture {
     dir: PathBuf,
@@ -210,6 +210,90 @@ fn rejects_malformed_images() {
     let mut no_entries = image.clone();
     no_entries[8..10].copy_from_slice(&0u16.to_le_bytes());
     assert_eq!(Fs::parse(&no_entries).unwrap_err(), Error::CorruptImage);
+}
+
+#[test]
+fn owned_fs_matches_borrowed_view() {
+    let fixture = Fixture::new();
+
+    for endian in [Endian::Little, Endian::Big] {
+        let image = fixture.image(endian);
+        let borrowed = Fs::parse(&image).unwrap();
+        let owned = OwnedFs::from_bytes(image.clone()).unwrap();
+
+        assert_eq!(owned.endian(), borrowed.endian());
+        assert_eq!(owned.entry_count(), borrowed.entry_count());
+        assert_eq!(owned.as_bytes(), borrowed.as_bytes());
+        assert_eq!(owned.root().name(), b"/");
+        assert_eq!(owned.read("/hello.txt").unwrap(), b"hello erfs\n");
+        assert_eq!(owned.read("/sub/deeper/bytes.bin").unwrap().len(), 256);
+        assert_eq!(owned.open("/sub").unwrap().children().unwrap().count(), 2);
+        assert_eq!(owned.as_fs().read("/sub/nested.txt").unwrap(), b"nested\n");
+
+        let mut owned_names = Vec::new();
+        owned
+            .walk(|visit| {
+                owned_names.push(visit.entry().name_str().unwrap());
+                Ok(())
+            })
+            .unwrap();
+
+        let mut borrowed_names = Vec::new();
+        borrowed
+            .walk(|visit| {
+                borrowed_names.push(visit.entry().name_str().unwrap());
+                Ok(())
+            })
+            .unwrap();
+
+        assert_eq!(owned_names, borrowed_names);
+    }
+}
+
+#[test]
+fn owned_fs_can_be_loaded_from_file() {
+    let fixture = Fixture::new();
+    let image = fixture.image(Endian::Big);
+    let path = fixture.path().join("image.img");
+    fs::write(&path, &image).unwrap();
+
+    let owned = OwnedFs::from_file(&path).unwrap();
+    assert_eq!(owned.endian(), ImageEndian::Big);
+    assert_eq!(owned.read("/hello.txt").unwrap(), b"hello erfs\n");
+
+    let missing = fixture.path().join("missing.img");
+    assert!(matches!(
+        OwnedFs::from_file(&missing),
+        Err(OpenError::Io(_))
+    ));
+
+    let invalid = fixture.path().join("invalid.img");
+    fs::write(&invalid, b"not an image").unwrap();
+    assert!(matches!(
+        OwnedFs::from_file(&invalid),
+        Err(OpenError::Image(Error::InvalidMagic))
+    ));
+}
+
+#[test]
+fn owned_fs_conversions() {
+    let fixture = Fixture::new();
+    let image = fixture.image(Endian::Little);
+
+    let from_slice = OwnedFs::from_slice(&image).unwrap();
+    assert_eq!(from_slice.as_bytes(), image.as_slice());
+
+    let from_vec = OwnedFs::try_from(image.clone()).unwrap();
+    assert_eq!(from_vec.as_bytes(), image.as_slice());
+    let as_ref: &[u8] = from_vec.as_ref();
+    assert_eq!(as_ref, image.as_slice());
+
+    let from_ref = OwnedFs::try_from(image.as_slice()).unwrap();
+    assert_eq!(from_ref.into_bytes(), image);
+
+    let mut bad = image.clone();
+    bad[0] = b'X';
+    assert_eq!(OwnedFs::try_from(bad).unwrap_err(), Error::InvalidMagic);
 }
 
 #[test]

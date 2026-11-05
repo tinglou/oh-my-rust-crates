@@ -21,12 +21,35 @@
 //!
 //! Both little-endian and big-endian images are supported; the byte order is
 //! detected from the image magic.
+//!
+//! # Storage modes
+//!
+//! * [`Fs`] borrows the image (`&[u8]`). This is the `no_std`, allocation-free
+//!   mode used together with [`include_bytes!`].
+//! * [`OwnedFs`] owns the image (`Vec<u8>`) and can load it from a file. Both
+//!   types share the same parsing and lookup code; [`OwnedFs::as_fs`] exposes
+//!   the borrowed view.
+//!
+//! The owned mode is enabled by the `alloc` feature, and loading from a file
+//! additionally requires the `std` feature. `std` is on by default; use
+//! `default-features = false` for bare-metal targets.
 
 #![no_std]
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "alloc")]
+extern crate alloc;
+#[cfg(feature = "std")]
+extern crate std;
+
 use core::cmp::Ordering;
 use core::fmt;
+
+#[cfg(feature = "alloc")]
+use alloc::vec::Vec;
+
+#[cfg(feature = "std")]
+use std::path::Path;
 
 /// Magic bytes of a little-endian image (`0x4552_4653` written LE).
 pub const MAGIC_LE: [u8; 4] = *b"SFRE";
@@ -154,13 +177,19 @@ impl<'a> Fs<'a> {
             return Err(Error::CorruptImage);
         }
 
-        let fs = Fs {
+        let fs = Fs::from_parts(image, endian, entry_count);
+        fs.validate()?;
+        Ok(fs)
+    }
+
+    /// Builds a view from an image that has already been validated.
+    #[inline]
+    fn from_parts(image: &'a [u8], endian: Endian, entry_count: u16) -> Self {
+        Fs {
             image,
             endian,
             entry_count,
-        };
-        fs.validate()?;
-        Ok(fs)
+        }
     }
 
     /// The raw image bytes.
@@ -509,6 +538,189 @@ impl<'a> Visit<'a> {
         match self {
             Visit::Enter(entry) | Visit::Leave(entry) | Visit::File(entry) => entry,
         }
+    }
+}
+
+/// An owning ERFS filesystem backed by a `Vec<u8>`.
+///
+/// This is the allocated counterpart of [`Fs`]: it takes ownership of the
+/// image and validates it once, then serves the same zero-copy lookups through
+/// [`OwnedFs::as_fs`]. Use it to load images at runtime, for example from a
+/// file with [`OwnedFs::from_file`].
+#[cfg(feature = "alloc")]
+#[derive(Clone)]
+pub struct OwnedFs {
+    image: Vec<u8>,
+    endian: Endian,
+    entry_count: u16,
+}
+
+#[cfg(feature = "alloc")]
+impl OwnedFs {
+    /// Validates `image` and takes ownership of its bytes.
+    pub fn from_bytes(image: Vec<u8>) -> Result<Self, Error> {
+        let (endian, entry_count) = {
+            let fs = Fs::parse(&image)?;
+            (fs.endian(), fs.entry_count())
+        };
+        Ok(OwnedFs {
+            image,
+            endian,
+            entry_count,
+        })
+    }
+
+    /// Validates `image` and copies it into a new owning filesystem.
+    pub fn from_slice(image: &[u8]) -> Result<Self, Error> {
+        Self::from_bytes(image.to_vec())
+    }
+
+    /// Loads and validates an image from a file.
+    #[cfg(feature = "std")]
+    pub fn from_file(path: impl AsRef<Path>) -> Result<Self, OpenError> {
+        Ok(Self::from_bytes(std::fs::read(path)?)?)
+    }
+
+    /// The raw image bytes.
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.image
+    }
+
+    /// Consumes the filesystem and returns the owned image bytes.
+    #[inline]
+    pub fn into_bytes(self) -> Vec<u8> {
+        self.image
+    }
+
+    /// A borrowed, already validated view of the same image.
+    ///
+    /// All lookup helpers delegate to this view, so [`Fs`] and [`OwnedFs`]
+    /// share the same implementation.
+    #[inline]
+    pub fn as_fs(&self) -> Fs<'_> {
+        Fs::from_parts(&self.image, self.endian, self.entry_count)
+    }
+
+    /// The byte order of the image.
+    #[inline]
+    pub fn endian(&self) -> Endian {
+        self.endian
+    }
+
+    /// Number of entries (files and directories, including the root).
+    #[inline]
+    pub fn entry_count(&self) -> u16 {
+        self.entry_count
+    }
+
+    /// Returns the entry at `index`.
+    pub fn entry_at(&self, index: u16) -> Result<Entry<'_>, Error> {
+        self.as_fs().entry_at(index)
+    }
+
+    /// Returns the root directory entry (`/`).
+    pub fn root(&self) -> Entry<'_> {
+        self.as_fs().root()
+    }
+
+    /// Opens a path such as `/dir/file.txt`.
+    pub fn open(&self, path: &str) -> Result<Entry<'_>, Error> {
+        self.as_fs().open(path)
+    }
+
+    /// Reads the content of the file at `path`.
+    pub fn read(&self, path: &str) -> Result<&[u8], Error> {
+        self.as_fs().read(path)
+    }
+
+    /// Depth-first traversal of the whole filesystem.
+    pub fn walk<'f, F>(&'f self, visit: F) -> Result<(), Error>
+    where
+        F: FnMut(Visit<'f>) -> Result<(), Error>,
+    {
+        self.as_fs().walk(visit)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl fmt::Debug for OwnedFs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("OwnedFs")
+            .field("endian", &self.endian)
+            .field("entry_count", &self.entry_count)
+            .field("size", &self.image.len())
+            .finish()
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl AsRef<[u8]> for OwnedFs {
+    fn as_ref(&self) -> &[u8] {
+        &self.image
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl TryFrom<Vec<u8>> for OwnedFs {
+    type Error = Error;
+
+    fn try_from(image: Vec<u8>) -> Result<Self, Error> {
+        Self::from_bytes(image)
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl TryFrom<&[u8]> for OwnedFs {
+    type Error = Error;
+
+    fn try_from(image: &[u8]) -> Result<Self, Error> {
+        Self::from_slice(image)
+    }
+}
+
+/// Error returned by [`OwnedFs::from_file`].
+#[cfg(feature = "std")]
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum OpenError {
+    /// The file could not be read.
+    Io(std::io::Error),
+    /// The file content is not a valid ERFS image.
+    Image(Error),
+}
+
+#[cfg(feature = "std")]
+impl fmt::Display for OpenError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            OpenError::Io(err) => err.fmt(f),
+            OpenError::Image(err) => err.fmt(f),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for OpenError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            OpenError::Io(err) => Some(err),
+            OpenError::Image(err) => Some(err),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl From<std::io::Error> for OpenError {
+    fn from(err: std::io::Error) -> Self {
+        OpenError::Io(err)
+    }
+}
+
+#[cfg(feature = "std")]
+impl From<Error> for OpenError {
+    fn from(err: Error) -> Self {
+        OpenError::Image(err)
     }
 }
 
