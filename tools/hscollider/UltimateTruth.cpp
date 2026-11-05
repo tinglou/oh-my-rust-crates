@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2019, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,11 +32,12 @@
 #include "UltimateTruth.h"
 #include "util/database_util.h"
 #include "util/ExpressionParser.h"
+#include "util/hash_util.h"
 #include "util/string_util.h"
 
 #include "ue2common.h"
 #include "common.h"
-#include "crc32.h"
+#include "database.h"
 #include "hs.h"
 #include "hs_internal.h"
 #include "util/make_unique.h"
@@ -66,7 +67,6 @@ using boost::ptr_vector;
 
 #ifndef RELEASE_BUILD
 
-#include "database.h"
 #include "state.h"
 
 static
@@ -135,6 +135,10 @@ public:
         : BaseDB(ids_begin, ids_end), db(db_in) {}
 
     ~HybridDB();
+
+    // Delete copy constructor and copy assignment operator
+    HybridDB(const HybridDB &) = delete;
+    HybridDB &operator=(const HybridDB &) = delete;
 
     // Underlying Hyperscan database pointer.
     ch_database_t *db;
@@ -614,6 +618,7 @@ bool UltimateTruth::streamingScan(const BaseDB &bdb, const string &buffer,
         }
         char *realigned = setupScanBuffer(ptr, blockSize, align);
         if (!realigned) {
+            hs_close_stream(stream, nullptr, nullptr, nullptr);
             return false;
         }
         ctx->in_scan_call = true;
@@ -625,15 +630,18 @@ bool UltimateTruth::streamingScan(const BaseDB &bdb, const string &buffer,
 
         if (limit_matches && rs->matches.size() == limit_matches) {
             if (ret != HS_SCAN_TERMINATED) {
+                hs_close_stream(stream, nullptr, nullptr, nullptr);
                 DEBUG_PRINTF("failure to scan %d\n", ret);
                 return false;
             }
         } else if (ret != HS_SUCCESS) {
+            hs_close_stream(stream, nullptr, nullptr, nullptr);
             DEBUG_PRINTF("failure to scan %d\n", ret);
             return false;
         }
 
         if (use_copy_scratch && !cloneScratch()) {
+            hs_close_stream(stream, nullptr, nullptr, nullptr);
             return false;
         }
 
@@ -641,6 +649,7 @@ bool UltimateTruth::streamingScan(const BaseDB &bdb, const string &buffer,
             hs_stream_t *s2;
             ret = hs_copy_stream(&s2, stream);
             if (ret != HS_SUCCESS) {
+                hs_close_stream(stream, nullptr, nullptr, nullptr);
                 DEBUG_PRINTF("failure to copy %d\n", ret);
                 return false;
             }
@@ -655,11 +664,14 @@ bool UltimateTruth::streamingScan(const BaseDB &bdb, const string &buffer,
                 expected = HS_SCAN_TERMINATED;
             }
             if (ret != expected) {
+                hs_close_stream(stream, nullptr, nullptr, nullptr);
+                hs_close_stream(s2, nullptr, nullptr, nullptr);
                 DEBUG_PRINTF("failure to scan %d\n", ret);
                 return false;
             }
             ret = hs_close_stream(stream, nullptr, nullptr, nullptr);
             if (ret != HS_SUCCESS) {
+                hs_close_stream(s2, nullptr, nullptr, nullptr);
                 DEBUG_PRINTF("failure to close %d\n", ret);
                 return false;
             }
@@ -675,6 +687,7 @@ bool UltimateTruth::streamingScan(const BaseDB &bdb, const string &buffer,
                 if (g_verbose) {
                     out << "Compress/Expand failed." << endl;
                 }
+                hs_close_stream(stream, nullptr, nullptr, nullptr);
                 return false;
             } else {
                 stream = rv;
@@ -687,6 +700,7 @@ bool UltimateTruth::streamingScan(const BaseDB &bdb, const string &buffer,
                 if (g_verbose) {
                     out << "Compress/Expand failed." << endl;
                 }
+                hs_close_stream(stream, nullptr, nullptr, nullptr);
                 return false;
             } else {
                 stream = rv;
@@ -1289,11 +1303,16 @@ string UltimateTruth::dbSettingsHash(const set<unsigned int> &ids) const {
 
     string info = info_oss.str();
 
-    u32 crc = Crc32c_ComputeBuf(0, info.data(), info.size());
+    // FNV-1a: deterministic across platforms/builds.
+    uint64_t hash_val = FNV1A_64_OFFSET_BASIS;
+    for (char c : info) {
+        hash_val ^= static_cast<uint64_t>(static_cast<unsigned char>(c));
+        hash_val *= FNV1A_64_PRIME;
+    }
 
-    // return STL string with printable version of digest
+    // return STL string with printable version of hash
     ostringstream oss;
-    oss << hex << setw(8) << setfill('0') << crc << dec;
+    oss << hex << setw(16) << setfill('0') << hash_val << dec;
 
     return oss.str();
 }

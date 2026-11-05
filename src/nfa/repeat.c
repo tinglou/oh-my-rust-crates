@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -1089,6 +1089,14 @@ void repeatUnpackRing(const char *src, const struct RepeatInfo *info,
         xs->first = indices[0];
         xs->last = indices[1];
     }
+
+    /* Validate ring indices against ring capacity (CWE-787). */
+    const u32 cap = ringCapacity(info);
+    if (xs->first >= cap || xs->last >= cap) {
+        xs->first = 0;
+        xs->last = 0;
+        xs->offset = 0;
+    }
 }
 
 static
@@ -1112,6 +1120,12 @@ void repeatUnpackRange(const char *src, const struct RepeatInfo *info,
     struct RepeatRangeControl *xs = &ctrl->range;
     xs->offset = loadPackedRelative(src, offset, info->packedCtrlSize - 1);
     xs->num = src[info->packedCtrlSize - 1];
+
+    /* Validate num against maximum ring capacity (CWE-787). */
+    if (xs->num > REPEAT_RANGE_MAX_SLOTS) {
+        xs->num = 0;
+        xs->offset = 0;
+    }
 }
 
 static
@@ -1136,6 +1150,13 @@ void repeatUnpackSparseOptimalP(const char *src, const struct RepeatInfo *info,
         const u8 *indices = (const u8 *)src + offset_len;
         xs->first = indices[0];
         xs->last = indices[1];
+    }
+
+    /* Validate ring indices against patch count (CWE-787). */
+    if (xs->first >= info->patchCount || xs->last >= info->patchCount) {
+        xs->first = 0;
+        xs->last = 0;
+        xs->offset = 0;
     }
 }
 

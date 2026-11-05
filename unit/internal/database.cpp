@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -30,7 +30,6 @@
 
 #include "hs.h"
 #include "compiler/compiler.h"
-#include "crc32.h"
 #include "database.h"
 #include "ue2common.h"
 #include "util/arch.h"
@@ -62,15 +61,4 @@ TEST(DB, flagsToPlatform) {
 
     platform_t pp = target_to_platform(target_t(p));
     ASSERT_EQ(pp, hs_current_platform);
-}
-
-TEST(CRC, alignments) {
-    std::array<u8, 4096> a;
-    a.fill('a');
-
-    // test the crc32c function at different alignments
-    for (u8 i = 0; i < 32; i++) {
-        u32 crc = Crc32c_ComputeBuf(0, (u8 *)a.data() + i, 4000);
-        ASSERT_EQ(crc, 0x94f04377U);
-    }
 }

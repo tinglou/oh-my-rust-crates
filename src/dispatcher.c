@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020, Intel Corporation
+ * Copyright (c) 2016-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -145,7 +145,3 @@ CREATE_DISPATCH(hs_error_t, hs_expand_stream, const hs_database_t *db,
 CREATE_DISPATCH(hs_error_t, hs_reset_and_expand_stream, hs_stream_t *to_stream,
                 const char *buf, size_t buf_size, hs_scratch_t *scratch,
                 match_event_handler onEvent, void *context);
-
-/** INTERNALS **/
-
-CREATE_DISPATCH(u32, Crc32c_ComputeBuf, u32 inCrc32, const void *buf, size_t bufLen);

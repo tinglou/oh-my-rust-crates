@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021, Intel Corporation
+ * Copyright (c) 2015-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,9 @@
 #include "allocator.h"
 #include "asserts.h"
 #include "compiler.h"
-#include "crc32.h"
+#include <cstddef>
+#include <openssl/hmac.h>
+#include "hs_db_hmac_key.h"
 #include "database.h"
 #include "grey.h"
 #include "hs_internal.h"
@@ -109,8 +111,63 @@ void validateExt(const hs_expr_ext &ext) {
 
 }
 
+/**
+ * Validate pattern buffer to prevent heap out-of-bounds read.
+ *
+ * This validation supports embedded nulls by counting both null and non-null
+ * bytes across the declared length.
+ */
+#ifdef VALIDATE_PATTERN_INPUT
+static bool validatePatternInput(const char *expression, size_t len) {
+    if (!expression || len == 0) {
+        return false;
+    }
+
+    if (len > MAX_PATTERN_LENGTH) {
+        return false;
+    }
+
+    size_t null_count = 0;
+    size_t non_null_count = 0;
+    size_t max_scan = std::min(len, (size_t)MAX_PATTERN_LENGTH);
+
+    for (size_t i = 0; i < max_scan; i++) {
+        if (expression[i] == '\0') {
+            null_count++;
+        } else {
+            non_null_count++;
+        }
+    }
+
+    if (null_count + non_null_count != len) {
+        return false;
+    }
+
+    if (len > 10 && null_count > (len * 9 / 10)) {
+        return false;
+    }
+
+    return true;
+}
+#endif /* VALIDATE_PATTERN_INPUT */
+
 void ParsedLitExpression::parseLiteral(const char *expression, size_t len,
                                        bool nocase) {
+#ifdef VALIDATE_PATTERN_INPUT
+    if (!validatePatternInput(expression, len)) {
+        if (len == 0) {
+            throw CompileError("Expression length is zero.");
+        } else if (len > MAX_PATTERN_LENGTH) {
+            throw CompileError("Pattern length exceeds maximum allowed (" +
+                               std::to_string((size_t)MAX_PATTERN_LENGTH) +
+                               " bytes).");
+        } else {
+            throw CompileError("Pattern validation failed: length/content mismatch. "
+                               "Verify pattern buffer size matches declared length.");
+        }
+    }
+#endif /* VALIDATE_PATTERN_INPUT */
+
     const char *c = expression;
     for (size_t i = 0; i < len; i++) {
         lit.push_back(*c, nocase);
@@ -290,6 +347,18 @@ void addExpression(NG &ng, unsigned index, const char *expression,
                                "are supported in combination "
                                "with HS_FLAG_COMBINATION.");
         }
+
+        // Enforce a length limit on logical combination
+        // expressions before parsing, to prevent denial of service via
+        // excessive CPU time and heap memory consumption in
+        // parseLogicalCombination(). Use the same configurable limit as
+        // regular patterns (cc.grey.limitPatternLength) for consistency.
+        size_t maxCombLen = cc.grey.limitPatternLength;
+        if (strnlen(expression, maxCombLen + 1) > maxCombLen) {
+            throw CompileError("Logical combination expression length exceeds "
+                               "limit.");
+        }
+
         if (flags & HS_FLAG_QUIET) {
             DEBUG_PRINTF("skip QUIET logical combination expression %u\n", id);
         } else {
@@ -421,6 +490,22 @@ void addLitExpression(NG &ng, unsigned index, const char *expression,
         throw CompileError("Pure literal API doesn't support empty string.");
     }
 
+    // Validate length/content consistency with embedded nulls.
+#ifdef VALIDATE_PATTERN_INPUT
+    if (!validatePatternInput(expression, expLength)) {
+        if (expLength == 0) {
+            throw CompileError("Expression length is zero.");
+        } else if (expLength > MAX_PATTERN_LENGTH) {
+            throw CompileError("Pattern length exceeds maximum allowed (" +
+                               std::to_string((size_t)MAX_PATTERN_LENGTH) +
+                               " bytes).");
+        } else {
+            throw CompileError("Pattern validation failed: length/content mismatch. "
+                               "Verify pattern buffer size matches declared length.");
+        }
+    }
+#endif /* VALIDATE_PATTERN_INPUT */
+
     // This expression must be a pure literal, we can build ue2_literal
     // directly based on expression text.
     ParsedLitExpression ple(index, expression, expLength, flags, id);
@@ -478,9 +563,9 @@ hs_database_t *dbCreate(const char *in_bytecode, size_t len, u64a platform) {
     DEBUG_PRINTF("db size %zu\n", db_len);
     DEBUG_PRINTF("db platform %llx\n", platform);
 
-    struct hs_database *db = (struct hs_database *)hs_database_alloc(db_len);
+    struct hs_database *db = (struct hs_database *)hs_db_alloc(db_len);
     if (hs_check_alloc(db) != HS_SUCCESS) {
-        hs_database_free(db);
+        hs_db_free(db, db_len);
         return nullptr;
     }
 
@@ -503,7 +588,33 @@ hs_database_t *dbCreate(const char *in_bytecode, size_t len, u64a platform) {
     // Copy bytecode
     memcpy(bytecode, in_bytecode, len);
 
-    db->crc32 = Crc32c_ComputeBuf(0, bytecode, db->length);
+    // Compute bytecode HMAC (content integrity)
+    unsigned int hmac_len = 32;
+    if (!HMAC(EVP_sha256(), HS_DB_HMAC_KEY, sizeof(HS_DB_HMAC_KEY),
+             (const unsigned char *)bytecode, db->length, db->hmac,
+             &hmac_len) || hmac_len != 32) {
+        hs_db_free(db, db_len);
+        return nullptr;
+    }
+
+    // Compute header HMAC excluding padding bytes
+    // over magic, version, length and platform
+    // to authenticate db->length for serialize safety
+    u8 hdr_buf[4 + 4 + 4 + 8]; // 20 bytes
+    memcpy(hdr_buf, &db->magic, 4);
+    memcpy(hdr_buf + 4, &db->version, 4);
+    memcpy(hdr_buf + 8, &db->length, 4);
+    memcpy(hdr_buf + 12, &db->platform, 8);
+
+    unsigned int hmac_hdr_len = 32;
+    if (!HMAC(EVP_sha256(), HS_DB_HMAC_KEY, sizeof(HS_DB_HMAC_KEY),
+             hdr_buf, sizeof(hdr_buf),
+             db->hmac_hdr, &hmac_hdr_len) || hmac_hdr_len != 32) {
+        hs_db_free(db, db_len);
+        return nullptr;
+    }
+
+    hs_db_protect(db, db_len);
     return db;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Intel Corporation
+ * Copyright (c) 2016-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -26,21 +26,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CRC32_H_36A5015B5840C1
-#define CRC32_H_36A5015B5840C1
+/**
+ * \file
+ * \brief Centralized HMAC key for database integrity verification.
+ *
+ * Override at build time with -DHS_DB_HMAC_KEY_OVERRIDE to supply a
+ * site-specific 32-byte key for additional hardening.
+ */
+
+#ifndef HS_DB_HMAC_KEY_H
+#define HS_DB_HMAC_KEY_H
 
 #include "ue2common.h"
 
-#ifdef __cplusplus
-extern "C"
-{
+#ifndef HS_DB_HMAC_KEY_OVERRIDE
+static const u8 HS_DB_HMAC_KEY[32] = {
+    0xD7, 0xC4, 0xA1, 0xB3, 0x9E, 0x2F, 0x5D, 0x8C,
+    0x6B, 0x4A, 0x71, 0xF0, 0x3E, 0x82, 0xC5, 0x19,
+    0xA8, 0x57, 0xD4, 0x6E, 0x0B, 0x93, 0xFA, 0x2C,
+    0x7D, 0x16, 0xE9, 0x45, 0xB8, 0x60, 0x3F, 0xCE
+};
+#else
+static const u8 HS_DB_HMAC_KEY[32] = HS_DB_HMAC_KEY_OVERRIDE;
 #endif
 
-u32 Crc32c_ComputeBuf(u32 inCrc32, const void *buf, size_t bufLen);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* CRC32_H_36A5015B5840C1 */
-
+#endif /* HS_DB_HMAC_KEY_H */

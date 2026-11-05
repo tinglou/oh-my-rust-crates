@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Intel Corporation
+ * Copyright (c) 2016-2026, Intel Corporation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -190,6 +190,9 @@ public:
         // Try and satisfy the request by stealing it from another queue.
         for (size_t i = 1; i < consumer_q.size(); i++) {
             size_t victim_id = (consumer_id + i) % consumer_q.size();
+            if (victim_id == consumer_id) {
+                continue;
+            }
             auto &victim_q = consumer_q[victim_id];
             auto victim_lock = victim_q.lock();
             // Note: we don't steal sentinel elements.
