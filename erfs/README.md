@@ -12,6 +12,7 @@ This workspace contains the pure-Rust implementation:
 | --------------------------- | ------------------------------------------------------------------ |
 | [`erfs-rt`](erfs-rt)        | `no_std` runtime with borrowed (`&[u8]`) and owned (`Vec<u8>`) modes. |
 | [`erfs-gen`](erfs-gen)      | Image generator: library for `build.rs` plus the `erfs-gen` CLI.   |
+| [`erfs-tool`](erfs-tool)    | Image inspector: `ls`, `cat`, and `tree` subcommands.              |
 | [`samples/erfs-demo`](../samples/erfs-demo) | Complete example with the default (`std` + `alloc`) features. |
 | [`samples/erfs-nostd-demo`](../samples/erfs-nostd-demo) | Example using `default-features = false`. |
 
@@ -59,6 +60,25 @@ Generated files use the same names as `erfs-c`:
 * `erfs_le_<id>.img`, `erfs_be_<id>.img` — binary images.
 * `erfs_<id>.rs` — Rust binding exposing `IMAGE`, `IMAGE_LE`, `IMAGE_BE`
   and `ID` constants that use `include_bytes!`.
+
+### Image inspection tool
+
+`erfs-tool` provides the same three subcommands as `erfstool` from `erfs-c`:
+
+```text
+erfs-tool ls <dir> <img>             - list directory entries
+erfs-tool cat [-c | -x] <path> <img> - print file content
+erfs-tool tree [-d] <dir> <img>      - print directory tree
+```
+
+`cat` writes the raw file bytes by default. `-c` produces a C-style dump with
+16 bytes per line, an offset column, escaped control characters, and hex for
+other non-printable bytes. `-x` (or `--hex`) produces a hexadecimal dump. `tree -d` shows
+only directories and ignores files.
+
+`ls` renders a borderless table with a header, aligning name, type, and size.
+`tree` uses standard `├──` / `└──` / `│` connectors to show the hierarchy while
+keeping those columns aligned.
 
 ## Using the library from `build.rs`
 

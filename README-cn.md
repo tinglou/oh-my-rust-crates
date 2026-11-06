@@ -15,6 +15,7 @@
 | [init-log4rs](init-log4rs/README-cn.md) | 零配置发现、创建并初始化 `log4rs` |
 | [erfs-rt](erfs/README-cn.md) | 零拷贝读取内嵌 ERFS 资源镜像的 `no_std` 运行时 |
 | [erfs-gen](erfs/README-cn.md) | 构建期 ERFS 镜像生成库与命令行工具 |
+| [erfs-tool](erfs/README-cn.md) | 查看 ERFS 镜像内容的命令行工具，支持 `ls`、`cat`、`tree` |
 | [cargo-undep](cargo-undep/README-cn.md) | 查找无用工作区依赖，并安全提升成员依赖来源 |
 
 ## Crates
@@ -63,7 +64,7 @@
 
 **嵌入式资源文件系统**
 
-`erfs-rt` 是一个 `no_std` 运行时，用于读取通过 `include_bytes!` 内嵌或运行时加载的紧凑只读 ERFS 镜像。`erfs-gen` 将目录树打包为这些镜像，可在 `build.rs` 或命令行中使用。
+`erfs-rt` 是一个 `no_std` 运行时，用于读取通过 `include_bytes!` 内嵌或运行时加载的紧凑只读 ERFS 镜像。`erfs-gen` 将目录树打包为这些镜像，可在 `build.rs` 或命令行中使用；`erfs-tool` 用于查看镜像内容。
 
 详见 [erfs/README-cn.md](erfs/README-cn.md)，包含用法、镜像格式与示例项目。
 

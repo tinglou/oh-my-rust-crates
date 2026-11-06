@@ -1,0 +1,25 @@
+[package]
+name = "erfs-tool"
+description = "Embedded Resource Filesystem: command line tool to inspect ERFS images"
+categories = ["command-line-utilities", "development-tools::debugging"]
+documentation = "https://docs.rs/erfs-tool/"
+keywords = ["embedded", "resources", "filesystem", "cli"]
+
+version = "0.2.0"
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+readme = "../README.md"
+
+[[bin]]
+name = "erfs-tool"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+comfy-table = { version = "8.0", default-features = false }
+erfs-rt = { path = "../erfs-rt", version = "0.2.0" }
+
+[dev-dependencies]
+erfs-gen = { path = "../erfs-gen", version = "0.2.0" }
