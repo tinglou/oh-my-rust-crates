@@ -1,7 +1,11 @@
 [package]
 name = "erfs-tool"
 description = "Embedded Resource Filesystem: command line tool to inspect ERFS images"
-categories = ["command-line-utilities", "development-tools::debugging"]
+categories = [
+    "filesystem",
+    "command-line-utilities",
+    "development-tools::debugging",
+]
 documentation = "https://docs.rs/erfs-tool/"
 keywords = ["embedded", "resources", "filesystem", "cli"]
 

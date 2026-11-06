@@ -3,8 +3,8 @@ name = "erfs-rt"
 description = "Embedded Resource Filesystem: no_std runtime to read embedded or owned ERFS images"
 
 categories = [
-    "no-std",
     "filesystem",
+    "no-std",
     "embedded",
 ] # https://crates.io/category_slugs
 documentation = "https://docs.rs/erfs-rt/"

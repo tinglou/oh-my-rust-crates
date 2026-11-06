@@ -3,6 +3,7 @@ name = "erfs-gen"
 description = "Embedded Resource Filesystem: library and command line tool to generate ERFS images"
 
 categories = [
+    "filesystem",
     "development-tools::build-utils",
     "command-line-utilities",
 ] # https://crates.io/category_slugs
