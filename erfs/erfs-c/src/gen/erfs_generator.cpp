@@ -148,6 +148,12 @@ int erfs_generate(const char *path, const char *id, int options, const char *tar
 
     flatten_directory(root, flat_entries, 0);
 
+    if (flat_entries.size() > UINT16_MAX) {
+        std::cerr << "Error: too many entries: " << flat_entries.size()
+                  << " (maximum is " << UINT16_MAX << ")" << std::endl;
+        return ERFS_SOURCE_TOO_LARGE;
+    }
+
     std::vector<uint8_t> le_image, be_image;
     if (gen_c || gen_le) {
         le_image = build_image(flat_entries, false);
