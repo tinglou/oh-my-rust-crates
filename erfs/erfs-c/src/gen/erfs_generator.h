@@ -37,7 +37,7 @@ enum ErfsGenStatusCode {
     ERFS_NOT_DIRECTORY     =  -4,  /**< 源路径不是目录 */
     ERFS_OUTOF_BOUND       =  -5,  /**< 索引越界 */
 
-    ERFS_SOURCE_TOO_LARGE  = -100, /**< 源数据过大 */
+    ERFS_SOURCE_TOO_LARGE  = -100, /**< 源数据过大（如条目数超过 65535） */
     ERFS_TARGET_NOT_EXIST  = -101, /**< 目标目录不存在 */
     ERFS_INVALID_ID        = -102, /**< ID 格式无效 */
     ERFS_INVALID_OPTION    = -103, /**< 选项组合无效 */

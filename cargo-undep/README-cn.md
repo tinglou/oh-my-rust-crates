@@ -14,6 +14,10 @@
 
 查找可以安全地在 `[workspace.dependencies]` 中只声明一次、并由成员 crate 继承的依赖。**只把来源（`version`、`path`、`git`）移到工作区层**；成员级属性（`features`、`optional`、`default-features`）保留在成员 manifest。使用 `--fix` 时，也会对已在 `[workspace.dependencies]` 中的依赖强制把成员改为 `workspace = true`（强制继承）。
 
+### `sort` — 按 path 和 crate 分类整理依赖表
+
+当 `[workspace.dependencies]` 或成员 crate 的 `[dependencies]` 依赖数不少于 10 个时，对这些表进行分类排序。path 依赖排在第一组；其他依赖按 crate 的第一个 category 分组；没有 category 的依赖放入最后的 `misc` 组。如果依赖行尾注释指定了 `# category = ...`，则该类别优先级最高。每组前增加注释行，组内按名称排序。依赖正上方连续的多行注释以及依赖行尾注释会随该依赖一起移动。
+
 ## 安装
 
 ```text
@@ -43,18 +47,25 @@ cargo undep hoist
 
 # 提升成员依赖（同时强制继承已声明的依赖）
 cargo undep hoist --fix
+
+# 只检测需要排序的依赖表
+cargo undep sort
+
+# 对依赖表分类排序
+cargo undep sort --fix
 ```
 
 ## 命令行参数
 
 ```bash
-cargo undep [clean|hoist] [--fix] [--build] [--allow-dirty] [--manifest-path PATH]
+cargo undep [clean|hoist|sort] [--fix] [--build] [--allow-dirty] [--manifest-path PATH]
 ```
 
 | 参数 | 说明 |
 |------|------|
 | `clean` | 检测或删除无用的 `[workspace.dependencies]` |
 | `hoist` | 检测或将成员 crate 中可共享的依赖来源提升到 `[workspace.dependencies]` |
+| `sort` | 检测或按 path 和 category 对 `[workspace.dependencies]` 与成员 `[dependencies]` 排序 |
 | `--fix` | 对选定的命令应用修改 |
 | `--build` | 在 `--fix` 有文件修改后，运行 `cargo build --all-targets` 验证 |
 | `--allow-dirty` | 允许在 git 工作区有未提交修改或 git 不可用时执行 `--fix` |
@@ -62,7 +73,7 @@ cargo undep [clean|hoist] [--fix] [--build] [--allow-dirty] [--manifest-path PAT
 | `-h`, `--help` | 打印帮助 |
 | `-V`, `--version` | 打印版本 |
 
-不指定命令时，工具同时报告无用的工作区依赖和可提升的成员依赖。`--fix` 必须配合 `clean` 或 `hoist` 使用。在非工作区根目录运行 `hoist` 时，只处理当前目录下的 crate。
+不指定命令时，工具同时报告无用的工作区依赖和可提升的成员依赖。`--fix` 必须配合 `clean`、`hoist` 或 `sort` 使用。在非工作区根目录运行 `hoist` 时，只处理当前目录下的 crate。
 
 ## 用法示例
 
@@ -139,6 +150,49 @@ Hoistable workspace dependencies (24):
 Updated 15 files and hoisted 24 workspace dependencies.
 ```
 
+### 对依赖表排序
+
+```text
+$ cargo undep sort
+Cargo.toml files to update (2):
+  - /path/to/Cargo.toml
+  - /path/to/member/Cargo.toml
+
+Run `cargo undep sort --fix` to apply these changes.
+
+$ cargo undep sort --fix
+Cargo.toml files to update (2):
+  - /path/to/Cargo.toml
+  - /path/to/member/Cargo.toml
+
+Updated 2 Cargo.toml files.
+```
+
+### 排序前后对比
+
+```toml
+# 修改前
+[dependencies]
+zeta = { package = "serde_json", version = "1" }
+# anyhow 上方的注释
+anyhow = "1" # 行尾注释
+local = { path = "../local" }
+clap = "4"
+...
+
+# 修改后
+[dependencies]
+# --- path ---
+local = { path = "../local" }
+# --- command-line-interface ---
+clap = "4"
+# --- encoding ---
+zeta = { package = "serde_json", version = "1" }
+# --- rust-patterns ---
+# anyhow 上方的注释
+anyhow = "1" # 行尾注释
+```
+
 ### 提升前后对比
 
 ```toml
@@ -169,6 +223,31 @@ serde = "1.0"
 - `[target.'cfg(...)'.build-dependencies]`
 
 同时支持 inline table 和 `[dependencies.foo]` 子表写法。工作区内的 path 依赖会自动纳入成员继续扫描。支持 `[workspace].members` glob 和 `[workspace].exclude`。
+
+### 依赖排序规则
+
+`sort` 对 `[workspace.dependencies]` 和成员 `[dependencies]` 中的每个依赖分类：
+
+1. 依赖行尾注释中指定的 category 优先级最高，例如 `snmp2 = { version = "0.5.3" } # category = network-programming`。
+2. 带 `path` 来源的依赖排在第一组 `path`。
+3. 其他依赖使用 `cargo metadata` 提供的第一个 category，并只保留 `::` 之前的部分。例如 `development-tools::profiling` 归为 `development-tools`。
+4. 没有 category 的依赖放入最后一组 `misc`。
+
+组顺序为 `path`、按字母排序的 category、最后的 `misc`。组内按依赖名称排序。依赖数少于 10 个的表不做修改。
+
+每组前会增加一行注释：
+
+```toml
+[dependencies]
+# --- path ---
+local-helper = { path = "../local-helper" }
+# --- encoding ---
+serde = "1"
+# --- misc ---
+unknown-crate = "1"
+```
+
+排序时会保留依赖原有的声明文本。依赖正上方连续的多行注释以及同一行末尾的注释都会随依赖一起移动。
 
 ### 注释处理规则
 
@@ -217,13 +296,15 @@ unused = "1.0"
 
 ### Git 安全策略
 
-`--fix` 会修改文件，因此默认要求 git 工作区干净：
+`clean --fix` 和 `hoist --fix` 会修改文件，因此默认要求 git 工作区干净：
 
 1. 必须存在 `git`。
 2. 工作区必须位于 git 仓库内。
 3. `git status --porcelain` 输出必须为空。
 
-任一检查失败时，工具会拒绝修改文件并报错。如果 git 不可用或工作区有修改，需显式传入 `--allow-dirty`。未跟踪文件也会被视为 dirty。
+`sort --fix` 只修改 `Cargo.toml`，因此只有当某个 `Cargo.toml` 有未提交修改时才会拒绝执行；其他文件的未提交修改不影响排序。
+
+任一检查失败时，工具会拒绝修改文件并报错。如果 git 不可用或相关文件有修改，需显式传入 `--allow-dirty`。未跟踪文件也会被视为 dirty。
 
 ## 许可证
 

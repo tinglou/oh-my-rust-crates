@@ -20,42 +20,66 @@ const SOURCE_KEYS: &[&str] = &[
     "package",
 ];
 
+/// Planned result of a hoisting operation.
 pub struct HoistPlan {
+    /// Dependencies that can be hoisted to the workspace level.
     pub hoisted: Vec<HoistedDependency>,
+    /// Dependencies already in `[workspace.dependencies]` whose members will be
+    /// rewritten to use `workspace = true`.
     pub enforced: Vec<HoistedDependency>,
+    /// Dependencies that could not be hoisted due to conflicts.
     pub skipped: Vec<SkippedDependency>,
+    /// Files that need to be rewritten.
     pub changes: Vec<FileChange>,
 }
 
 impl HoistPlan {
+    /// Returns `true` if the plan has no changes to apply.
     pub fn is_empty(&self) -> bool {
         self.changes.is_empty()
     }
 }
 
+/// A dependency that can be hoisted to `[workspace.dependencies]`.
 pub struct HoistedDependency {
+    /// The dependency name (key).
     pub name: String,
+    /// A human-readable description of the source (version, path, or git).
     pub source: String,
+    /// Number of member crates declaring this dependency.
     pub declarations: usize,
+    /// Manifest paths of the member crates declaring this dependency.
     pub manifests: Vec<PathBuf>,
 }
 
+/// A dependency that could not be hoisted.
 pub struct SkippedDependency {
+    /// The dependency name.
     pub name: String,
+    /// Explanation of why it was skipped.
     pub reason: String,
+    /// The type of conflict that caused the skip.
     pub conflict_type: ConflictType,
 }
 
+/// The reason a dependency could not be hoisted.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConflictType {
+    /// Incompatible version requirements across members.
     VersionConflict,
+    /// Mixed `default-features` values across members.
     DefaultFeaturesConflict,
+    /// Already declared in `[workspace.dependencies]` (enforced instead).
     AlreadyInWorkspace,
+    /// Any other conflict.
     Other,
 }
 
+/// A file modification to be applied.
 pub struct FileChange {
+    /// Path to the file to modify.
     pub path: PathBuf,
+    /// New file contents.
     pub contents: String,
 }
 
@@ -166,10 +190,15 @@ impl Group {
     }
 }
 
+/// Compute a hoisting plan for the entire workspace.
 pub fn plan(workspace: &Workspace) -> Result<HoistPlan, String> {
     plan_scoped(workspace, None)
 }
 
+/// Compute a hoisting plan scoped to a specific directory.
+///
+/// If `scope` is `None`, the entire workspace is processed. If `scope` points
+/// inside a member crate, only that crate and its sub-crates are processed.
 pub fn plan_scoped(workspace: &Workspace, scope: Option<&Path>) -> Result<HoistPlan, String> {
     let members = match scope {
         Some(scope) => workspace.members_in_scope(scope),
