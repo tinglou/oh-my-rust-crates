@@ -1,19 +1,17 @@
 [package]
 name = "cargo-undep"
-version = "0.2.1"
+version = "0.3.0"
 authors.workspace = true
 license.workspace = true
 edition.workspace = true
 repository.workspace = true
-description = "Find unused workspace dependencies and hoist member dependencies in a Cargo workspace"
+description = "Find unused workspace dependencies, hoist member dependencies, and sort dependency tables in a Cargo workspace"
 readme = "README.md"
 keywords = ["cargo", "cargo-subcommand", "workspace", "dependencies", "unused"]
 categories = ["development-tools::cargo-plugins", "command-line-utilities"]
 
-[features]
-clap-cli = ["dep:clap"]
-
 [dependencies]
-clap = { version = "4.5", default-features = false, features = ["std", "derive", "help", "usage"], optional = true }
+clap = { version = "4.5", default-features = false, features = ["std", "derive", "help", "usage"] }
 glob = "0.3"
+serde_json = "1"
 toml_edit = "0.25"

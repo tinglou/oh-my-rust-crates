@@ -6,19 +6,16 @@ This document contains information for contributors and maintainers of `cargo-un
 
 ```bash
 # Format check
-cargo fmt --all -- --check
+cargo fmt -p cargo-undep -- --check
 
 # Linting (strict)
-cargo clippy --all-targets -- -D warnings
-cargo clippy --all-targets --features clap-cli -- -D warnings
+cargo clippy -p cargo-undep --all-targets -- -D warnings
 
 # Tests
-cargo test
-cargo test --features clap-cli
+cargo test -p cargo-undep
 
 # Documentation (no warnings)
-RUSTDOCFLAGS='-D warnings' cargo doc --no-deps
-RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --features clap-cli
+RUSTDOCFLAGS='-D warnings' cargo doc -p cargo-undep --no-deps
 ```
 
 ## Project structure
@@ -30,10 +27,10 @@ cargo-undep/
 ├── README-cn.md
 ├── src/
 │   ├── main.rs           # Entry point, command dispatch
-│   ├── cli.rs            # Hand-written CLI parser (default)
-│   ├── cli_clap.rs       # Clap-based CLI parser (optional feature)
+│   ├── cli.rs            # Clap-based CLI parser
 │   ├── workspace.rs      # Workspace discovery, member detection, reference checking
 │   ├── hoist.rs          # Dependency hoisting logic
+│   ├── sort.rs           # Category-based dependency sorting
 │   ├── cleaner.rs        # Comment-aware line removal
 │   └── git.rs            # Git safety checks
 ```
@@ -41,11 +38,11 @@ cargo-undep/
 ## Key design decisions
 
 ### CLI
-- Two subcommands: `clean` (unused deps) and `hoist` (member → workspace)
-- Default (no subcommand) reports both
+- Three subcommands: `clean` (unused deps), `hoist` (member → workspace), and `sort` (dependency table ordering)
+- Default (no subcommand) reports both unused and hoistable dependencies
 - `--fix` is the "apply" flag, requires a subcommand
 - Global options: `--allow-dirty`, `--manifest-path`
-- Hand-written parser is default; clap is behind `clap-cli` feature for binary size comparison
+- Clap owns command-line parsing
 
 ### Workspace discovery
 - Reads `[workspace]` from root `Cargo.toml`
@@ -68,11 +65,24 @@ A dependency is "used" if any member declares `workspace = true` in any dependen
 - Preserves member-level `features`, `optional`, `default-features`
 - `--hoist --fix` also enforces inheritance for deps already in `[workspace.dependencies]`
 
+### Sorting logic (sort.rs)
+- Targets `[workspace.dependencies]` and each member's `[dependencies]` only
+- Tables with fewer than 10 entries are left untouched
+- A category written in a dependency's trailing comment (`# category = ...`) overrides every other rule
+- Path dependencies form the first `path` group
+- Other dependencies are grouped by the first crate category from `cargo metadata`
+- Categories are normalized to the segment before `::` (for example, `development-tools::profiling` becomes `development-tools`)
+- Missing categories go into the final `misc` group
+- Entries within a group are sorted by dependency key
+- Each group starts with a `# --- category ---` comment
+- `toml_edit` moves each entry together with contiguous comments above it and any inline comment after it
+- The operation is idempotent; previously generated group comments are replaced
+
 ### Version merging
 Simple caret versions only (e.g., `1.0`, `1.2.5`, `^1.2`). Merges by taking the maximum lower bound within same major (or same minor for 0.x). Non-simple versions (exact, tilde, ranges) require exact match.
 
 ### Git safety
-`--fix` requires clean git work tree (git available, inside repo, `git status --porcelain` empty). `--allow-dirty` bypasses.
+`clean --fix` and `hoist --fix` require a clean git work tree (git available, inside repo, `git status --porcelain` empty). `sort --fix` only refuses when a `Cargo.toml` has uncommitted changes. `--allow-dirty` bypasses these checks.
 
 ## Adding a new test
 

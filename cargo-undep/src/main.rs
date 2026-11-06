@@ -5,25 +5,21 @@
 //! dependency tables. With no command it reports both unused workspace
 //! dependencies and dependencies that can be hoisted. The `clean` command
 //! removes unused entries; the `hoist` command moves compatible member
-//! dependency sources into `[workspace.dependencies]`.
+//! dependency sources into `[workspace.dependencies]`; the `sort` command
+//! groups dependency tables by path and crate category.
 
 mod cleaner;
-#[cfg(not(feature = "clap-cli"))]
 mod cli;
-#[cfg(feature = "clap-cli")]
-mod cli_clap;
 mod git;
 mod hoist;
+mod sort;
 mod workspace;
 
 use std::fs;
 use std::path::Path;
 use std::process::{Command, ExitCode};
 
-#[cfg(not(feature = "clap-cli"))]
 use cli::{Args, Mode};
-#[cfg(feature = "clap-cli")]
-use cli_clap::{Args, Mode};
 
 fn main() -> ExitCode {
     match run() {
@@ -68,6 +64,13 @@ fn run() -> Result<(), String> {
                 scope,
             )
         }
+        Some(Mode::Sort) => run_sort(
+            &workspace,
+            args.fix,
+            args.build,
+            args.allow_dirty,
+            &manifest_path,
+        ),
     }
 }
 
@@ -176,6 +179,48 @@ fn run_hoist(
     );
 
     if build && !plan.changes.is_empty() {
+        run_cargo_build(manifest_path)?;
+    }
+
+    Ok(())
+}
+
+fn run_sort(
+    workspace: &workspace::Workspace,
+    fix: bool,
+    build: bool,
+    allow_dirty: bool,
+    manifest_path: &Path,
+) -> Result<(), String> {
+    let plan = sort::plan(workspace)?;
+
+    if plan.changes.is_empty() {
+        println!("No dependency tables need sorting.");
+        return Ok(());
+    }
+
+    println!("Cargo.toml files to update ({}):", plan.changes.len());
+    for change in &plan.changes {
+        println!("  - {}", change.path.display());
+    }
+
+    if !fix {
+        println!();
+        println!("Run `cargo undep sort --fix` to apply these changes.");
+        return Ok(());
+    }
+
+    ensure_manifest_git_safety(workspace, allow_dirty)?;
+
+    for change in &plan.changes {
+        fs::write(&change.path, &change.contents)
+            .map_err(|error| format!("failed to write {}: {error}", change.path.display()))?;
+    }
+
+    println!();
+    println!("Updated {} Cargo.toml files.", plan.changes.len());
+
+    if build {
         run_cargo_build(manifest_path)?;
     }
 
@@ -302,4 +347,53 @@ fn ensure_git_safety(workspace: &workspace::Workspace, allow_dirty: bool) -> Res
     }
 
     Ok(())
+}
+
+/// Enforce git safety for `sort --fix`.
+///
+/// Sorting only rewrites Cargo.toml files, so only uncommitted changes to a
+/// Cargo.toml block the operation. Other dirty files are unrelated.
+fn ensure_manifest_git_safety(
+    workspace: &workspace::Workspace,
+    allow_dirty: bool,
+) -> Result<(), String> {
+    if !git::is_available() {
+        if allow_dirty {
+            eprintln!(
+                "warning: git was not found; skipping dirty check because --allow-dirty was supplied."
+            );
+            return Ok(());
+        }
+        return Err(
+            "git was not found. Re-run with --allow-dirty to modify files without git safety checks."
+                .to_string(),
+        );
+    }
+
+    if !git::is_work_tree(&workspace.root_dir)? {
+        if allow_dirty {
+            eprintln!(
+                "warning: the workspace is not inside a git repository; skipping dirty check because --allow-dirty was supplied."
+            );
+            return Ok(());
+        }
+        return Err(
+            "the workspace is not inside a git repository. Re-run with --allow-dirty to modify files without git safety checks."
+                .to_string(),
+        );
+    }
+
+    let dirty_manifests = git::modified_manifests(&workspace.root_dir)?;
+    if dirty_manifests.is_empty() {
+        return Ok(());
+    }
+
+    if allow_dirty {
+        return Ok(());
+    }
+
+    Err(format!(
+        "these Cargo.toml files have uncommitted changes: {}. Commit or stash them, or re-run with --allow-dirty.",
+        dirty_manifests.join(", ")
+    ))
 }

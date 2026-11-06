@@ -1,33 +1,45 @@
-//! Command-line argument parsing.
-//!
-//! The tool intentionally uses a tiny hand-written parser instead of pulling in
-//! a CLI framework: there are only two commands and three switches, and keeping
-//! the dependency graph small is a design goal.
+//! Command-line argument parsing with clap.
 
 use std::ffi::OsString;
 use std::path::PathBuf;
 
+use clap::{Parser, Subcommand};
+
 /// Selected operation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Subcommand)]
 pub enum Mode {
-    /// Report or remove unused workspace dependencies.
+    /// Report or remove unused workspace dependencies
     Clean,
-    /// Report or hoist compatible member dependency sources.
+    /// Report or move compatible member dependency sources
     Hoist,
+    /// Report or sort dependency tables by path and crate category
+    Sort,
 }
 
 /// Parsed command-line options.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Parser)]
+#[command(
+    name = "cargo-undep",
+    bin_name = "cargo undep",
+    version,
+    about = "Find unused workspace dependencies, hoist member dependencies, or sort dependency tables",
+    after_help = "Without COMMAND, the tool reports unused and hoistable dependencies. --fix requires `clean`, `hoist`, or `sort`. When run from a member directory, `hoist` only processes crates under the current directory."
+)]
 pub struct Args {
-    /// Command selected on the command line. `None` reports both operations.
+    /// Command to run
+    #[command(subcommand)]
     pub mode: Option<Mode>,
-    /// Apply changes instead of only reporting them.
+    /// Apply changes for the selected command
+    #[arg(long, global = true)]
     pub fix: bool,
-    /// After a successful --fix with changes, run `cargo build --all-targets` to verify.
+    /// After --fix with changes, run `cargo build --all-targets` to verify
+    #[arg(long, global = true)]
     pub build: bool,
-    /// Allow `--fix` to run with uncommitted git changes or without git.
+    /// Allow --fix with uncommitted git changes or no git
+    #[arg(long, global = true)]
     pub allow_dirty: bool,
-    /// Optional path to a workspace root `Cargo.toml`.
+    /// Path to the workspace root Cargo.toml
+    #[arg(long, global = true, value_name = "PATH")]
     pub manifest_path: Option<PathBuf>,
 }
 
@@ -39,109 +51,47 @@ impl Args {
     /// When invoked as `cargo undep`, Cargo passes the subcommand name as the
     /// first argument (`argv[1] == "undep"`), so it is stripped here.
     pub fn parse() -> Result<Self, String> {
-        Self::parse_from(std::env::args_os().skip(1))
-    }
-
-    fn parse_from<I>(iter: I) -> Result<Self, String>
-    where
-        I: IntoIterator<Item = OsString>,
-    {
-        let mut args = Self::default();
-        let mut iter = iter.into_iter().peekable();
-
-        if iter
-            .peek()
+        let mut argv: Vec<OsString> = std::env::args_os().collect();
+        if argv
+            .get(1)
             .is_some_and(|arg| arg.to_string_lossy() == "undep")
         {
-            iter.next();
+            argv.remove(1);
         }
 
-        while let Some(raw) = iter.next() {
-            let arg = raw.to_string_lossy();
+        Self::parse_from(argv)
+    }
 
-            match arg.as_ref() {
-                "clean" => set_mode(&mut args, Mode::Clean)?,
-                "hoist" => set_mode(&mut args, Mode::Hoist)?,
-                "--fix" => args.fix = true,
-                "--build" => args.build = true,
-                "--allow-dirty" => args.allow_dirty = true,
-                "--manifest-path" => {
-                    let value = iter
-                        .next()
-                        .ok_or_else(|| "--manifest-path requires a path argument".to_string())?;
-                    args.manifest_path = Some(PathBuf::from(value));
-                }
-                "-h" | "--help" => {
-                    print!("{HELP}");
-                    std::process::exit(0);
-                }
-                "-V" | "--version" => {
-                    println!("cargo-undep {}", env!("CARGO_PKG_VERSION"));
-                    std::process::exit(0);
-                }
-                other => {
-                    if let Some(value) = other.strip_prefix("--manifest-path=") {
-                        if value.is_empty() {
-                            return Err("--manifest-path requires a path argument".to_string());
-                        }
-                        args.manifest_path = Some(PathBuf::from(value));
-                    } else {
-                        return Err(format!("unknown argument or command: {other}\n\n{HELP}"));
-                    }
+    fn parse_from<I, T>(args: I) -> Result<Self, String>
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<OsString> + Clone,
+    {
+        match Self::try_parse_from(args) {
+            Ok(args) => {
+                if args.fix && args.mode.is_none() {
+                    Err("--fix requires the `clean`, `hoist`, or `sort` command".to_string())
+                } else {
+                    Ok(args)
                 }
             }
+            Err(error) if error.use_stderr() => Err(error.to_string()),
+            Err(error) => {
+                print!("{error}");
+                std::process::exit(0);
+            }
         }
-
-        if args.fix && args.mode.is_none() {
-            return Err(format!(
-                "--fix requires the `clean` or `hoist` command\n\n{HELP}"
-            ));
-        }
-
-        Ok(args)
     }
 }
-
-fn set_mode(args: &mut Args, mode: Mode) -> Result<(), String> {
-    if args.mode.is_some() {
-        return Err("only one of `clean` or `hoist` may be specified".to_string());
-    }
-    args.mode = Some(mode);
-    Ok(())
-}
-
-/// Help text shown by `--help`.
-pub const HELP: &str = "\
-cargo-undep - find unused workspace dependencies and hoist member dependencies
-
-USAGE:
-    cargo undep [COMMAND] [OPTIONS]
-
-COMMANDS:
-    clean                  Report or remove unused [workspace.dependencies]
-    hoist                  Report or move compatible member dependency sources
-                           into [workspace.dependencies]
-
-OPTIONS:
-    --fix                  Apply changes for the selected command
-    --build                After --fix with changes, run `cargo build --all-targets` to verify
-    --allow-dirty          Allow --fix with uncommitted git changes or no git
-    --manifest-path PATH   Path to the workspace root Cargo.toml
-    -h, --help             Print help
-    -V, --version          Print version
-
-Without COMMAND, the tool reports both unused workspace dependencies and
-hoistable member dependencies. --fix requires `clean` or `hoist`.
-When run from a member directory, `hoist` only processes crates under the
-current directory.
-";
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     fn parse(items: &[&str]) -> Result<Args, String> {
-        Args::parse_from(items.iter().map(OsString::from))
+        let mut args = vec!["cargo-undep"];
+        args.extend_from_slice(items);
+        Args::parse_from(args)
     }
 
     #[test]
@@ -168,15 +118,15 @@ mod tests {
     }
 
     #[test]
-    fn rejects_fix_without_command() {
-        assert!(parse(&["--fix"]).is_err());
+    fn parses_sort() {
+        let args = parse(&["sort", "--fix"]).unwrap();
+        assert_eq!(args.mode, Some(Mode::Sort));
+        assert!(args.fix);
     }
 
     #[test]
-    fn strips_cargo_subcommand_name() {
-        let args = parse(&["undep", "clean", "--fix"]).unwrap();
-        assert_eq!(args.mode, Some(Mode::Clean));
-        assert!(args.fix);
+    fn rejects_fix_without_command() {
+        assert!(parse(&["--fix"]).is_err());
     }
 
     #[test]
