@@ -10,6 +10,7 @@ members = [
     "conan2-rs",
     "erfs/erfs-rt",
     "erfs/erfs-gen",
+    "erfs/erfs-tool",
 
     "hypervectorscan-rs/hypervectorscan",
     "hypervectorscan-rs/hypervectorscan-sys",

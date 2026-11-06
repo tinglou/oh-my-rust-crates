@@ -10,6 +10,7 @@ ERFS 将目录树打包为紧凑的只读镜像，使应用可以直接从自身
 | ------------------------------ | ------------------------------------------------------------------- |
 | [`erfs-rt`](erfs-rt)           | `no_std` 运行时，支持借用（`&[u8]`）与拥有（`Vec<u8>`）两种模式。    |
 | [`erfs-gen`](erfs-gen)         | 镜像生成器：供 `build.rs` 使用的库，以及 `erfs-gen` 命令行工具。    |
+| [`erfs-tool`](erfs-tool)       | 镜像查看工具：`ls`、`cat`、`tree` 三个子命令。                     |
 | [`samples/erfs-demo`](../samples/erfs-demo) | 使用默认（`std` + `alloc`）特性的完整示例。          |
 | [`samples/erfs-nostd-demo`](../samples/erfs-nostd-demo) | 使用 `default-features = false` 的示例。 |
 
@@ -54,6 +55,23 @@ ERFS 将目录树打包为紧凑的只读镜像，使应用可以直接从自身
 * `erfs_le_<id>.img`、`erfs_be_<id>.img` —— 二进制镜像。
 * `erfs_<id>.rs` —— Rust 绑定，通过 `include_bytes!` 提供 `IMAGE`、
   `IMAGE_LE`、`IMAGE_BE` 和 `ID` 常量。
+
+### 镜像查看工具
+
+`erfs-tool` 提供与 `erfs-c` 中 `erfstool` 相同的三个子命令：
+
+```text
+erfs-tool ls <dir> <img>             - 列出目录条目
+erfs-tool cat [-c | -x] <path> <img> - 输出文件内容
+erfs-tool tree [-d] <dir> <img>      - 打印目录树
+```
+
+`cat` 默认原样输出文件字节；`-c` 使用 C 风格转储（每行 16 字节，包含偏移量、
+转义控制字符和十六进制表示）；`-x`（或 `--hex`）输出十六进制转储。`tree -d` 只显示目录，
+忽略文件。
+
+`ls` 使用无边框、带表头的表格对齐名称、类型和大小；`tree` 使用标准的
+`├──` / `└──` / `│` 连接线展示层级，同时对齐各列。
 
 ## 在 `build.rs` 中使用库
 

@@ -15,6 +15,7 @@ A collection of focused Rust crates for diagnostics, networking, embedded resour
 | [init-log4rs](init-log4rs/README.md) | Zero-config `log4rs` discovery, creation, and initialization |
 | [erfs-rt](erfs/README.md) | `no_std` runtime for zero-copy access to embedded ERFS resource images |
 | [erfs-gen](erfs/README.md) | Build-time ERFS image generator and command-line tool |
+| [erfs-tool](erfs/README.md) | Command-line inspector for ERFS images with `ls`, `cat`, and `tree` |
 | [cargo-undep](cargo-undep/README.md) | Find unused workspace dependencies and hoist member dependency sources safely |
 
 ## Crates
@@ -63,7 +64,7 @@ See [init-log4rs/README.md](init-log4rs/README.md) for setup and configuration d
 
 **Embedded Resource Filesystem**
 
-`erfs-rt` is a `no_std` runtime for reading compact, read-only ERFS images embedded with `include_bytes!` or loaded at runtime. `erfs-gen` packs a directory tree into those images and is usable from `build.rs` or the command line.
+`erfs-rt` is a `no_std` runtime for reading compact, read-only ERFS images embedded with `include_bytes!` or loaded at runtime. `erfs-gen` packs a directory tree into those images and is usable from `build.rs` or the command line, while `erfs-tool` inspects the result.
 
 See [erfs/README.md](erfs/README.md) for usage, the image format, and the sample projects.
 
