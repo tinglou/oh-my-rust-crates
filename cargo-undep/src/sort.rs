@@ -10,7 +10,7 @@
 //! contiguous comments above it and inline comments after it. Only the order of
 //! the entries changes.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -321,14 +321,13 @@ fn sort_table(
     });
 
     let sorted_names: Vec<String> = table.iter().map(|(name, _)| name.to_string()).collect();
-    let mut emitted = BTreeSet::new();
+    let mut emitted = BTreeMap::new();
+    let mut is_first_group = true;
     for name in sorted_names {
         let Some(group) = groups.get(&name) else {
             continue;
         };
-        if !emitted.insert(group.clone()) {
-            continue;
-        }
+        let is_first_in_group = emitted.insert(group.clone(), ()).is_none();
 
         if let Some(mut key) = table.key_mut(&name) {
             let prefix = key
@@ -337,12 +336,28 @@ fn sort_table(
                 .and_then(|prefix| prefix.as_str())
                 .unwrap_or_default();
             let prefix = strip_category_comments(prefix);
-            let comment = format!(
-                "\n{CATEGORY_COMMENT_PREFIX}{}{CATEGORY_COMMENT_SUFFIX}\n\n",
-                group.label()
-            );
-            key.leaf_decor_mut()
-                .set_prefix(format!("{comment}{prefix}"));
+
+            if is_first_in_group {
+                // First item in group: prepend category comment
+                let comment = if is_first_group {
+                    format!(
+                        "{CATEGORY_COMMENT_PREFIX}{}{CATEGORY_COMMENT_SUFFIX}\n",
+                        group.label()
+                    )
+                } else {
+                    format!(
+                        "\n{CATEGORY_COMMENT_PREFIX}{}{CATEGORY_COMMENT_SUFFIX}\n",
+                        group.label()
+                    )
+                };
+                is_first_group = false;
+                key.leaf_decor_mut()
+                    .set_prefix(format!("{comment}{prefix}"));
+            } else {
+                // Subsequent items in group: strip leading blank lines from prefix
+                let prefix = trim_leading_blank_lines(&prefix);
+                key.leaf_decor_mut().set_prefix(prefix);
+            }
         }
     }
 
@@ -422,6 +437,19 @@ fn strip_category_comments(prefix: &str) -> String {
         i += 1;
     }
     output
+}
+
+fn trim_leading_blank_lines(s: &str) -> String {
+    let mut start = 0;
+    let bytes = s.as_bytes();
+    while start < bytes.len() {
+        if bytes[start] == b'\n' || bytes[start] == b'\r' {
+            start += 1;
+        } else {
+            break;
+        }
+    }
+    s[start..].to_string()
 }
 
 fn is_workspace_inherited(item: &Item) -> bool {
