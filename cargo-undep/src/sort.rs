@@ -270,7 +270,9 @@ fn sort_manifest(
         return Ok(None);
     }
 
-    let contents = restore_line_endings(text, document.to_string());
+    let mut contents = document.to_string();
+    contents = align_inline_comments(&contents);
+    let contents = restore_line_endings(text, contents);
     if contents == text {
         Ok(None)
     } else {
@@ -516,6 +518,111 @@ fn category_from_comment(comment: &str) -> Option<String> {
         let value = value.trim_matches(['"', '\'', ',']);
         if let Some(category) = normalize_category(value) {
             return Some(category);
+        }
+    }
+
+    None
+}
+
+/// Align inline suffix comments (`# ...`) within each dependency group so that
+/// the `#` characters start at the same column.
+///
+/// Only lines inside a group (i.e. after a `# --- category ---` header) are
+/// considered. Lines without an inline comment are left untouched. Category
+/// header lines and bare comments are not treated as inline comments.
+fn align_inline_comments(text: &str) -> String {
+    let ends_with_newline = text.ends_with('\n');
+    let lines: Vec<&str> = text.lines().collect();
+    let n = lines.len();
+
+    // Assign each line to a group. Lines before the first header (or outside any
+    // group) get `None`. Each `# --- ... ---` header starts a new group.
+    let mut group_ids: Vec<Option<usize>> = vec![None; n];
+    let mut current_group: Option<usize> = None;
+    let mut group_count = 0usize;
+
+    for (i, line) in lines.iter().enumerate() {
+        if is_category_header(line) {
+            current_group = Some(group_count);
+            group_count += 1;
+        }
+        group_ids[i] = current_group;
+    }
+
+    // First pass: find the maximum inline-comment (`#`) byte offset per group.
+    let mut max_comment_pos: Vec<usize> = vec![0; group_count];
+    for (i, line) in lines.iter().enumerate() {
+        let Some(g) = group_ids[i] else {
+            continue;
+        };
+        if let Some(pos) = inline_comment_position(line) {
+            max_comment_pos[g] = max_comment_pos[g].max(pos);
+        }
+    }
+
+    // Second pass: emit lines, padding spaces before `#` to align within group.
+    let mut output: Vec<String> = Vec::with_capacity(n);
+    for (i, line) in lines.iter().enumerate() {
+        let Some(g) = group_ids[i] else {
+            output.push(line.to_string());
+            continue;
+        };
+        match inline_comment_position(line) {
+            Some(pos) if pos < max_comment_pos[g] => {
+                let pad = max_comment_pos[g] - pos;
+                let mut new_line = line.to_string();
+                new_line.insert_str(pos, &" ".repeat(pad));
+                output.push(new_line);
+            }
+            _ => output.push(line.to_string()),
+        }
+    }
+
+    let mut result = output.join("\n");
+    if ends_with_newline && !result.ends_with('\n') {
+        result.push('\n');
+    }
+    result
+}
+
+/// Returns `true` if `line` is a category header comment like `# --- misc ---`.
+fn is_category_header(line: &str) -> bool {
+    let trimmed = line.trim();
+    trimmed.starts_with(CATEGORY_COMMENT_PREFIX) && trimmed.ends_with(CATEGORY_COMMENT_SUFFIX)
+}
+
+/// Returns the byte offset of the first `#` that begins an inline comment,
+/// i.e. a `#` appearing after `=` and outside of any quoted string.
+///
+/// Returns `None` for lines without an inline comment (bare comments, category
+/// headers, blank lines, and dependency declarations without a trailing comment).
+fn inline_comment_position(line: &str) -> Option<usize> {
+    let mut in_double = false;
+    let mut in_single = false;
+    let mut escaped = false;
+    let mut found_eq = false;
+
+    for (i, ch) in line.char_indices() {
+        if in_double {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == '"' {
+                in_double = false;
+            }
+        } else if in_single {
+            if ch == '\'' {
+                in_single = false;
+            }
+        } else if ch == '"' {
+            in_double = true;
+        } else if ch == '\'' {
+            in_single = true;
+        } else if ch == '=' {
+            found_eq = true;
+        } else if ch == '#' && found_eq {
+            return Some(i);
         }
     }
 
@@ -859,5 +966,132 @@ kappa = "1"
 
         assert!(sorted.contains("\r\n"));
         assert!(!sorted.replace("\r\n", "").contains('\n'));
+    }
+
+    #[test]
+    fn aligns_inline_comments_within_a_group() {
+        let text = r#"[dependencies]
+aaa = "1" # short
+bbbbbbbbbb = "2" # a longer comment
+cc = "3" # medium length comment here
+ddd = "4"
+eee = "5" # another comment
+fff = "6"
+ggg = "7"
+hhh = "8"
+iii = "9"
+jjj = "10"
+"#;
+        let sorted = sort_manifest(
+            text,
+            Path::new("Cargo.toml"),
+            &[DependencyTable::Dependencies],
+            &categories(),
+            &workspace_dependencies(),
+        )
+        .unwrap()
+        .unwrap();
+
+        // Collect the byte offset of the inline `#` in each dependency line
+        // (excluding the category header line).
+        let positions: Vec<usize> = sorted
+            .lines()
+            .filter(|line| !is_category_header(line))
+            .filter_map(inline_comment_position)
+            .collect();
+
+        assert!(!positions.is_empty());
+        // All inline comments in the single misc group must share one column.
+        assert!(
+            positions.windows(2).all(|w| w[0] == w[1]),
+            "comment positions should be aligned, got {positions:?}"
+        );
+    }
+
+    #[test]
+    fn aligns_inline_comments_per_group_independently() {
+        let text = r#"[dependencies]
+zeta = "1"
+alpha = "1" # short comment
+clap = "4" # this is a much longer comment
+local = { path = "../local" }
+serde = "1" # tiny
+tokio = "1" # async runtime comment here
+beta = "1"
+gamma = "1" # beta-ish comment
+delta = "1" # delta comment text
+epsilon = "1" # epsilon comment here
+"#;
+        let sorted = sort_manifest(
+            text,
+            Path::new("Cargo.toml"),
+            &[DependencyTable::Dependencies],
+            &categories(),
+            &workspace_dependencies(),
+        )
+        .unwrap()
+        .unwrap();
+
+        // Each group's comments should be aligned within that group, but
+        // different groups may have different alignment columns.
+        let mut prev_group_positions: Option<Vec<usize>> = None;
+        let mut current_group_positions: Vec<usize> = Vec::new();
+
+        for line in sorted.lines() {
+            if is_category_header(line) {
+                if let Some(prev) = prev_group_positions.take() {
+                    assert!(
+                        prev.windows(2).all(|w| w[0] == w[1]),
+                        "previous group comments should be aligned"
+                    );
+                }
+                prev_group_positions = Some(current_group_positions);
+                current_group_positions = Vec::new();
+                continue;
+            }
+            if let Some(pos) = inline_comment_position(line) {
+                current_group_positions.push(pos);
+            }
+        }
+        if let Some(prev) = prev_group_positions {
+            assert!(
+                prev.windows(2).all(|w| w[0] == w[1]),
+                "last group comments should be aligned"
+            );
+        }
+    }
+
+    #[test]
+    fn alignment_is_idempotent() {
+        let text = r#"[dependencies]
+aaa = "1" # short
+bbbbbbbbbb = "2" # a longer comment
+cc = "3" # medium length comment here
+ddd = "4"
+eee = "5" # another comment
+fff = "6"
+ggg = "7"
+hhh = "8"
+iii = "9"
+jjj = "10"
+"#;
+        let first = sort_manifest(
+            text,
+            Path::new("Cargo.toml"),
+            &[DependencyTable::Dependencies],
+            &categories(),
+            &workspace_dependencies(),
+        )
+        .unwrap()
+        .unwrap();
+        let second = sort_manifest(
+            &first,
+            Path::new("Cargo.toml"),
+            &[DependencyTable::Dependencies],
+            &categories(),
+            &workspace_dependencies(),
+        )
+        .unwrap();
+        assert!(second.is_none());
     }
 }
