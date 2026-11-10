@@ -12,7 +12,7 @@ pub enum Mode {
     Clean,
     /// Report or move compatible member dependency sources
     Hoist,
-    /// Report or sort dependency tables by path and crate category
+    /// Report or sort dependency tables, merging duplicate workspace dependencies
     Sort,
 }
 

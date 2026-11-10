@@ -14,9 +14,11 @@ Scans every workspace member for `workspace = true` inheritance. A workspace dep
 
 Finds dependencies that can safely be declared once in `[workspace.dependencies]` and inherited by their member crates. Moves only the source (`version`, `path`, `git`) to the workspace level; member-level attributes (`features`, `optional`, `default-features`) stay in the member crate. With `--fix`, also enforces inheritance for dependencies already declared in `[workspace.dependencies]`.
 
-### `sort` — Group dependency tables by path and category
+### `sort` — Merge duplicates and group dependency tables by path and category
 
-Sorts `[workspace.dependencies]` and every member's `[dependencies]` table when they contain at least 10 entries. Path dependencies come first, other dependencies are grouped by their crate's first category, and dependencies without a category go into a final `misc` group. A trailing comment such as `# category = network-programming` overrides all other classification. Groups are separated by comment lines and entries are sorted by name. Contiguous comments above a dependency and any trailing comment on its line move with the entry.
+Merges duplicate entries in the root `[workspace.dependencies]` table into a single entry. Duplicate keys are invalid TOML, so this repair happens before sorting and does not depend on the table size. `features` are combined as an ordered union, compatible version requirements are merged (for example `1` and `1.2` become `1.2`), and source fields such as `path`, `git`, and `package` must match. Conflicting versions or sources abort the whole run without writing any file. Comments above and after each duplicate are preserved; a `# category = ...` comment stays on the merged entry so it still controls classification.
+
+After merging, sorts `[workspace.dependencies]` and every member's `[dependencies]` table when they contain at least 10 entries. Path dependencies come first, other dependencies are grouped by their crate's first category, and dependencies without a category go into a final `misc` group. A trailing comment such as `# category = network-programming` overrides all other classification. Groups are separated by comment lines and entries are sorted by name. Contiguous comments above a dependency and any trailing comment on its line move with the entry. Member `[dependencies]` tables and the root package's `[dependencies]` table are sorted but never deduplicated.
 
 ## Installation
 
@@ -48,10 +50,10 @@ cargo undep hoist
 # Hoist member dependencies (also enforces inheritance for already-declared deps)
 cargo undep hoist --fix
 
-# Check dependency tables that would be sorted
+# Check duplicate merges and dependency tables that would be sorted
 cargo undep sort
 
-# Sort dependency tables
+# Merge duplicate workspace dependencies and sort dependency tables
 cargo undep sort --fix
 ```
 
@@ -65,7 +67,7 @@ cargo undep [clean|hoist|sort] [--fix] [--build] [--allow-dirty] [--manifest-pat
 |--------|-------------|
 | `clean` | Report or remove unused `[workspace.dependencies]` |
 | `hoist` | Report or move compatible member dependency sources into `[workspace.dependencies]` |
-| `sort` | Report or sort `[workspace.dependencies]` and member `[dependencies]` by path and category |
+| `sort` | Merge duplicate `[workspace.dependencies]`, then report or sort dependency tables by path and category |
 | `--fix` | Apply changes for the selected command |
 | `--build` | After `--fix` with changes, run `cargo build --all-targets` to verify |
 | `--allow-dirty` | Allow `--fix` when the git work tree is dirty or git is unavailable |
@@ -238,6 +240,17 @@ unknown-crate = "1"
 ```
 
 The original declaration text is preserved while sorting. Contiguous comment lines directly above a dependency and any trailing comment on the same line move with that dependency.
+
+#### Duplicate workspace dependencies
+
+Duplicate keys are invalid TOML, so a root `Cargo.toml` that declares the same key twice cannot be parsed by Cargo or by the strict loader used by `clean` and `hoist`. `sort` repairs this before anything else:
+
+- Only the root `[workspace.dependencies]` table is deduplicated. Member `[dependencies]` tables and the root package's `[dependencies]` table are sorted but never merged.
+- Duplicates are merged even when the table has fewer than 10 entries; sorting still requires at least 10.
+- `features` are combined as an ordered union, and compatible versions are merged using the same rules as `hoist` (`1` plus `1.2` becomes `1.2`).
+- Source fields (`path`, `git`, `branch`, `tag`, `rev`, `package`, `registry`, `registry-index`) must match. Conflicting versions or sources abort the run before any file is written.
+- The first entry's comments are kept. Additional comments are deduplicated and moved above the merged entry, while a `# category = ...` trailing comment stays inline so it keeps controlling classification.
+- Without `--fix`, the duplicate merge is only reported. With `--fix`, the merged manifest is written first and then reloaded so `cargo metadata` categories can be applied in a second pass.
 
 ### Comment handling
 

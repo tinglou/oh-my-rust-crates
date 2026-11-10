@@ -791,7 +791,7 @@ fn merge_optional_versions(
     }
 }
 
-fn merge_versions(left: &str, right: &str) -> Option<String> {
+pub(crate) fn merge_versions(left: &str, right: &str) -> Option<String> {
     if left == right {
         return Some(left.to_string());
     }

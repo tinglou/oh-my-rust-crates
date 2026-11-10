@@ -35,11 +35,18 @@ pub struct FileChange {
 pub struct SortPlan {
     /// Files that need to be rewritten with sorted dependencies.
     pub changes: Vec<FileChange>,
+    /// Number of duplicate `[workspace.dependencies]` declarations that were
+    /// merged while preparing the plan.
+    pub merged: usize,
 }
 
 /// Build a sorting plan for the workspace root and every member crate.
 ///
 /// Returns a plan containing all `Cargo.toml` files that would be modified.
+/// Duplicate entries in the root `[workspace.dependencies]` table are merged
+/// into one entry before sorting. The root manifest is compared against
+/// [`Workspace::original_manifest_text`], so a deduplication-only change is
+/// still reported even when no table is large enough to sort.
 pub fn plan(workspace: &Workspace) -> Result<SortPlan, String> {
     let categories = Categories::load(workspace);
     let workspace_dependencies =
@@ -62,20 +69,28 @@ pub fn plan(workspace: &Workspace) -> Result<SortPlan, String> {
 
     let mut changes = Vec::new();
     for (manifest_path, text) in manifests {
-        let tables = if manifest_path == workspace.manifest_path {
+        let is_root = manifest_path == workspace.manifest_path;
+        let tables = if is_root {
             vec![DependencyTable::Workspace, DependencyTable::Dependencies]
         } else {
             vec![DependencyTable::Dependencies]
         };
 
-        if let Some(contents) = sort_manifest(
+        let sorted = sort_manifest(
             &text,
             &manifest_path,
             &tables,
             &categories,
             &workspace_dependencies,
-        )? && contents != text
-        {
+        )?;
+        let contents = sorted.unwrap_or_else(|| text.clone());
+        let original = if is_root {
+            &workspace.original_manifest_text
+        } else {
+            &text
+        };
+
+        if contents != *original {
             changes.push(FileChange {
                 path: manifest_path,
                 contents,
@@ -83,7 +98,10 @@ pub fn plan(workspace: &Workspace) -> Result<SortPlan, String> {
         }
     }
 
-    Ok(SortPlan { changes })
+    Ok(SortPlan {
+        changes,
+        merged: workspace.merged_duplicates,
+    })
 }
 
 #[derive(Clone, Copy)]
@@ -123,6 +141,16 @@ struct Categories {
 
 impl Categories {
     fn load(workspace: &Workspace) -> Self {
+        // `cargo metadata` reads the manifest from disk, which still contains
+        // the duplicate keys before `--fix` writes the merged text. Skip it and
+        // let the caller re-plan after writing.
+        if workspace.merged_duplicates > 0 {
+            eprintln!(
+                "warning: duplicate workspace dependencies were merged in memory; crate categories are unavailable until the merged manifest is written, so unclassified dependencies use misc for now."
+            );
+            return Self::default();
+        }
+
         match load_categories(workspace) {
             Ok(categories) => Self { first: categories },
             Err(error) => {
@@ -1059,6 +1087,44 @@ epsilon = "1" # epsilon comment here
                 "last group comments should be aligned"
             );
         }
+    }
+
+    fn workspace_with_duplicate_root(text: &str) -> Workspace {
+        let merged =
+            crate::manifest::merge_workspace_dependency_duplicates(text, Path::new("Cargo.toml"))
+                .unwrap();
+        Workspace {
+            root_dir: PathBuf::from("."),
+            manifest_path: PathBuf::from("Cargo.toml"),
+            manifest_text: merged.text,
+            original_manifest_text: text.to_string(),
+            merged_duplicates: merged.merged,
+            dependencies: Vec::new(),
+            member_manifests: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn plans_duplicate_merge_even_when_table_is_small() {
+        let text = r#"[workspace]
+members = []
+
+[workspace.dependencies]
+# encoding comment
+serde = "1" # category = encoding
+serde = { version = "1.2", features = ["derive"] } # extra
+"#;
+        let workspace = workspace_with_duplicate_root(text);
+        let plan = plan(&workspace).unwrap();
+
+        assert_eq!(plan.merged, 1);
+        assert_eq!(plan.changes.len(), 1);
+        let contents = &plan.changes[0].contents;
+        assert_eq!(contents.matches("serde =").count(), 1);
+        assert!(contents.contains("features = [\"derive\"]"));
+        assert!(contents.contains("# category = encoding"));
+        assert!(contents.contains("# encoding comment"));
+        assert!(contents.contains("# extra"));
     }
 
     #[test]

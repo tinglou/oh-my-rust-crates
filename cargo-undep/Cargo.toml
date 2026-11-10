@@ -1,6 +1,6 @@
 [package]
 name = "cargo-undep"
-version = "0.3.0"
+version = "0.4.0"
 authors.workspace = true
 license.workspace = true
 edition.workspace = true
@@ -15,3 +15,4 @@ clap = { version = "4.5", default-features = false, features = ["std", "derive",
 glob = "0.3"
 serde_json = "1"
 toml_edit = "0.25"
+toml_parser = "1"

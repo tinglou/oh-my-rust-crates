@@ -6,17 +6,20 @@
 //! dependencies and dependencies that can be hoisted. The `clean` command
 //! removes unused entries; the `hoist` command moves compatible member
 //! dependency sources into `[workspace.dependencies]`; the `sort` command
-//! groups dependency tables by path and crate category.
+//! merges duplicate workspace dependencies and groups dependency tables by path
+//! and crate category.
 
 mod cleaner;
 mod cli;
 mod git;
 mod hoist;
+mod manifest;
 mod sort;
 mod workspace;
 
+use std::collections::BTreeSet;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 
 use cli::{Args, Mode};
@@ -42,7 +45,12 @@ fn run() -> Result<(), String> {
     };
 
     let manifest_path = workspace::find_workspace_manifest(&start)?;
-    let workspace = workspace::Workspace::load(&manifest_path)?;
+    let workspace = match args.mode {
+        // `sort` merges duplicate workspace dependencies, so it must tolerate a
+        // manifest that the strict loader would reject.
+        Some(Mode::Sort) => workspace::Workspace::load_for_sort(&manifest_path)?,
+        _ => workspace::Workspace::load(&manifest_path)?,
+    };
 
     match args.mode {
         None => report_all(&workspace),
@@ -195,7 +203,7 @@ fn run_sort(
     let plan = sort::plan(workspace)?;
 
     if plan.changes.is_empty() {
-        println!("No dependency tables need sorting.");
+        println!("No dependency tables need sorting or merging.");
         return Ok(());
     }
 
@@ -212,18 +220,41 @@ fn run_sort(
 
     ensure_manifest_git_safety(workspace, allow_dirty)?;
 
-    for change in &plan.changes {
-        fs::write(&change.path, &change.contents)
-            .map_err(|error| format!("failed to write {}: {error}", change.path.display()))?;
+    let mut updated = BTreeSet::new();
+    write_sort_changes(&plan.changes, &mut updated)?;
+
+    if plan.merged > 0 {
+        // The first pass wrote the merged manifest, which makes it valid TOML
+        // again. Reload it and re-plan so `cargo metadata` can supply crate
+        // categories; otherwise every dependency would stay in `misc`.
+        let reloaded = workspace::Workspace::load_for_sort(manifest_path)?;
+        let sorted = sort::plan(&reloaded)?;
+        write_sort_changes(&sorted.changes, &mut updated)?;
     }
 
     println!();
-    println!("Updated {} Cargo.toml files.", plan.changes.len());
+    println!("Updated {} Cargo.toml files.", updated.len());
+    if plan.merged > 0 {
+        println!("Merged {} duplicate workspace dependencies.", plan.merged);
+    }
 
     if build {
         run_cargo_build(manifest_path)?;
     }
 
+    Ok(())
+}
+
+/// Write planned sort changes and record every file that was touched.
+fn write_sort_changes(
+    changes: &[sort::FileChange],
+    updated: &mut BTreeSet<PathBuf>,
+) -> Result<(), String> {
+    for change in changes {
+        fs::write(&change.path, &change.contents)
+            .map_err(|error| format!("failed to write {}: {error}", change.path.display()))?;
+        updated.insert(change.path.clone());
+    }
     Ok(())
 }
 

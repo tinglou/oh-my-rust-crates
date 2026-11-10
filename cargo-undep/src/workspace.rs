@@ -36,8 +36,14 @@ pub struct Workspace {
     pub root_dir: PathBuf,
     /// Path to the workspace root `Cargo.toml`.
     pub manifest_path: PathBuf,
-    /// Original manifest text. Used for exact line-based edits.
+    /// Manifest text after any duplicate `[workspace.dependencies]` entries have
+    /// been merged. This is the text that sorting operates on.
     pub manifest_text: String,
+    /// Manifest text exactly as read from disk, before duplicate merging.
+    pub original_manifest_text: String,
+    /// Number of duplicate workspace dependency declarations that were merged
+    /// while loading. Always zero for [`Workspace::load`].
+    pub merged_duplicates: usize,
     /// All entries in `[workspace.dependencies]`.
     pub dependencies: Vec<WorkspaceDependency>,
     /// Manifests of every crate that belongs to the workspace.
@@ -46,7 +52,26 @@ pub struct Workspace {
 
 impl Workspace {
     /// Load a workspace from its root `Cargo.toml`.
+    ///
+    /// Duplicate keys are rejected by the TOML parser. Use
+    /// [`Workspace::load_for_sort`] when duplicate `[workspace.dependencies]`
+    /// entries should be merged instead.
     pub fn load(manifest_path: &Path) -> Result<Self, String> {
+        Self::load_inner(manifest_path, false)
+    }
+
+    /// Load a workspace for the `sort` command.
+    ///
+    /// Duplicate entries in the root `[workspace.dependencies]` table are merged
+    /// before the manifest is parsed, because `toml_edit` rejects duplicate
+    /// keys. The original text is kept in
+    /// [`Workspace::original_manifest_text`] so callers can detect and write the
+    /// merged result.
+    pub fn load_for_sort(manifest_path: &Path) -> Result<Self, String> {
+        Self::load_inner(manifest_path, true)
+    }
+
+    fn load_inner(manifest_path: &Path, merge_duplicates: bool) -> Result<Self, String> {
         let manifest_path = manifest_path.to_path_buf();
         let root_dir = manifest_path
             .parent()
@@ -58,8 +83,18 @@ impl Workspace {
             })?
             .to_path_buf();
 
-        let manifest_text = fs::read_to_string(&manifest_path)
+        let original_manifest_text = fs::read_to_string(&manifest_path)
             .map_err(|err| format!("failed to read {}: {err}", manifest_path.display()))?;
+
+        let (manifest_text, merged_duplicates) = if merge_duplicates {
+            let merged = crate::manifest::merge_workspace_dependency_duplicates(
+                &original_manifest_text,
+                &manifest_path,
+            )?;
+            (merged.text, merged.merged)
+        } else {
+            (original_manifest_text.clone(), 0)
+        };
 
         let document: Document<String> = manifest_text
             .parse()
@@ -95,12 +130,20 @@ impl Workspace {
         };
 
         let excludes = collect_excludes(&document, &root_dir);
-        let member_manifests = discover_members(&document, &manifest_path, &root_dir, &excludes)?;
+        let member_manifests = discover_members(
+            &document,
+            &manifest_path,
+            &root_dir,
+            &excludes,
+            &manifest_text,
+        )?;
 
         Ok(Self {
             root_dir,
             manifest_path,
             manifest_text,
+            original_manifest_text,
+            merged_duplicates,
             dependencies,
             member_manifests,
         })
@@ -189,8 +232,10 @@ pub fn find_workspace_manifest(start: &Path) -> Result<PathBuf, String> {
         let candidate = directory.join("Cargo.toml");
         if candidate.is_file()
             && let Ok(text) = fs::read_to_string(&candidate)
-            && let Ok(document) = text.parse::<Document<String>>()
-            && document.get("workspace").is_some()
+            && (text
+                .parse::<Document<String>>()
+                .map(|document| document.get("workspace").is_some())
+                .unwrap_or_else(|_| contains_workspace_table(&text)))
         {
             return Ok(candidate);
         }
@@ -202,6 +247,18 @@ pub fn find_workspace_manifest(start: &Path) -> Result<PathBuf, String> {
             ));
         }
     }
+}
+
+/// Detect a `[workspace]` table without parsing the whole manifest.
+///
+/// This is a fallback for manifests that the TOML parser rejects, for example
+/// because `[workspace.dependencies]` contains duplicate keys. `sort` repairs
+/// those manifests, but it still has to find the workspace first.
+fn contains_workspace_table(text: &str) -> bool {
+    text.lines().any(|line| {
+        let line = line.split('#').next().unwrap_or(line).trim();
+        line == "[workspace]" || line.starts_with("[workspace.") || line.starts_with("[workspace ")
+    })
 }
 
 /// Convert a key/value span into inclusive zero-based line numbers.
@@ -295,14 +352,16 @@ fn discover_members(
     root_manifest: &Path,
     root_dir: &Path,
     excludes: &[PathBuf],
+    root_text: &str,
 ) -> Result<Vec<PathBuf>, String> {
+    let root_manifest = normalize_path(root_manifest);
     let mut manifests = Vec::new();
     let mut seen = HashSet::new();
     let mut pending = Vec::new();
 
     if document.get("package").is_some() {
         add_member(
-            root_manifest.to_path_buf(),
+            root_manifest.clone(),
             excludes,
             &mut manifests,
             &mut seen,
@@ -359,8 +418,15 @@ fn discover_members(
         let manifest = pending[index].clone();
         index += 1;
 
-        let text = fs::read_to_string(&manifest)
-            .map_err(|err| format!("failed to read {}: {err}", manifest.display()))?;
+        // The root manifest may have been rewritten in memory to merge
+        // duplicate workspace dependencies. Re-parse that text instead of the
+        // stale copy on disk.
+        let text = if manifest == root_manifest {
+            root_text.to_string()
+        } else {
+            fs::read_to_string(&manifest)
+                .map_err(|err| format!("failed to read {}: {err}", manifest.display()))?
+        };
         let document: Document<String> = text
             .parse()
             .map_err(|err| format!("failed to parse {}: {err}", manifest.display()))?;
@@ -680,5 +746,39 @@ unused-a = { workspace = true }
             .collect();
 
         assert!(unused.contains(&"unused-a"));
+    }
+
+    #[test]
+    fn load_for_sort_merges_duplicate_workspace_dependencies() {
+        let root = temp_dir("sort-duplicates");
+        let manifest = root.join("Cargo.toml");
+        write(
+            &manifest,
+            r#"[package]
+name = "root"
+version = "0.1.0"
+
+[workspace]
+members = []
+
+[workspace.dependencies]
+serde = "1"
+serde = { version = "1", features = ["derive"] }
+"#,
+        );
+
+        assert!(Workspace::load(&manifest).is_err());
+        assert_eq!(find_workspace_manifest(&manifest).unwrap(), manifest);
+
+        let workspace = Workspace::load_for_sort(&manifest).unwrap();
+        assert_eq!(workspace.merged_duplicates, 1);
+        assert_eq!(workspace.dependencies.len(), 1);
+        assert_eq!(workspace.dependencies[0].name, "serde");
+        assert_eq!(workspace.manifest_text.matches("serde =").count(), 1);
+        assert_eq!(
+            workspace.original_manifest_text.matches("serde =").count(),
+            2
+        );
+        assert!(workspace.manifest_text.contains("features = [\"derive\"]"));
     }
 }

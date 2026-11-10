@@ -14,9 +14,11 @@
 
 查找可以安全地在 `[workspace.dependencies]` 中只声明一次、并由成员 crate 继承的依赖。**只把来源（`version`、`path`、`git`）移到工作区层**；成员级属性（`features`、`optional`、`default-features`）保留在成员 manifest。使用 `--fix` 时，也会对已在 `[workspace.dependencies]` 中的依赖强制把成员改为 `workspace = true`（强制继承）。
 
-### `sort` — 按 path 和 crate 分类整理依赖表
+### `sort` — 合并重复项并按 path 和 crate 分类整理依赖表
 
-当 `[workspace.dependencies]` 或成员 crate 的 `[dependencies]` 依赖数不少于 10 个时，对这些表进行分类排序。path 依赖排在第一组；其他依赖按 crate 的第一个 category 分组；没有 category 的依赖放入最后的 `misc` 组。如果依赖行尾注释指定了 `# category = ...`，则该类别优先级最高。每组前增加注释行，组内按名称排序。依赖正上方连续的多行注释以及依赖行尾注释会随该依赖一起移动。
+先把根 `[workspace.dependencies]` 中的重复条目合并为一条。重复 key 属于非法 TOML，因此该修复在排序前进行，且不受表大小限制。`features` 按首次出现顺序取并集；兼容的版本要求会合并（例如 `1` 与 `1.2` 合并为 `1.2`）；`path`、`git`、`package` 等来源字段必须一致。版本或来源冲突时中止整个流程，不写入任何文件。重复项上方和行尾的注释都会保留，`# category = ...` 仍留在合并后的行尾以继续决定分类。
+
+合并后，当 `[workspace.dependencies]` 或成员 crate 的 `[dependencies]` 依赖数不少于 10 个时，对这些表进行分类排序。path 依赖排在第一组；其他依赖按 crate 的第一个 category 分组；没有 category 的依赖放入最后的 `misc` 组。如果依赖行尾注释指定了 `# category = ...`，则该类别优先级最高。每组前增加注释行，组内按名称排序。依赖正上方连续的多行注释以及依赖行尾注释会随该依赖一起移动。成员 `[dependencies]` 和根包 `[dependencies]` 只排序，不去重。
 
 ## 安装
 
@@ -48,10 +50,10 @@ cargo undep hoist
 # 提升成员依赖（同时强制继承已声明的依赖）
 cargo undep hoist --fix
 
-# 只检测需要排序的依赖表
+# 检测重复项合并和需要排序的依赖表
 cargo undep sort
 
-# 对依赖表分类排序
+# 合并重复的工作区依赖并对依赖表分类排序
 cargo undep sort --fix
 ```
 
@@ -65,7 +67,7 @@ cargo undep [clean|hoist|sort] [--fix] [--build] [--allow-dirty] [--manifest-pat
 |------|------|
 | `clean` | 检测或删除无用的 `[workspace.dependencies]` |
 | `hoist` | 检测或将成员 crate 中可共享的依赖来源提升到 `[workspace.dependencies]` |
-| `sort` | 检测或按 path 和 category 对 `[workspace.dependencies]` 与成员 `[dependencies]` 排序 |
+| `sort` | 合并重复的 `[workspace.dependencies]`，再按 path 和 category 检测或排序依赖表 |
 | `--fix` | 对选定的命令应用修改 |
 | `--build` | 在 `--fix` 有文件修改后，运行 `cargo build --all-targets` 验证 |
 | `--allow-dirty` | 允许在 git 工作区有未提交修改或 git 不可用时执行 `--fix` |
@@ -248,6 +250,17 @@ unknown-crate = "1"
 ```
 
 排序时会保留依赖原有的声明文本。依赖正上方连续的多行注释以及同一行末尾的注释都会随依赖一起移动。
+
+#### 重复的工作区依赖
+
+重复 key 属于非法 TOML，因此同一个 key 在根 `Cargo.toml` 中声明两次时，Cargo 以及 `clean`、`hoist` 使用的严格加载器都无法解析。`sort` 会优先修复这个问题：
+
+- 只对根 `[workspace.dependencies]` 去重；成员 `[dependencies]` 和根包 `[dependencies]` 只排序，不合并。
+- 即使表内不足 10 个依赖也会去重；排序仍然要求至少 10 个。
+- `features` 按顺序取并集；兼容版本使用与 `hoist` 相同的规则合并（`1` 加 `1.2` 得到 `1.2`）。
+- 来源字段（`path`、`git`、`branch`、`tag`、`rev`、`package`、`registry`、`registry-index`）必须一致。版本或来源冲突时在写入任何文件前中止。
+- 保留第一条的前置注释；其余注释去重后移到合并条目上方，`# category = ...` 行尾注释保留在原行，继续影响分类。
+- 不带 `--fix` 时只报告合并计划；带 `--fix` 时先写入合并结果，再重新加载并通过 `cargo metadata` 获取 category 进行第二次排序。
 
 ### 注释处理规则
 

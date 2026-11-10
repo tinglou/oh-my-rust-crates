@@ -30,6 +30,7 @@ cargo-undep/
 │   ├── cli.rs            # Clap-based CLI parser
 │   ├── workspace.rs      # Workspace discovery, member detection, reference checking
 │   ├── hoist.rs          # Dependency hoisting logic
+│   ├── manifest.rs       # Duplicate [workspace.dependencies] merging
 │   ├── sort.rs           # Category-based dependency sorting
 │   ├── cleaner.rs        # Comment-aware line removal
 │   └── git.rs            # Git safety checks
@@ -48,6 +49,9 @@ cargo-undep/
 - Reads `[workspace]` from root `Cargo.toml`
 - Supports `members` (globs), `exclude`, and auto-discovery of path dependencies
 - Root package (if present) is also a member
+- `find_workspace_manifest` falls back to line-based `[workspace]` detection when the manifest is invalid TOML
+- `Workspace::load` is strict; `Workspace::load_for_sort` merges duplicate root `[workspace.dependencies]` entries before parsing and keeps both the original and merged text
+- Member manifests are always parsed strictly, so duplicate keys outside the root workspace dependencies still fail
 
 ### Reference detection
 A dependency is "used" if any member declares `workspace = true` in any dependency table (normal, dev, build, target-specific). Both inline and sub-table forms supported.
@@ -65,8 +69,21 @@ A dependency is "used" if any member declares `workspace = true` in any dependen
 - Preserves member-level `features`, `optional`, `default-features`
 - `--hoist --fix` also enforces inheritance for deps already in `[workspace.dependencies]`
 
+### Duplicate merging (manifest.rs)
+- Duplicate keys are invalid TOML, so `toml_edit` cannot parse a manifest that contains them
+- `toml_parser` lexes the text and its event stream provides spans for the keys and values inside the exact `[workspace.dependencies]` table
+- Each individual value is parsed with `toml_edit` and merged; the surrounding document text is rebuilt from spans
+- `features` are combined as an ordered union; versions use `hoist::merge_versions`; source fields must match exactly
+- Conflicting versions or sources return an error before any replacement is applied, so no partial file is written
+- Prefix comments are deduplicated above the merged entry; one trailing comment stays inline, preferring a `# category = ...` comment so sorting still classifies correctly
+- Only the root `[workspace.dependencies]` table is scanned; table-form `[workspace.dependencies.foo]` duplicates produce a clear error
+- CRLF line endings are preserved and the merge is idempotent
+
 ### Sorting logic (sort.rs)
 - Targets `[workspace.dependencies]` and each member's `[dependencies]` only
+- Root duplicate workspace dependencies are merged before sorting, regardless of table size
+- The root manifest is compared against `original_manifest_text`, so a deduplication-only change is still reported
+- `cargo metadata` is skipped while the on-disk manifest still has duplicate keys; `sort --fix` writes the merged manifest, reloads it, and re-plans so categories can be applied in a second pass
 - Tables with fewer than 10 entries are left untouched
 - A category written in a dependency's trailing comment (`# category = ...`) overrides every other rule
 - Path dependencies form the first `path` group
