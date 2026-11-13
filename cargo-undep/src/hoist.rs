@@ -6,6 +6,7 @@ use std::path::{Component, Path, PathBuf};
 
 use toml_edit::{DocumentMut, InlineTable, Item, Key, Table, Value};
 
+use crate::text::restore_line_endings;
 use crate::workspace::{DEPENDENCY_SECTIONS, Workspace, normalize_path};
 
 const SOURCE_KEYS: &[&str] = &[
@@ -52,6 +53,15 @@ pub struct HoistedDependency {
     pub manifests: Vec<PathBuf>,
 }
 
+/// Per-manifest detail for a skipped dependency.
+#[derive(Debug, Clone)]
+pub struct SkippedManifestInfo {
+    /// Relative path to the Cargo.toml.
+    pub path: PathBuf,
+    /// The specific value in this manifest related to the conflict.
+    pub detail: String,
+}
+
 /// A dependency that could not be hoisted.
 pub struct SkippedDependency {
     /// The dependency name.
@@ -60,6 +70,8 @@ pub struct SkippedDependency {
     pub reason: String,
     /// The type of conflict that caused the skip.
     pub conflict_type: ConflictType,
+    /// Per-manifest information for each declaration.
+    pub manifests: Vec<SkippedManifestInfo>,
 }
 
 /// The reason a dependency could not be hoisted.
@@ -69,10 +81,38 @@ pub enum ConflictType {
     VersionConflict,
     /// Mixed `default-features` values across members.
     DefaultFeaturesConflict,
-    /// Already declared in `[workspace.dependencies]` (enforced instead).
-    AlreadyInWorkspace,
-    /// Any other conflict.
-    Other,
+    /// Custom registry is not supported.
+    CustomRegistry,
+    /// Both path and git are specified on the same dependency.
+    AmbiguousSource,
+    /// No version, path, or git source specified.
+    MissingSource,
+    /// Conflicting package names across members.
+    PackageConflict,
+    /// Different path values across members.
+    PathConflict,
+    /// Different git sources across members.
+    GitConflict,
+    /// Conflicting source types (e.g., version vs path).
+    SourceTypeConflict,
+    /// Version is specified by only some declarations.
+    PartialVersion,
+}
+
+/// A typed conflict: its category plus a human-readable explanation.
+#[derive(Debug, Clone)]
+struct Conflict {
+    conflict_type: ConflictType,
+    reason: String,
+}
+
+impl Conflict {
+    fn new(conflict_type: ConflictType, reason: impl Into<String>) -> Self {
+        Self {
+            conflict_type,
+            reason: reason.into(),
+        }
+    }
 }
 
 /// A file modification to be applied.
@@ -142,15 +182,21 @@ impl Group {
         }
     }
 
-    fn merge(&mut self, declaration: &Declaration) -> Result<(), String> {
+    fn merge(&mut self, declaration: &Declaration) -> Result<(), Conflict> {
         if self.package != declaration.package {
-            return Err("conflicting package names".to_string());
+            return Err(Conflict::new(
+                ConflictType::PackageConflict,
+                "conflicting package names",
+            ));
         }
 
         match (&mut self.source, &declaration.source) {
             (Source::Version(current), Source::Version(incoming)) => {
                 let merged = merge_versions(current, incoming).ok_or_else(|| {
-                    format!("incompatible version requirements `{current}` and `{incoming}`")
+                    Conflict::new(
+                        ConflictType::VersionConflict,
+                        format!("incompatible version requirements `{current}` and `{incoming}`"),
+                    )
                 })?;
                 *current = merged;
             }
@@ -162,7 +208,7 @@ impl Group {
                 },
             ) => {
                 if path.as_path() != incoming_path.as_path() {
-                    return Err("different paths".to_string());
+                    return Err(Conflict::new(ConflictType::PathConflict, "different paths"));
                 }
                 merge_optional_versions(version, incoming_version)?;
             }
@@ -174,11 +220,19 @@ impl Group {
                 },
             ) => {
                 if source != incoming_source {
-                    return Err("different git sources".to_string());
+                    return Err(Conflict::new(
+                        ConflictType::GitConflict,
+                        "different git sources",
+                    ));
                 }
                 merge_optional_versions(version, incoming_version)?;
             }
-            _ => return Err("conflicting source types".to_string()),
+            _ => {
+                return Err(Conflict::new(
+                    ConflictType::SourceTypeConflict,
+                    "conflicting source types",
+                ));
+            }
         }
 
         if self.default_features != declaration.default_features {
@@ -211,8 +265,11 @@ pub fn plan_scoped(workspace: &Workspace, scope: Option<&Path>) -> Result<HoistP
         .map(|dependency| dependency.name.clone())
         .collect();
 
-    let mut groups: BTreeMap<String, Result<Group, String>> = BTreeMap::new();
-    let mut skipped: BTreeMap<String, (String, ConflictType)> = BTreeMap::new();
+    let mut groups: BTreeMap<String, Result<Group, Conflict>> = BTreeMap::new();
+    let mut skipped: BTreeMap<String, Conflict> = BTreeMap::new();
+    // Tracks per-manifest details for skipped dependencies so conflict output
+    // can show which `Cargo.toml` contributed which value.
+    let mut skipped_details: BTreeMap<String, Vec<(PathBuf, String)>> = BTreeMap::new();
     let mut modified = BTreeSet::new();
 
     for manifest in &members {
@@ -231,7 +288,13 @@ pub fn plan_scoped(workspace: &Workspace, scope: Option<&Path>) -> Result<HoistP
                 name,
                 item,
             ) {
-                Ok(ParseResult::Declaration(declaration)) => {
+                ParseResult::Declaration(declaration) => {
+                    let detail = declaration_detail(&declaration);
+                    skipped_details
+                        .entry(name.to_string())
+                        .or_default()
+                        .push((manifest.clone(), detail));
+
                     let declaration = *declaration;
                     match groups.entry(name.to_string()) {
                         Entry::Vacant(entry) => {
@@ -239,32 +302,20 @@ pub fn plan_scoped(workspace: &Workspace, scope: Option<&Path>) -> Result<HoistP
                         }
                         Entry::Occupied(mut entry) => {
                             if let Ok(group) = entry.get_mut()
-                                && let Err(reason) = group.merge(&declaration)
+                                && let Err(conflict) = group.merge(&declaration)
                             {
-                                let _ = entry.insert(Err(reason));
+                                let _ = entry.insert(Err(conflict));
                             }
                         }
                     }
                 }
-                Ok(ParseResult::Inherited) => {}
-                Ok(ParseResult::Skip(reason)) => {
-                    skipped
+                ParseResult::Inherited => {}
+                ParseResult::Skip(conflict) => {
+                    skipped_details
                         .entry(name.to_string())
-                        .or_insert((reason, ConflictType::Other));
-                }
-                Err(reason) => {
-                    let conflict_type = if reason.contains("incompatible version") {
-                        ConflictType::VersionConflict
-                    } else if reason.contains("default-features") {
-                        ConflictType::DefaultFeaturesConflict
-                    } else if reason.contains("already declared") {
-                        ConflictType::AlreadyInWorkspace
-                    } else {
-                        ConflictType::Other
-                    };
-                    skipped
-                        .entry(name.to_string())
-                        .or_insert((reason, conflict_type));
+                        .or_default()
+                        .push((manifest.clone(), conflict.reason.clone()));
+                    skipped.entry(name.to_string()).or_insert(conflict);
                 }
             },
         );
@@ -279,28 +330,23 @@ pub fn plan_scoped(workspace: &Workspace, scope: Option<&Path>) -> Result<HoistP
         if root_names.contains(&name) {
             match group {
                 Ok(group) => enforced_groups.push(group),
-                Err(reason) => {
-                    skipped.entry(name).or_insert((reason, ConflictType::Other));
+                Err(conflict) => {
+                    skipped.entry(name).or_insert(conflict);
                 }
             }
         } else {
             match group {
                 Ok(group) if group.default_features_conflict => {
                     skipped.entry(name).or_insert_with(|| {
-                        (
-                            "mixed default-features".to_string(),
+                        Conflict::new(
                             ConflictType::DefaultFeaturesConflict,
+                            "mixed default-features",
                         )
                     });
                 }
                 Ok(group) => hoisted_groups.push(group),
-                Err(reason) => {
-                    let conflict_type = if reason.contains("incompatible version") {
-                        ConflictType::VersionConflict
-                    } else {
-                        ConflictType::Other
-                    };
-                    skipped.entry(name).or_insert((reason, conflict_type));
+                Err(conflict) => {
+                    skipped.entry(name).or_insert(conflict);
                 }
             }
         }
@@ -415,12 +461,24 @@ pub fn plan_scoped(workspace: &Workspace, scope: Option<&Path>) -> Result<HoistP
         })
         .collect();
 
-    let skipped = skipped
+    let skipped: Vec<SkippedDependency> = skipped
         .into_iter()
-        .map(|(name, (reason, conflict_type))| SkippedDependency {
-            name,
-            reason,
-            conflict_type,
+        .map(|(name, conflict)| {
+            let manifests = skipped_details
+                .remove(&name)
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(path, detail)| SkippedManifestInfo {
+                    path: relative_path(&path, &workspace.root_dir),
+                    detail,
+                })
+                .collect();
+            SkippedDependency {
+                name,
+                reason: conflict.reason,
+                conflict_type: conflict.conflict_type,
+                manifests,
+            }
         })
         .collect();
 
@@ -525,7 +583,7 @@ fn dependency_item_mut<'a>(document: &'a mut Table, location: &Location) -> Opti
 enum ParseResult {
     Declaration(Box<Declaration>),
     Inherited,
-    Skip(String),
+    Skip(Conflict),
 }
 
 fn parse_declaration(
@@ -535,14 +593,15 @@ fn parse_declaration(
     section: &str,
     name: &str,
     item: &Item,
-) -> Result<ParseResult, String> {
+) -> ParseResult {
     if get_bool(item, "workspace").unwrap_or(false) {
-        return Ok(ParseResult::Inherited);
+        return ParseResult::Inherited;
     }
 
     if get_str(item, "registry").is_some() || get_str(item, "registry-index").is_some() {
-        return Ok(ParseResult::Skip(
-            "custom registry is not supported".to_string(),
+        return ParseResult::Skip(Conflict::new(
+            ConflictType::CustomRegistry,
+            "custom registry is not supported",
         ));
     }
 
@@ -555,8 +614,9 @@ fn parse_declaration(
 
     let source = if let Some(path) = path {
         if git.is_some() {
-            return Ok(ParseResult::Skip(
-                "both path and git are specified".to_string(),
+            return ParseResult::Skip(Conflict::new(
+                ConflictType::AmbiguousSource,
+                "both path and git are specified",
             ));
         }
         Source::Path {
@@ -578,12 +638,13 @@ fn parse_declaration(
     } else if let Some(version) = item.as_str() {
         Source::Version(version.to_string())
     } else {
-        return Ok(ParseResult::Skip(
-            "no version, path, or git source".to_string(),
+        return ParseResult::Skip(Conflict::new(
+            ConflictType::MissingSource,
+            "no version, path, or git source",
         ));
     };
 
-    Ok(ParseResult::Declaration(Box::new(Declaration {
+    ParseResult::Declaration(Box::new(Declaration {
         location: Location {
             manifest: manifest.to_path_buf(),
             target: target.map(str::to_string),
@@ -593,7 +654,7 @@ fn parse_declaration(
         package,
         default_features,
         source,
-    })))
+    }))
 }
 
 fn get_str<'a>(item: &'a Item, key: &str) -> Option<&'a str> {
@@ -738,20 +799,42 @@ fn describe_source(source: &Source, root_dir: &Path) -> String {
     }
 }
 
+/// Produce a compact string describing a declaration's source, suitable for
+/// displaying alongside the manifest path in conflict output.
+fn declaration_detail(decl: &Declaration) -> String {
+    match &decl.source {
+        Source::Version(v) => v.clone(),
+        Source::Path {
+            path: _,
+            version: Some(v),
+        } => {
+            format!("version = {v}")
+        }
+        Source::Path {
+            path: _,
+            version: None,
+        } => String::new(),
+        Source::Git {
+            source,
+            version: Some(v),
+        } => {
+            format!("git = {}, version = {v}", source.git)
+        }
+        Source::Git {
+            source,
+            version: None,
+        } => {
+            format!("git = {}", source.git)
+        }
+    }
+}
+
 fn path_string(path: &Path, root_dir: &Path) -> String {
     let relative = relative_path(path, root_dir);
     if relative.as_os_str().is_empty() {
         ".".to_string()
     } else {
         relative.to_string_lossy().replace('\\', "/")
-    }
-}
-
-fn restore_line_endings(original: &str, contents: String) -> String {
-    if original.contains("\r\n") {
-        contents.replace("\r\n", "\n").replace('\n', "\r\n")
-    } else {
-        contents
     }
 }
 
@@ -777,17 +860,23 @@ fn relative_path(path: &Path, base: &Path) -> PathBuf {
 fn merge_optional_versions(
     current: &mut Option<String>,
     incoming: &Option<String>,
-) -> Result<(), String> {
+) -> Result<(), Conflict> {
     match (current.clone(), incoming.clone()) {
         (None, None) => Ok(()),
         (Some(left), Some(right)) => {
             let merged = merge_versions(&left, &right).ok_or_else(|| {
-                format!("incompatible version requirements `{left}` and `{right}`")
+                Conflict::new(
+                    ConflictType::VersionConflict,
+                    format!("incompatible version requirements `{left}` and `{right}`"),
+                )
             })?;
             *current = Some(merged);
             Ok(())
         }
-        _ => Err("version is specified only by some declarations".to_string()),
+        _ => Err(Conflict::new(
+            ConflictType::PartialVersion,
+            "version is specified only by some declarations",
+        )),
     }
 }
 
@@ -1026,6 +1115,10 @@ serde = "1"
         assert!(plan.changes.is_empty());
         assert_eq!(plan.skipped.len(), 1);
         assert_eq!(plan.skipped[0].name, "serde");
+        assert_eq!(
+            plan.skipped[0].conflict_type,
+            ConflictType::DefaultFeaturesConflict
+        );
         assert!(plan.skipped[0].reason.contains("default-features"));
     }
 
@@ -1095,6 +1188,7 @@ helper = { path = "../helper", version = "0.1", default-features = false }
         assert!(plan.hoisted.is_empty());
         assert!(plan.changes.is_empty());
         assert_eq!(plan.skipped[0].name, "thiserror");
+        assert_eq!(plan.skipped[0].conflict_type, ConflictType::VersionConflict);
         assert!(plan.skipped[0].reason.contains("incompatible version"));
     }
 
@@ -1280,6 +1374,114 @@ foo = { package = "bar", git = "https://example.com/bar", rev = "abc123", versio
         let a_text = changed_ending(&plan, "a/Cargo.toml");
         assert!(a_text.contains("\r\n"));
         assert!(!a_text.replace("\r\n", "").contains('\n'));
+    }
+
+    #[test]
+    fn skips_custom_registry() {
+        let root = temp_dir("custom-registry");
+        write(
+            &root.join("Cargo.toml"),
+            "[workspace]\nmembers = [\"a\"]\n\n[workspace.dependencies]\n",
+        );
+        write(
+            &root.join("a/Cargo.toml"),
+            "[package]\nname = \"a\"\nversion = \"0.1.0\"\n\n[dependencies]\nprivate = { version = \"1\", registry = \"my-registry\" }\n",
+        );
+
+        let workspace = workspace(&root);
+        let plan = plan(&workspace).unwrap();
+
+        assert!(plan.hoisted.is_empty());
+        assert_eq!(plan.skipped.len(), 1);
+        assert_eq!(plan.skipped[0].name, "private");
+        assert_eq!(plan.skipped[0].conflict_type, ConflictType::CustomRegistry);
+    }
+
+    #[test]
+    fn skips_ambiguous_path_and_git_source() {
+        let root = temp_dir("ambiguous-source");
+        write(
+            &root.join("Cargo.toml"),
+            "[workspace]\nmembers = [\"a\"]\n\n[workspace.dependencies]\n",
+        );
+        write(
+            &root.join("a/Cargo.toml"),
+            "[package]\nname = \"a\"\nversion = \"0.1.0\"\n\n[dependencies]\nfoo = { path = \"../foo\", git = \"https://example.com/foo\" }\n",
+        );
+
+        let workspace = workspace(&root);
+        let plan = plan(&workspace).unwrap();
+
+        assert_eq!(plan.skipped.len(), 1);
+        assert_eq!(plan.skipped[0].name, "foo");
+        assert_eq!(plan.skipped[0].conflict_type, ConflictType::AmbiguousSource);
+    }
+
+    #[test]
+    fn skips_different_paths_and_reports_each_manifest() {
+        let root = temp_dir("different-paths");
+        write(
+            &root.join("Cargo.toml"),
+            "[workspace]\nmembers = [\"a\", \"b\"]\n\n[workspace.dependencies]\n",
+        );
+        write(
+            &root.join("a/Cargo.toml"),
+            "[package]\nname = \"a\"\nversion = \"0.1.0\"\n\n[dependencies]\nhelper = { path = \"../helper-a\" }\n",
+        );
+        write(
+            &root.join("b/Cargo.toml"),
+            "[package]\nname = \"b\"\nversion = \"0.1.0\"\n\n[dependencies]\nhelper = { path = \"../helper-b\" }\n",
+        );
+        write(
+            &root.join("helper-a/Cargo.toml"),
+            "[package]\nname = \"helper-a\"\nversion = \"0.1.0\"\n",
+        );
+        write(
+            &root.join("helper-b/Cargo.toml"),
+            "[package]\nname = \"helper-b\"\nversion = \"0.1.0\"\n",
+        );
+
+        let workspace = workspace(&root);
+        let plan = plan(&workspace).unwrap();
+
+        assert_eq!(plan.skipped.len(), 1);
+        assert_eq!(plan.skipped[0].conflict_type, ConflictType::PathConflict);
+
+        let manifests: Vec<String> = plan.skipped[0]
+            .manifests
+            .iter()
+            .map(|info| info.path.to_string_lossy().replace('\\', "/"))
+            .collect();
+        assert!(manifests.iter().any(|path| path.ends_with("a/Cargo.toml")));
+        assert!(manifests.iter().any(|path| path.ends_with("b/Cargo.toml")));
+    }
+
+    #[test]
+    fn skips_partial_version() {
+        let root = temp_dir("partial-version");
+        write(
+            &root.join("Cargo.toml"),
+            "[workspace]\nmembers = [\"a\", \"b\"]\n\n[workspace.dependencies]\n",
+        );
+        write(
+            &root.join("a/Cargo.toml"),
+            "[package]\nname = \"a\"\nversion = \"0.1.0\"\n\n[dependencies]\nhelper = { path = \"../helper\", version = \"0.1\" }\n",
+        );
+        write(
+            &root.join("b/Cargo.toml"),
+            "[package]\nname = \"b\"\nversion = \"0.1.0\"\n\n[dependencies]\nhelper = { path = \"../helper\" }\n",
+        );
+        write(
+            &root.join("helper/Cargo.toml"),
+            "[package]\nname = \"helper\"\nversion = \"0.1.0\"\n",
+        );
+
+        let workspace = workspace(&root);
+        let plan = plan(&workspace).unwrap();
+
+        assert_eq!(plan.skipped.len(), 1);
+        assert_eq!(plan.skipped[0].name, "helper");
+        assert_eq!(plan.skipped[0].conflict_type, ConflictType::PartialVersion);
     }
 
     #[test]

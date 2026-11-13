@@ -17,11 +17,13 @@ use std::process::Command;
 
 use toml_edit::{DocumentMut, Item, Table, Value};
 
+use crate::text::{
+    CATEGORY_COMMENT_PREFIX, CATEGORY_COMMENT_SUFFIX, category_from_comment, is_category_header,
+    normalize_category, restore_line_endings,
+};
 use crate::workspace::Workspace;
 
 const MIN_DEPENDENCIES: usize = 10;
-const CATEGORY_COMMENT_PREFIX: &str = "# --- ";
-const CATEGORY_COMMENT_SUFFIX: &str = " ---";
 
 /// A file modification to be applied.
 pub struct FileChange {
@@ -226,11 +228,6 @@ fn load_categories(workspace: &Workspace) -> Result<BTreeMap<String, String>, St
     }
 
     Ok(categories)
-}
-
-fn normalize_category(category: &str) -> Option<String> {
-    let category = category.split("::").next().unwrap_or(category).trim();
-    (!category.is_empty()).then(|| category.to_string())
 }
 
 fn workspace_dependency_index(
@@ -523,35 +520,6 @@ fn comment_category(item: &Item) -> Option<String> {
     category_from_comment(comment)
 }
 
-fn category_from_comment(comment: &str) -> Option<String> {
-    for line in comment.lines() {
-        let Some((_, comment)) = line.split_once('#') else {
-            continue;
-        };
-        let comment = comment.trim();
-        if !comment.starts_with("category") {
-            continue;
-        }
-
-        let after_category = comment.strip_prefix("category").unwrap_or(comment).trim();
-        if !after_category.starts_with('=') {
-            continue;
-        }
-
-        let value = after_category
-            .strip_prefix('=')
-            .unwrap_or(after_category)
-            .trim();
-        let value = value.split_whitespace().next().unwrap_or(value);
-        let value = value.trim_matches(['"', '\'', ',']);
-        if let Some(category) = normalize_category(value) {
-            return Some(category);
-        }
-    }
-
-    None
-}
-
 /// Align inline suffix comments (`# ...`) within each dependency group so that
 /// the `#` characters start at the same column.
 ///
@@ -613,12 +581,6 @@ fn align_inline_comments(text: &str) -> String {
     result
 }
 
-/// Returns `true` if `line` is a category header comment like `# --- misc ---`.
-fn is_category_header(line: &str) -> bool {
-    let trimmed = line.trim();
-    trimmed.starts_with(CATEGORY_COMMENT_PREFIX) && trimmed.ends_with(CATEGORY_COMMENT_SUFFIX)
-}
-
 /// Returns the byte offset of the first `#` that begins an inline comment,
 /// i.e. a `#` appearing after `=` and outside of any quoted string.
 ///
@@ -655,14 +617,6 @@ fn inline_comment_position(line: &str) -> Option<usize> {
     }
 
     None
-}
-
-fn restore_line_endings(original: &str, contents: String) -> String {
-    if original.contains("\r\n") {
-        contents.replace("\r\n", "\n").replace('\n', "\r\n")
-    } else {
-        contents
-    }
 }
 
 #[cfg(test)]

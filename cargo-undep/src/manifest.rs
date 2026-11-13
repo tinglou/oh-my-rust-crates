@@ -16,6 +16,8 @@ use toml_edit::{Array, DocumentMut, InlineTable, Item, Value};
 use toml_parser::parser::{Event, EventKind, parse_document};
 use toml_parser::{Raw, Source};
 
+use crate::text::{has_category_comment, is_category_header, restore_line_endings};
+
 const WORKSPACE_DEPENDENCIES: [&str; 2] = ["workspace", "dependencies"];
 
 /// Result of merging duplicate workspace dependencies.
@@ -602,20 +604,9 @@ fn prefix_comments(text: &str, start: usize, end: usize) -> Vec<String> {
     text[start..end]
         .lines()
         .map(str::trim)
-        .filter(|line| line.starts_with('#') && !is_category_separator(line))
+        .filter(|line| line.starts_with('#') && !is_category_header(line))
         .map(str::to_string)
         .collect()
-}
-
-fn is_category_separator(line: &str) -> bool {
-    line.starts_with("# --- ") && line.ends_with(" ---")
-}
-
-fn has_category_comment(comment: &str) -> bool {
-    comment
-        .split_once('#')
-        .map(|(_, rest)| rest.trim_start().starts_with("category"))
-        .unwrap_or(false)
 }
 
 fn trailing_comment(text: &str, value_end: usize, line_end: usize) -> String {
@@ -673,14 +664,6 @@ struct Replacement {
     start: usize,
     end: usize,
     text: String,
-}
-
-fn restore_line_endings(original: &str, contents: String) -> String {
-    if original.contains("\r\n") {
-        contents.replace("\r\n", "\n").replace('\n', "\r\n")
-    } else {
-        contents
-    }
 }
 
 #[cfg(test)]
@@ -782,6 +765,24 @@ serde = "2"
         let result = merge(text);
         assert_eq!(result.merged, 0);
         assert_eq!(result.text, text);
+    }
+
+    #[test]
+    fn keeps_category_comment_inline_requires_equals() {
+        // `# categorize = ...` is prose, not a `# category = ...` annotation,
+        // so the real annotation on the second entry wins the inline slot.
+        let text = r#"[workspace.dependencies]
+serde = "1" # categorize = encoding
+serde = { version = "1", features = ["derive"] } # category = encoding
+"#;
+        let result = merge(text);
+        let serde_line = result
+            .text
+            .lines()
+            .find(|line| line.starts_with("serde ="))
+            .unwrap();
+        assert!(serde_line.contains("# category = encoding"));
+        assert!(result.text.contains("# categorize = encoding"));
     }
 
     #[test]

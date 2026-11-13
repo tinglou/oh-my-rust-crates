@@ -15,6 +15,7 @@ mod git;
 mod hoist;
 mod manifest;
 mod sort;
+mod text;
 mod workspace;
 
 use std::collections::BTreeSet;
@@ -328,10 +329,23 @@ fn print_hoist_plan(plan: &hoist::HoistPlan) {
             let category = match dependency.conflict_type {
                 hoist::ConflictType::VersionConflict => "[version conflict] ",
                 hoist::ConflictType::DefaultFeaturesConflict => "[default-features conflict] ",
-                hoist::ConflictType::AlreadyInWorkspace => "",
-                hoist::ConflictType::Other => "",
+                hoist::ConflictType::CustomRegistry => "[custom registry] ",
+                hoist::ConflictType::AmbiguousSource => "[ambiguous source] ",
+                hoist::ConflictType::MissingSource => "[missing source] ",
+                hoist::ConflictType::PackageConflict => "[package conflict] ",
+                hoist::ConflictType::PathConflict => "[path conflict] ",
+                hoist::ConflictType::GitConflict => "[git conflict] ",
+                hoist::ConflictType::SourceTypeConflict => "[source type conflict] ",
+                hoist::ConflictType::PartialVersion => "[partial version] ",
             };
             println!("  - {}{}: {}", category, dependency.name, dependency.reason);
+            for info in &dependency.manifests {
+                if info.detail.is_empty() {
+                    println!("      {}", info.path.display());
+                } else {
+                    println!("      {}: {}", info.path.display(), info.detail);
+                }
+            }
         }
     }
 }
